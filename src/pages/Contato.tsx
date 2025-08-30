@@ -72,14 +72,14 @@ const Contato = () => {
                     <MapPin className="h-5 w-5 text-accent mt-0.5" />
                     <div>
                       <p className="font-medium">Endereço</p>
-                      <p className="text-muted-foreground">Rua Exemplo, 123<br />São Paulo - SP, 01234-567</p>
+                      <p className="text-muted-foreground">R. Miguel Langone, 341<br />Itaquera<br />São Paulo - SP, 01234-567</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">
                     <Phone className="h-5 w-5 text-accent" />
                     <div>
                       <p className="font-medium">Telefone</p>
-                      <p className="text-muted-foreground">(11) 4240-6832</p>
+                      <p className="text-muted-foreground">(11) 4240-8832</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">
@@ -93,7 +93,7 @@ const Contato = () => {
                     <Clock className="h-5 w-5 text-accent mt-0.5" />
                     <div>
                       <p className="font-medium">Horário de Atendimento</p>
-                      <p className="text-muted-foreground">Segunda a Sexta: 8h às 18h<br />Sábado: 8h às 12h</p>
+                      <p className="text-muted-foreground">Segunda a Sexta: 8h às 18h</p>
                     </div>
                   </div>
                 </CardContent>
@@ -102,8 +102,16 @@ const Contato = () => {
               {/* Map */}
               <Card>
                 <CardContent className="p-6">
-                  <div className="bg-muted rounded-lg aspect-video flex items-center justify-center">
-                    <p className="text-muted-foreground">Google Maps</p>
+                  <div className="bg-muted rounded-lg aspect-video overflow-hidden">
+                    <iframe
+                      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3657.9253505904294!2d-46.44676202551126!3d-23.535187178817782!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94ce598f3c4f9c97%3A0x32dc8a103d318a5a!2sNexus%20V%C3%A1lvulas%20e%20Conex%C3%B5es%20Industriais!5e0!3m2!1spt-BR!2sbr!4v1755129506590!5m2!1spt-BR!2sbr"
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      allowFullScreen
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                    ></iframe>
                   </div>
                 </CardContent>
               </Card>

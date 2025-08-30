@@ -95,11 +95,12 @@ const Sobre = () => {
                 </p>
               </div>
             </div>
-            <div className="bg-muted rounded-lg aspect-video flex items-center justify-center">
-              <div className="text-center">
-                <Factory className="h-24 w-24 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Imagem da empresa</p>
-              </div>
+            <div className="bg-muted rounded-lg aspect-video overflow-hidden">
+              <img
+                src="/imagens/nexus-faixada.png" // coloque o caminho da imagem da empresa
+                alt="Empresa"
+                className="w-full h-full object-cover"
+              />
             </div>
           </div>
         </div>
@@ -205,57 +206,7 @@ const Sobre = () => {
             ))}
           </div>
         </div>
-      </section>
-
-      {/* Team Section */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Nossa Equipe</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Profissionais especializados e experientes para atender suas necessidades
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="text-center">
-              <CardContent className="p-6">
-                <div className="bg-muted rounded-full w-24 h-24 mx-auto mb-4 flex items-center justify-center">
-                  <span className="text-muted-foreground text-sm">Foto</span>
-                </div>
-                <h3 className="font-semibold mb-2">Equipe Técnica</h3>
-                <p className="text-muted-foreground text-sm">
-                  Engenheiros especializados em soluções industriais com mais de 15 anos de experiência
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center">
-              <CardContent className="p-6">
-                <div className="bg-muted rounded-full w-24 h-24 mx-auto mb-4 flex items-center justify-center">
-                  <span className="text-muted-foreground text-sm">Foto</span>
-                </div>
-                <h3 className="font-semibold mb-2">Equipe Comercial</h3>
-                <p className="text-muted-foreground text-sm">
-                  Consultores especializados em identificar as melhores soluções para cada aplicação
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center">
-              <CardContent className="p-6">
-                <div className="bg-muted rounded-full w-24 h-24 mx-auto mb-4 flex items-center justify-center">
-                  <span className="text-muted-foreground text-sm">Foto</span>
-                </div>
-                <h3 className="font-semibold mb-2">Suporte Técnico</h3>
-                <p className="text-muted-foreground text-sm">
-                  Atendimento especializado para suporte pós-venda e assistência técnica
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
+      </section>      
     </Layout>
   );
 };

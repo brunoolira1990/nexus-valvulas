@@ -12,43 +12,50 @@ const Produtos = () => {
       id: "valvulas-industriais",
       title: "Válvulas Industriais",
       description: "Ampla linha de válvulas para controle de fluxo, pressão e temperatura em aplicações industriais.",
-      icon: Wrench,
-      subcategories: ["Válvula Esfera", "Válvula Borboleta", "Válvula Gaveta", "Válvula Globo", "Válvula Agulha"]
+      image: "/imagens/valvulas.svg", // caminho da imagem
+      subcategories: ["Esfera", "Borboleta", "Gaveta", "Globo", "Retenção", "Agulha"]
     },
     {
       id: "conexoes",
       title: "Conexões",
       description: "Conexões roscadas e soldadas em diversos materiais para sistemas de tubulação industrial.",
-      icon: Settings,
-      subcategories: ["Conexões Roscadas", "Conexões Soldadas", "Conexões Forjadas", "Conexões de Aço Inox"]
+      image: "/imagens/conexoes.svg", // caminho da imagem
+      subcategories: ["Conexões Tubulares", "Conexões Forjadas", "Conexõe de Ferro"]
     },
     {
       id: "flanges",
       title: "Flanges",
       description: "Flanges em aço carbono e inox para união de tubulações em alta pressão e temperatura.",
-      icon: Gauge,
-      subcategories: ["Flanges Slip-On", "Flanges Weld Neck", "Flanges Blind", "Flanges Socket Weld"]
+      image: "/imagens/flanges.svg", // caminho da imagem
+      subcategories: ["Flange Cego", "Flange com Pescoço", "Flange Lap-Joint", "Flange Roscado", "Flange Sobreposto", "Flange Soquete"]
     },
     {
       id: "tubos",
       title: "Tubos",
       description: "Tubos industriais sem costura e com costura para diversas aplicações e pressões.",
-      icon: Factory,
-      subcategories: ["Tubos Sem Costura", "Tubos Com Costura", "Tubos de Aço Inox", "Tubos Especiais"]
+      image: "/imagens/tubos.svg", // caminho da imagem
+      subcategories: ["Tubos Sem Costura", "Tubos Com Costura", "Para Caldeira", "Tubos Galvanizados", "Eletrodutos", "Tubos Zincados"]
     },
     {
       id: "acessorios",
       title: "Acessórios",
       description: "Linha completa de acessórios para complementar sistemas de tubulação industrial.",
-      icon: Settings,
-      subcategories: ["Parafusos e Porcas", "Juntas e Vedações", "Suportes", "Instrumentação"]
+      image: "/imagens/acessorios.svg", // caminho da imagem
+      subcategories: ["Manômetro", "Termometro", "Torneira e Tubo Sifão", "Visor de Fluxo", "Filtro", "Purgador"]
     },
     {
       id: "combate-incendio",
       title: "Combate a Incêndio",
       description: "Equipamentos e acessórios especializados para sistemas de combate a incêndio.",
-      icon: Flame,
-      subcategories: ["Hidrantes", "Válvulas de Governo", "Sprinklers", "Conexões Fire"]
+      image: "/imagens/incendio.svg", // caminho da imagem
+      subcategories: ["Adaptador", "Tampão", "Chave Storz", "Esguicho", "Mangueira", "Abrigo", "Canhão", "Válvula"]
+    },
+    {
+      id: "diversos",
+      title: "Diversos",
+      description: "Linha de acessórios e componentes variados como engates, espigões, grampos e fitas para aplicações industriais diversas.",
+      image: "/imagens/diversos.svg",
+      subcategories: ["Engate Rápido", "Espigão", "Grampo U", "Fita Veda Rosca"]
     }
   ];
 
@@ -78,18 +85,22 @@ const Produtos = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {categories.map((category) => {
-              const IconComponent = category.icon;
+              const IconComponent = category.image;
               return (
                 <Card 
                   key={category.id} 
                   className="group hover:shadow-xl transition-all duration-300 cursor-pointer border-2 hover:border-accent"
                   onClick={() => handleCategoryClick(category.id)}
                 >
-                  <CardHeader className="text-center">
-                    <div className="bg-accent/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4 group-hover:bg-accent/20 transition-colors">
-                      <IconComponent className="h-10 w-10 text-accent" />
-                    </div>
-                    <CardTitle className="group-hover:text-accent transition-colors text-xl">
+                  <CardHeader className="p-0 flex justify-center">
+                    {category.image && (
+                      <img
+                        src={category.image}
+                        alt={category.title}
+                        className="h-32 w-auto object-contain" // altura menor, largura proporcional
+                      />
+                    )}
+                    <CardTitle className="mt-4 text-center group-hover:text-accent transition-colors text-xl">
                       {category.title}
                     </CardTitle>
                   </CardHeader>

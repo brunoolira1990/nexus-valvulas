@@ -19,7 +19,7 @@ const ProdutoCategoria = () => {
           id: "valvula-esfera",
           name: "Válvula Esfera",
           description: "Válvulas esfera bipartidas e tripartidas para aplicações de alta pressão",
-          image: "/api/placeholder/300/200",
+          image: "/imagens/valvulas-industriais/valvula_esfera.png",
           applications: ["Petróleo e Gás", "Química", "Água"],
           materials: ["Aço Carbono", "Aço Inox", "Bronze"]
         },
@@ -27,7 +27,7 @@ const ProdutoCategoria = () => {
           id: "valvula-borboleta",
           name: "Válvula Borboleta",
           description: "Válvulas borboleta wafer e lug para grandes diâmetros",
-          image: "/api/placeholder/300/200",
+          image: "/imagens/valvulas-industriais/valvula_borboleta.png",
           applications: ["Saneamento", "HVAC", "Alimentícia"],
           materials: ["Ferro Fundido", "Aço Inox", "PVC"]
         },
@@ -35,7 +35,7 @@ const ProdutoCategoria = () => {
           id: "valvula-gaveta",
           name: "Válvula Gaveta",
           description: "Válvulas gaveta para isolamento total de linha",
-          image: "/api/placeholder/300/200",
+          image: "/imagens/valvulas-industriais/valvula_gaveta.png",
           applications: ["Água", "Óleo", "Vapor"],
           materials: ["Ferro Fundido", "Aço Carbono", "Aço Inox"]
         },
@@ -43,7 +43,7 @@ const ProdutoCategoria = () => {
           id: "valvula-globo",
           name: "Válvula Globo",
           description: "Válvulas globo para controle preciso de fluxo",
-          image: "/api/placeholder/300/200",
+          image: "/imagens/valvulas-industriais/valvula_globo.png",
           applications: ["Vapor", "Condensado", "Ar Comprimido"],
           materials: ["Aço Carbono", "Aço Inox", "Bronze"]
         },
@@ -51,7 +51,7 @@ const ProdutoCategoria = () => {
           id: "valvula-agulha",
           name: "Válvula Agulha",
           description: "Válvulas agulha para controle fino de pequenos fluxos",
-          image: "/api/placeholder/300/200",
+          image: "/imagens/valvulas-industriais/valvula_agulha.png",
           applications: ["Instrumentação", "Teste", "Amostragem"],
           materials: ["Aço Inox", "Monel", "Hasteloy"]
         },
@@ -59,7 +59,7 @@ const ProdutoCategoria = () => {
           id: "valvula-retencao",
           name: "Válvula Retenção",
           description: "Válvulas de retenção para prevenção de fluxo reverso",
-          image: "/api/placeholder/300/200",
+          image: "/imagens/valvulas-industriais/valvula_retencao.png",
           applications: ["Bombeamento", "Compressores", "Sistemas"],
           materials: ["Ferro Fundido", "Aço Carbono", "Aço Inox"]
         }
@@ -117,8 +117,12 @@ const ProdutoCategoria = () => {
                   onClick={() => handleProductClick(product.id)}
                 >
                   <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
-                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                      <span className="text-primary font-semibold">Imagem do Produto</span>
+                    <div className="w-full h-full flex items-center justify-center bg-white rounded-md">
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="max-w-full max-h-full object-contain p-2"
+                      />
                     </div>
                   </div>
                   

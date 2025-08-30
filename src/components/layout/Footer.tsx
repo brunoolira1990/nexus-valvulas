@@ -10,25 +10,31 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Company Info */}
           <div className="space-y-4">
-            <div className="text-2xl font-bold">NEXUS</div>
-            <p className="text-primary-foreground/80">
-              Válvulas e Conexões Industriais
-            </p>
+            <img 
+              src="/imagens/logo-nexus-letreiro-branco.png" 
+              alt="Nexus Logo"
+              className="h-10 w-auto" // altura maior, largura proporcional
+            />
             <div className="space-y-2">
               <div className="flex items-start space-x-2">
                 <MapPin className="h-5 w-5 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm">Rua Exemplo, 123</p>
-                  <p className="text-sm">São Paulo - SP, 01234-567</p>
+                  <p className="text-sm">R. Miguel Langone, 341</p>
+                  <p className="text-sm">Itaquera</p>
+                  <p className="text-sm">São Paulo - SP, 08215-330</p>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
                 <Phone className="h-5 w-5" />
-                <span className="text-sm">(11) 4240-6832</span>
+                <a href="tel:+551142408832" className="text-sm hover:underline-none">
+                  (11) 4240-8832
+                </a>
               </div>
               <div className="flex items-center space-x-2">
                 <Mail className="h-5 w-5" />
-                <span className="text-sm">nexus@nexusvalvulas.com.br</span>
+                <a href="mailto:nexus@nexusvalvulas.com.br" className="text-sm hover:underline-none">
+                  nexus@nexusvalvulas.com.br
+                </a>
               </div>
             </div>
           </div>

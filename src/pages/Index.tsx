@@ -1,57 +1,64 @@
+import { useMemo } from "react";
 import { Layout } from "@/components/layout/Layout";
+import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Factory, Wrench, Settings, Shield } from "lucide-react";
 
 const Index = () => {
-  const segments = [
+  const segments = useMemo(() => [
     {
       title: "Química",
       description: "Para o setor químico, a Nexus fornece válvulas, tubos e acessórios industriais que atendem às necessidades específicas de segurança e eficiência.",
-      image: "/api/placeholder/400/300"
+      image: "segmentos/quimicas.jpg"
     },
     {
       title: "Refinarias",
       description: "A Nexus garante a operação segura e eficiente das refinarias com suas válvulas, flanges e acessórios.",
-      image: "/api/placeholder/400/300"
+      image: "segmentos/refinarias.jpg"
     },
     {
       title: "Siderúrgicas",
       description: "As siderúrgicas contam com a Nexus para fornecer válvulas, chapas e acessórios industriais que suportam altas temperaturas.",
-      image: "/api/placeholder/400/300"
+      image: "segmentos/siderurgicas.jpg"
     },
     {
       title: "Usinas",
       description: "A Nexus oferece válvulas, tubos e acessórios industriais que atendem às exigências específicas de usinas de energia.",
-      image: "/api/placeholder/400/300"
+      image: "segmentos/usinas.jpg"
     },
     {
       title: "Metalúrgicas",
       description: "A Nexus é uma das principais fornecedoras de válvulas, conexões e acessórios industriais para o setor metalúrgico.",
-      image: "/api/placeholder/400/300"
+      image: "segmentos/metalurgica.jpg"
     },
     {
       title: "Petroquímicas",
       description: "Soluções especializadas para o setor petroquímico com produtos de alta resistência e durabilidade.",
-      image: "/api/placeholder/400/300"
+      image: "segmentos/petroquimica.jpg"
     }
-  ];
+  ], []);
 
-  const partners = [
-    { name: "MIC", logo: "/api/placeholder/150/60" },
-    { name: "Mercado Livre", logo: "/api/placeholder/150/60" },
-    { name: "Comlink", logo: "/api/placeholder/150/60" }
-  ];
+  const partners = useMemo(() => [
+  { name: "CRC", logo: "/partners/crc.png" },
+  { name: "Comlink", logo: "/partners/comlink.png" },
+  { name: "Mercado Eletrônico", logo: "/partners/me.png" }
+], []);
 
   return (
     <Layout>
+      <SEO
+        title="Nexus Válvulas E Conexões Industriais"
+        description="Com mais de 20 anos de experiência no mercado, a Nexus é uma das principais fornecedoras de válvulas e conexões industriais no Brasil. Atendemos química, refinarias, siderúrgicas, usinas, metalúrgicas e petroquímicas."
+        keywords="válvulas industriais, conexões industriais, válvulas química, válvulas refinaria, válvulas siderúrgica, válvulas usina, válvulas metalúrgica, válvulas petroquímica, nexus, brasil"
+      />
       {/* Hero Section */}
       <section className="relative min-h-[80vh] flex items-center justify-center bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
         <div 
           className="absolute inset-0 bg-cover bg-center opacity-20"
           style={{
-            backgroundImage: "url('/api/placeholder/1920/1080')"
+            backgroundImage: "url('/src/assets/hero-industrial.jpg')"
           }}
         />
         <div className="relative z-10 container mx-auto px-4 text-center">
@@ -70,15 +77,17 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Partners/Certifications */}
+      {/* Partners/Certifications */}      
       <section className="py-8 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="flex justify-center items-center space-x-8 md:space-x-16">
             {partners.map((partner, index) => (
               <div key={index} className="flex items-center">
-                <Badge variant="outline" className="p-3">
-                  {partner.name}
-                </Badge>
+                <img 
+                  src={partner.logo}   // caminho da imagem
+                  alt={partner.name}   // nome para acessibilidade
+                  className="h-12 object-contain"  // ajusta altura e mantém proporção
+                />
               </div>
             ))}
           </div>
@@ -99,10 +108,18 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {segments.map((segment, index) => (
               <Card key={index} className="group hover:shadow-lg transition-all duration-300 cursor-pointer">
-                <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
-                  <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                    <Factory className="h-16 w-16 text-primary" />
-                  </div>
+                <div className="aspect-video rounded-t-lg overflow-hidden">
+                  {segment.image ? (
+                    <img
+                      src={segment.image}        // caminho da imagem
+                      alt={segment.title}
+                      className="w-full h-full object-cover" // cobre todo o card mantendo proporção
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                      <Factory className="h-16 w-16 text-primary" />
+                    </div>
+                  )}
                 </div>
                 <CardHeader>
                   <CardTitle className="group-hover:text-accent transition-colors">

@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { NavLink } from "react-router-dom";
 import { Menu, X, Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export const Header = () => {
+export const Header = memo(() => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = [
@@ -20,24 +20,29 @@ export const Header = () => {
         <div className="container mx-auto flex justify-end items-center space-x-6 text-sm">
           <div className="flex items-center space-x-2">
             <Mail className="h-4 w-4" />
-            <span>nexus@nexusvalvulas.com.br</span>
+            <a href="mailto:nexus@nexusvalvulas.com.br" className="no-underline hover:no-underline">
+              nexus@nexusvalvulas.com.br
+            </a>
           </div>
           <div className="flex items-center space-x-2">
-            <Phone className="h-4 w-4" />
-            <span>(11) 4240-6832</span>
+            <Phone className="h-4 w-4" />            
+            <a href="tel:+551142408832" className="hover:underline-none">
+              (11) 4240-8832
+            </a>
           </div>
         </div>
       </div>
 
       {/* Main navigation */}
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-22">
           {/* Logo */}
           <NavLink to="/" className="flex items-center space-x-2">
-            <div className="text-2xl font-bold text-primary">NEXUS</div>
-            <div className="text-sm text-muted-foreground">
-              Válvulas e Conexões Industriais
-            </div>
+            <img 
+              src="/imagens/logo-nexus.png" 
+              alt="Nexus Logo" 
+              className="h-20 md:h-24 lg:h-28 w-auto" // altura maior em telas maiores, largura proporcional
+            />
           </NavLink>
 
           {/* Desktop Navigation */}
@@ -92,4 +97,4 @@ export const Header = () => {
       </div>
     </header>
   );
-};
+});
