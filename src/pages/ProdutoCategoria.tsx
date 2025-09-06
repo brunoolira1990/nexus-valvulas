@@ -65,6 +65,76 @@ const ProdutoCategoria = () => {
         }
       ]
     },
+    "flanges": {
+      title: "Flanges",
+      description: "Nossa linha completa de flanges industriais oferece soluções confiáveis para conexões de tubulações em aplicações industriais críticas, atendendo às principais normas técnicas.",
+      products: [
+        {
+          id: "flange-com-pescoco",
+          name: "Flange com Pescoço",
+          description: "Flange projetado para transferir tensão para a tubulação, ideal para aplicações de alta pressão",
+          image: "/imagens/flanges/flange_pescoco.png",
+          applications: ["Petróleo e Gás", "Refinarias", "Petroquímicas"],
+          materials: ["Aço Carbono", "Aço Inox", "Aço Liga"]
+        },
+        {
+          id: "flange-roscado",
+          name: "Flange Roscado", 
+          description: "Flange de fácil montagem com rosca interna, ideal para aplicações de baixa pressão",
+          image: "/imagens/flanges/flange_roscado.png",
+          applications: ["Saneamento", "Água Industrial", "HVAC"],
+          materials: ["Aço Carbono", "Aço Inox", "Ferro Fundido"]
+        },
+        {
+          id: "flange-soquete",
+          name: "Flange Soquete",
+          description: "Flange soldado por encaixe, utilizado em quaisquer condições de pressão e temperatura",
+          image: "/imagens/flanges/flange_soquete.png",
+          applications: ["Química", "Petroquímica", "Alimentícia"],
+          materials: ["Aço Inox", "Aço Carbono", "Aço Liga"]
+        },
+        {
+          id: "flange-cego",
+          name: "Flange Cego",
+          description: "Flange sem furo central, usado para vedação de extremidades de tubulações",
+          image: "/imagens/flanges/flange_cego.png",
+          applications: ["Bloqueio", "Manutenção", "Teste"],
+          materials: ["Aço Carbono", "Aço Inox", "Ferro Fundido"]
+        },
+        {
+          id: "flange-lap-joint",
+          name: "Flange Lap-Joint",
+          description: "Flange solto utilizado com stub-end, permite rotação durante a montagem",
+          image: "/imagens/flanges/flange_lap_joint.png",
+          applications: ["Sistemas Móveis", "Alinhamento", "Manutenção"],
+          materials: ["Aço Carbono", "Aço Inox", "Aço Liga"]
+        },
+        {
+          id: "flange-sobreposto",
+          name: "Flange Sobreposto",
+          description: "Flange que desliza sobre a tubulação, soldado por solda de filete",
+          image: "/imagens/flanges/flange_sobreposto.png",
+          applications: ["Baixa Pressão", "Sistemas Temporários", "Reparos"],
+          materials: ["Aço Carbono", "Aço Inox", "Ferro Fundido"]
+        },
+        {
+          id: "flange-orificio",
+          name: "Flange Orifício",
+          description: "Flange com orifício calibrado para medição de vazão, mais utilizado pela indústria",
+          image: "/imagens/flanges/flange_orificio.png",
+          applications: ["Medição", "Instrumentação", "Controle"],
+          materials: ["Aço Inox", "Aço Carbono", "Aço Liga"]
+        },
+        {
+          id: "raquete-figura-8",
+          name: "Raquete/Figura 8",
+          description: "Flanges empregadas junto às válvulas de bloqueio para isolamento seguro",
+          image: "/imagens/flanges/raquete_figura8.png",
+          applications: ["Bloqueio", "Isolamento", "Segurança"],
+          materials: ["Aço Carbono", "Aço Inox", "Aço Liga"]
+        }
+      ]
+    },
     // Adicionar outros dados de categoria aqui...
   };
 
