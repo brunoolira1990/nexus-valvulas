@@ -917,6 +917,33 @@ const ProdutoDetalhes = () => {
             { size: "20\"", drawing_url: "/imagens/flanges/pescoco/150lb_20.jpg" },
             { size: "24\"", drawing_url: "/imagens/flanges/pescoco/150lb_24.jpg" }
           ]
+        },
+        {
+          id: "flange-pescoco-300",
+          name: "Flange com Pescoço – 300 Libras",
+          description: "Flange com pescoço padrão ASME 300 libras para aplicações de média pressão",
+          specifications: [
+            { size: "1/2\"", drawing_url: "/imagens/flanges/pescoco/300lb_12.jpg" },
+            { size: "3/4\"", drawing_url: "/imagens/flanges/pescoco/300lb_34.jpg" },
+            { size: "1\"", drawing_url: "/imagens/flanges/pescoco/300lb_1.jpg" },
+            { size: "1.1/4\"", drawing_url: "/imagens/flanges/pescoco/300lb_114.jpg" },
+            { size: "1.1/2\"", drawing_url: "/imagens/flanges/pescoco/300lb_112.jpg" },
+            { size: "2\"", drawing_url: "/imagens/flanges/pescoco/300lb_2.jpg" },
+            { size: "2.1/2\"", drawing_url: "/imagens/flanges/pescoco/300lb_212.jpg" },
+            { size: "3\"", drawing_url: "/imagens/flanges/pescoco/300lb_3.jpg" },
+            { size: "3.1/2\"", drawing_url: "/imagens/flanges/pescoco/300lb_312.jpg" },
+            { size: "4\"", drawing_url: "/imagens/flanges/pescoco/300lb_4.jpg" },
+            { size: "5\"", drawing_url: "/imagens/flanges/pescoco/300lb_5.jpg" },
+            { size: "6\"", drawing_url: "/imagens/flanges/pescoco/300lb_6.jpg" },
+            { size: "8\"", drawing_url: "/imagens/flanges/pescoco/300lb_8.jpg" },
+            { size: "10\"", drawing_url: "/imagens/flanges/pescoco/300lb_10.jpg" },
+            { size: "12\"", drawing_url: "/imagens/flanges/pescoco/300lb_12_grande.jpg" },
+            { size: "14\"", drawing_url: "/imagens/flanges/pescoco/300lb_14.jpg" },
+            { size: "16\"", drawing_url: "/imagens/flanges/pescoco/300lb_16.jpg" },
+            { size: "18\"", drawing_url: "/imagens/flanges/pescoco/300lb_18.jpg" },
+            { size: "20\"", drawing_url: "/imagens/flanges/pescoco/300lb_20.jpg" },
+            { size: "24\"", drawing_url: "/imagens/flanges/pescoco/300lb_24.jpg" }
+          ]
         }
       ]
     }
