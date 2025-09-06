@@ -870,6 +870,55 @@ const ProdutoDetalhes = () => {
           
         }
       ]
+    },
+    "flange-com-pescoco": {
+      name: "Flange com Pescoço",
+      category: "Flanges",
+      image: "/imagens/flanges/flange_pescoco.png",
+      description: "Flanges com pescoço de alta qualidade para aplicações industriais. Disponível em diferentes classes de pressão e materiais, garantindo vedação perfeita e durabilidade.",
+      features: [
+        "Material de alta qualidade",
+        "Conformidade com normas ASME e DIN",
+        "Vedação perfeita",
+        "Resistente à corrosão",
+        "Facilidade de instalação"
+      ],
+      applications: [
+        "Petróleo e Gás",
+        "Refinarias", 
+        "Petroquímicas",
+        "Saneamento",
+        "Água Industrial"
+      ],
+      models: [
+        {
+          id: "flange-pescoco-150",
+          name: "Flange com Pescoço – 150 Libras",
+          description: "Flange com pescoço padrão ASME 150 libras para aplicações de baixa pressão",
+          specifications: [
+            { size: "1/2\"", drawing_url: "/imagens/flanges/pescoco/150lb_12.jpg" },
+            { size: "3/4\"", drawing_url: "/imagens/flanges/pescoco/150lb_34.jpg" },
+            { size: "1\"", drawing_url: "/imagens/flanges/pescoco/150lb_1.jpg" },
+            { size: "1.1/4\"", drawing_url: "/imagens/flanges/pescoco/150lb_114.jpg" },
+            { size: "1.1/2\"", drawing_url: "/imagens/flanges/pescoco/150lb_112.jpg" },
+            { size: "2\"", drawing_url: "/imagens/flanges/pescoco/150lb_2.jpg" },
+            { size: "2.1/2\"", drawing_url: "/imagens/flanges/pescoco/150lb_212.jpg" },
+            { size: "3\"", drawing_url: "/imagens/flanges/pescoco/150lb_3.jpg" },
+            { size: "3.1/2\"", drawing_url: "/imagens/flanges/pescoco/150lb_312.jpg" },
+            { size: "4\"", drawing_url: "/imagens/flanges/pescoco/150lb_4.jpg" },
+            { size: "5\"", drawing_url: "/imagens/flanges/pescoco/150lb_5.jpg" },
+            { size: "6\"", drawing_url: "/imagens/flanges/pescoco/150lb_6.jpg" },
+            { size: "8\"", drawing_url: "/imagens/flanges/pescoco/150lb_8.jpg" },
+            { size: "10\"", drawing_url: "/imagens/flanges/pescoco/150lb_10.jpg" },
+            { size: "12\"", drawing_url: "/imagens/flanges/pescoco/150lb_12_grande.jpg" },
+            { size: "14\"", drawing_url: "/imagens/flanges/pescoco/150lb_14.jpg" },
+            { size: "16\"", drawing_url: "/imagens/flanges/pescoco/150lb_16.jpg" },
+            { size: "18\"", drawing_url: "/imagens/flanges/pescoco/150lb_18.jpg" },
+            { size: "20\"", drawing_url: "/imagens/flanges/pescoco/150lb_20.jpg" },
+            { size: "24\"", drawing_url: "/imagens/flanges/pescoco/150lb_24.jpg" }
+          ]
+        }
+      ]
     }
   };
 
