@@ -1,351 +1,171 @@
-import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, Navigate, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
+import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Download, ShoppingCart, Calculator } from "lucide-react";
-
-interface ProductSpec {
-  size: string;
-  diameter_mm: number;
-  passage_mm: number;
-  weight_kg: number;
-  length_mm: number;
-  height_mm: number;
-  drawing_url: string;
-}
-
-interface ProductModel {
-  id: string;
-  name: string;
-  description: string;
-  specifications: ProductSpec[];
-}
+import { ArrowLeft, Download, Image as ImageIcon } from "lucide-react";
+import { useProduct } from "@/hooks/useSupabaseData";
+import { PageLoader } from "@/components/PageLoader";
+import { useState } from "react";
 
 const ProdutoDetalhes = () => {
-  const { categoria, produto } = useParams();
-  const navigate = useNavigate();
-  const [selectedModel, setSelectedModel] = useState<string>("");
-  const [selectedSize, setSelectedSize] = useState<string>("");
+  const { categoria, produto } = useParams<{ categoria: string; produto: string }>();
+  const { product, variants, loading, error } = useProduct(produto || '');
+  const [selectedImage, setSelectedImage] = useState(0);
 
-  // Mock data - seria carregado de uma API
-  const productData: Record<string, any> = {
-    "valvula-esfera": {
-      name: "Válvula Esfera",
-      category: "Válvulas Industriais",
-      image: "/imagens/valvulas-industriais/valvula_esfera.png",
-      description: "Válvulas esfera de alta performance para aplicações industriais exigentes. Disponível em configurações bipartidas e tripartidas, com diferentes classes de pressão e materiais.",
-      features: [
-        "Operação 1/4 de volta",
-        "Vedação metal-metal ou soft seat",
-        "Baixo torque de operação",
-        "Manutenção facilitada",
-        "Conformidade com normas API e ASME"
-      ],
-      applications: [
-        "Petróleo e Gás",
-        "Refinarias",
-        "Petroquímicas",
-        "Saneamento",
-        "Água Industrial"
-      ],
-      models: [
-        {
-          id: "tripartida-300-pr",
-          name: "Válvula Esfera Tripartida 300# Passagem Reduzida",
-          specifications: [
-            { size: '1/2"', drawing_url: "/imagens/valvulas-industriais/esfera/tripartida300pr12.jpg" },
-            { size: '3/4"', drawing_url: "/imagens/valvulas-industriais/esfera/tripartida300pr34.jpg" },
-            { size: '1"', drawing_url: "/imagens/valvulas-industriais/esfera/tripartida300pr1.jpg" },
-            { size: '1.1/4"', drawing_url: "/imagens/valvulas-industriais/esfera/tripartida300pr114.jpg" },
-            { size: '1.1/2"', drawing_url: "/imagens/valvulas-industriais/esfera/tripartida300pr112.jpg" },
-            { size: '2"', drawing_url: "/imagens/valvulas-industriais/esfera/tripartida300pr2.jpg" },
-            { size: '2.1/2"', drawing_url: "/imagens/valvulas-industriais/esfera/tripartida300pr212.jpg" },
-            { size: '3"', drawing_url: "/imagens/valvulas-industriais/esfera/tripartida300pr3.jpg" }
-          ]
-        }
-      ]
-    },
-    "flange-com-pescoco": {
-      name: "Flange com Pescoço",
-      category: "Flanges",
-      image: "/imagens/flanges/flange_pescoco.png",
-      description: "Flanges com pescoço de alta qualidade para aplicações industriais. Disponível em diferentes classes de pressão e materiais, garantindo vedação perfeita e durabilidade.",
-      features: [
-        "Material de alta qualidade",
-        "Conformidade com normas ASME e DIN",
-        "Vedação perfeita",
-        "Resistente à corrosão",
-        "Facilidade de instalação"
-      ],
-      applications: [
-        "Petróleo e Gás",
-        "Refinarias", 
-        "Petroquímicas",
-        "Saneamento",
-        "Água Industrial"
-      ],
-      models: [
-        {
-          id: "flange-pescoco-150",
-          name: "Flange com Pescoço – 150 Libras",
-          description: "Flange com pescoço padrão ASME 150 libras para aplicações de baixa pressão",
-          specifications: [
-            { size: '1/2"', drawing_url: "/imagens/flanges/pescoco/150lb_12.jpg" },
-            { size: '3/4"', drawing_url: "/imagens/flanges/pescoco/150lb_34.jpg" },
-            { size: '1"', drawing_url: "/imagens/flanges/pescoco/150lb_1.jpg" },
-            { size: '1.1/4"', drawing_url: "/imagens/flanges/pescoco/150lb_114.jpg" },
-            { size: '1.1/2"', drawing_url: "/imagens/flanges/pescoco/150lb_112.jpg" },
-            { size: '2"', drawing_url: "/imagens/flanges/pescoco/150lb_2.jpg" },
-            { size: '2.1/2"', drawing_url: "/imagens/flanges/pescoco/150lb_212.jpg" },
-            { size: '3"', drawing_url: "/imagens/flanges/pescoco/150lb_3.jpg" },
-            { size: '3.1/2"', drawing_url: "/imagens/flanges/pescoco/150lb_312.jpg" },
-            { size: '4"', drawing_url: "/imagens/flanges/pescoco/150lb_4.jpg" },
-            { size: '5"', drawing_url: "/imagens/flanges/pescoco/150lb_5.jpg" },
-            { size: '6"', drawing_url: "/imagens/flanges/pescoco/150lb_6.jpg" },
-            { size: '8"', drawing_url: "/imagens/flanges/pescoco/150lb_8.jpg" },
-            { size: '10"', drawing_url: "/imagens/flanges/pescoco/150lb_10.jpg" },
-            { size: '12"', drawing_url: "/imagens/flanges/pescoco/150lb_12_grande.jpg" },
-            { size: '14"', drawing_url: "/imagens/flanges/pescoco/150lb_14.jpg" },
-            { size: '16"', drawing_url: "/imagens/flanges/pescoco/150lb_16.jpg" },
-            { size: '18"', drawing_url: "/imagens/flanges/pescoco/150lb_18.jpg" },
-            { size: '20"', drawing_url: "/imagens/flanges/pescoco/150lb_20.jpg" },
-            { size: '24"', drawing_url: "/imagens/flanges/pescoco/150lb_24.jpg" }
-          ]
-        },
-        {
-          id: "flange-pescoco-300",
-          name: "Flange com Pescoço – 300 Libras",
-          description: "Flange com pescoço padrão ASME 300 libras para aplicações de média pressão",
-          specifications: [
-            { size: '1/2"', drawing_url: "/imagens/flanges/pescoco/300lb_12.jpg" },
-            { size: '3/4"', drawing_url: "/imagens/flanges/pescoco/300lb_34.jpg" },
-            { size: '1"', drawing_url: "/imagens/flanges/pescoco/300lb_1.jpg" },
-            { size: '1.1/4"', drawing_url: "/imagens/flanges/pescoco/300lb_114.jpg" },
-            { size: '1.1/2"', drawing_url: "/imagens/flanges/pescoco/300lb_112.jpg" },
-            { size: '2"', drawing_url: "/imagens/flanges/pescoco/300lb_2.jpg" },
-            { size: '2.1/2"', drawing_url: "/imagens/flanges/pescoco/300lb_212.jpg" },
-            { size: '3"', drawing_url: "/imagens/flanges/pescoco/300lb_3.jpg" },
-            { size: '3.1/2"', drawing_url: "/imagens/flanges/pescoco/300lb_312.jpg" },
-            { size: '4"', drawing_url: "/imagens/flanges/pescoco/300lb_4.jpg" },
-            { size: '5"', drawing_url: "/imagens/flanges/pescoco/300lb_5.jpg" },
-            { size: '6"', drawing_url: "/imagens/flanges/pescoco/300lb_6.jpg" },
-            { size: '8"', drawing_url: "/imagens/flanges/pescoco/300lb_8.jpg" },
-            { size: '10"', drawing_url: "/imagens/flanges/pescoco/300lb_10.jpg" },
-            { size: '12"', drawing_url: "/imagens/flanges/pescoco/300lb_12_grande.jpg" },
-            { size: '14"', drawing_url: "/imagens/flanges/pescoco/300lb_14.jpg" },
-            { size: '16"', drawing_url: "/imagens/flanges/pescoco/300lb_16.jpg" },
-            { size: '18"', drawing_url: "/imagens/flanges/pescoco/300lb_18.jpg" },
-            { size: '20"', drawing_url: "/imagens/flanges/pescoco/300lb_20.jpg" },
-            { size: '24"', drawing_url: "/imagens/flanges/pescoco/300lb_24.jpg" }
-          ]
-        }
-      ]
-    }
-  };
+  if (loading) {
+    return <PageLoader />;
+  }
 
-  const currentProduct = productData[produto || ""] || {
-    name: "Produto não encontrado",
-    models: []
-  };
+  if (error || !product) {
+    return <Navigate to="/produtos" replace />;
+  }
 
-  const selectedModelData = currentProduct.models?.find((m: ProductModel) => m.id === selectedModel);
-  const selectedSpec = selectedModelData?.specifications.find((s: ProductSpec) => s.size === selectedSize);
-
-  const handleAddToQuote = () => {
-    // Aqui seria implementada a funcionalidade de adicionar ao orçamento
-    console.log("Adicionado ao orçamento:", {
-      product: currentProduct.name,
-      model: selectedModelData?.name,
-      size: selectedSize,
-      spec: selectedSpec
-    });
-  };
+  const images = product.images || [];
+  const pdfs = product.pdfs || [];
 
   return (
     <Layout>
-      {/* Header */}
-      <section className="bg-primary text-primary-foreground py-8">
+      <SEO
+        title={`${product.title} - Nexus Válvulas | Detalhes do Produto`}
+        description={product.description || `Especificações técnicas e detalhes do produto ${product.title}.`}
+        keywords={`${product.title}, válvulas industriais, especificações técnicas`}
+      />
+      
+      <section className="bg-muted/30 py-4">
         <div className="container mx-auto px-4">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate(`/produtos/${categoria}`)}
-            className="text-primary-foreground hover:text-accent hover:bg-primary-foreground/10 mb-4"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar para {categoria?.replace('-', ' ')}
-          </Button>
-          
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-2">
-                {currentProduct.name}
-              </h1>
-              <p className="text-primary-foreground/80">
-                {currentProduct.category}
-              </p>
-            </div>
+          <div className="flex items-center space-x-2 text-sm">
+            <Link to="/produtos" className="text-accent hover:underline">Produtos</Link>
+            <span className="text-muted-foreground">/</span>
+            <Link to={`/produtos/${categoria}`} className="text-accent hover:underline">
+              {product.category?.name}
+            </Link>
+            <span className="text-muted-foreground">/</span>
+            <span className="text-foreground">{product.title}</span>
           </div>
         </div>
       </section>
 
-      {/* Main Content */}
-      <section className="py-8">
+      <section className="py-16">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left Column - Product Info */}
-            <div className="space-y-6">
-              {/* Product Images */}
-              <Card>
-                <CardContent className="p-6">
-                  <div className="aspect-square bg-muted rounded-lg flex items-center justify-center mb-4 overflow-hidden">
-                    <img
-                      src={currentProduct.image}
-                      alt={currentProduct.name}
-                      className="w-full h-full object-contain"
-                    />
-                  </div>                 
-                </CardContent>
-              </Card>
+          <div className="flex items-center mb-6">
+            <Button variant="ghost" size="sm" asChild>
+              <Link to={`/produtos/${categoria}`}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Voltar à Categoria
+              </Link>
+            </Button>
+          </div>
 
-              {/* Product Description */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Descrição</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground mb-4">
-                    {currentProduct.description}
-                  </p>
-                  
-                  {currentProduct.features && (
-                    <div className="space-y-3">
-                      <h4 className="font-semibold">Características:</h4>
-                      <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                        {currentProduct.features.map((feature: string, index: number) => (
-                          <li key={index}>{feature}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Applications */}
-              {currentProduct.applications && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Aplicações</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      {currentProduct.applications.map((app: string, index: number) => (
-                        <Badge key={index} variant="outline">
-                          {app}
-                        </Badge>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <div className="space-y-4">
+              {images.length > 0 ? (
+                <>
+                  <div className="aspect-square rounded-lg overflow-hidden border">
+                    <img src={images[selectedImage]} alt={product.title} className="w-full h-full object-cover" />
+                  </div>
+                  {images.length > 1 && (
+                    <div className="grid grid-cols-4 gap-2">
+                      {images.map((image, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setSelectedImage(index)}
+                          className={`aspect-square rounded border overflow-hidden ${selectedImage === index ? 'ring-2 ring-accent' : ''}`}
+                        >
+                          <img src={image} alt={`${product.title} - Imagem ${index + 1}`} className="w-full h-full object-cover" />
+                        </button>
                       ))}
                     </div>
-                  </CardContent>
-                </Card>
+                  )}
+                </>
+              ) : (
+                <div className="aspect-square rounded-lg border bg-muted flex items-center justify-center">
+                  <ImageIcon className="h-24 w-24 text-muted-foreground" />
+                </div>
               )}
             </div>
 
-            {/* Right Column - Specifications */}
             <div className="space-y-6">
-              {/* Model Selection */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Especificações Técnicas</CardTitle>
-                  <CardDescription>
-                    Selecione o modelo e tamanho para ver as especificações detalhadas
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Model Selector */}
+              <div>
+                <h1 className="text-4xl font-bold mb-4">{product.title}</h1>
+                <Badge variant="secondary" className="mb-4">{product.category?.name}</Badge>
+                {product.description && (
+                  <p className="text-lg text-muted-foreground">{product.description}</p>
+                )}
+              </div>
+
+              {pdfs.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold">Downloads</h3>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Modelo:</label>
-                    <Select value={selectedModel} onValueChange={setSelectedModel}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um modelo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {currentProduct.models?.map((model: ProductModel) => (
-                          <SelectItem key={model.id} value={model.id}>
-                            {model.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {pdfs.map((pdf, index) => (
+                      <Button key={index} variant="outline" size="sm" asChild className="w-full justify-start">
+                        <a href={pdf} target="_blank" rel="noopener noreferrer">
+                          <Download className="h-4 w-4 mr-2" />
+                          Catálogo Técnico {index + 1}
+                        </a>
+                      </Button>
+                    ))}
                   </div>
-
-                  {/* Size Selector */}
-                  {selectedModelData && (
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Tamanho:</label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {selectedModelData.specifications.map((spec: ProductSpec) => (
-                          <Button
-                            key={spec.size}
-                            variant={selectedSize === spec.size ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setSelectedSize(spec.size)}
-                            className="text-xs"
-                          >
-                            {spec.size}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Technical Drawing and Specs */}
-              {selectedSpec && (
-                <Card>
-                  <CardHeader className="flex justify-center items-center">
-                    <CardTitle className="text-center">
-                      {selectedSpec.size}
-                    </CardTitle>
-                  </CardHeader>
-
-                  <CardContent className="space-y-4">
-                    <div className="aspect-square bg-muted rounded-lg flex items-center justify-center overflow-hidden">
-                      <img
-                        src={selectedSpec.drawing_url}
-                        alt={selectedSpec.size}
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-
-                    <Button variant="outline" size="sm" className="w-full">
-                      <Download className="mr-2 h-4 w-4" />
-                      Baixar Desenho (PDF)
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Add to Quote */}
-              {selectedSpec && (
-                <Card>
-                  <CardContent className="p-6">
-                    <Button 
-                      onClick={handleAddToQuote}
-                      className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
-                      size="lg"
-                    >
-                      <ShoppingCart className="mr-2 h-5 w-5" />
-                      Adicionar ao Orçamento
-                    </Button>
-                  </CardContent>
-                </Card>
+                </div>
               )}
             </div>
           </div>
+
+          {variants.length > 0 && (
+            <div className="mt-16">
+              <Tabs defaultValue="specifications" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="specifications">Especificações</TabsTrigger>
+                  <TabsTrigger value="variants">Variações</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="specifications" className="space-y-6">
+                  <div className="grid gap-6">
+                    {variants.map((variant) => (
+                      <Card key={variant.id}>
+                        <CardHeader>
+                          <CardTitle>{variant.type} {variant.size && `- ${variant.size}`}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {variant.specifications && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                              {Object.entries(variant.specifications).map(([key, value]) => (
+                                <div key={key} className="flex justify-between">
+                                  <span className="font-medium">{key}:</span>
+                                  <span>{String(value)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="variants" className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {variants.map((variant) => (
+                      <Card key={variant.id} className="text-center">
+                        <CardHeader>
+                          <CardTitle className="text-lg">{variant.type}</CardTitle>
+                          {variant.size && <CardDescription>Tamanho: {variant.size}</CardDescription>}
+                        </CardHeader>
+                        {variant.drawing_url && (
+                          <CardContent>
+                            <img src={variant.drawing_url} alt={`${variant.type} ${variant.size}`} className="w-full h-32 object-contain" />
+                          </CardContent>
+                        )}
+                      </Card>
+                    ))}
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          )}
         </div>
       </section>
     </Layout>

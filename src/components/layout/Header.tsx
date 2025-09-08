@@ -9,6 +9,7 @@ export const Header = memo(() => {
   const navItems = [
     { name: "Home", path: "/" },
     { name: "Produtos", path: "/produtos" },
+    { name: "Blog", path: "/blog" },
     { name: "Sobre Nós", path: "/sobre" },
     { name: "Contato", path: "/contato" },
   ];
