@@ -5,6 +5,7 @@ import { Package, FolderOpen, FileText, Settings } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 
 export default function AdminDashboard() {
+  console.log('AdminDashboard: Componente renderizando');
   return (
     <>
       <Helmet>

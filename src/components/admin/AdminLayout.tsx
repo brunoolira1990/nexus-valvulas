@@ -14,6 +14,8 @@ const navigation = [
 export function AdminLayout() {
   const { signOut } = useAuth();
   const location = useLocation();
+  
+  console.log('AdminLayout: Componente renderizando', { location: location.pathname });
 
   const handleSignOut = async () => {
     await signOut();

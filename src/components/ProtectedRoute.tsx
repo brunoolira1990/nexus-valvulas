@@ -12,6 +12,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireAdmin = false 
 }) => {
   const { user, loading, isAdmin } = useAuth();
+  
+  console.log('ProtectedRoute:', { user: !!user, loading, isAdmin, requireAdmin });
 
   if (loading) {
     return <PageLoader />;
