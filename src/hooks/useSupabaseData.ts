@@ -33,27 +33,29 @@ export function useCategories() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchCategories = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar categorias');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('categories')
-          .select('*')
-          .order('name');
-
-        if (error) throw error;
-        setCategories(data || []);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erro ao carregar categorias');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchCategories();
   }, []);
 
-  return { categories, loading, error, refetch: () => window.location.reload() };
+  return { categories, loading, error, refetch: fetchCategories };
 }
 
 export function useProducts(categorySlug?: string) {
@@ -61,36 +63,38 @@ export function useProducts(categorySlug?: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        let query = supabase
-          .from('products')
-          .select(`
-            *,
-            category:categories(*)
-          `)
-          .order('title');
+  const fetchProducts = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      let query = supabase
+        .from('products')
+        .select(`
+          *,
+          category:categories(*)
+        `)
+        .order('title');
 
-        if (categorySlug) {
-          query = query.eq('categories.slug', categorySlug);
-        }
-
-        const { data, error } = await query;
-
-        if (error) throw error;
-        setProducts(data || []);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erro ao carregar produtos');
-      } finally {
-        setLoading(false);
+      if (categorySlug) {
+        query = query.eq('categories.slug', categorySlug);
       }
-    };
 
+      const { data, error } = await query;
+
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar produtos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchProducts();
   }, [categorySlug]);
 
-  return { products, loading, error, refetch: () => window.location.reload() };
+  return { products, loading, error, refetch: fetchProducts };
 }
 
 export function useProduct(productSlug: string) {
