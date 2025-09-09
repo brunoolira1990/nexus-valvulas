@@ -22,6 +22,9 @@ const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const Login = lazy(() => import("./pages/Login"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
+const AdminProducts = lazy(() => import("./pages/admin/AdminProducts"));
+const AdminBlog = lazy(() => import("./pages/admin/AdminBlog"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -54,6 +57,9 @@ const App = () => (
                     </ProtectedRoute>
                   }>
                     <Route index element={<AdminDashboard />} />
+                    <Route path="categories" element={<AdminCategories />} />
+                    <Route path="products" element={<AdminProducts />} />
+                    <Route path="blog" element={<AdminBlog />} />
                   </Route>
                   
                   <Route path="*" element={<NotFound />} />
