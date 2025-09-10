@@ -82,7 +82,59 @@ export function AdminLayout() {
           </header>
           
           <main className="p-6">
-            <Outlet />
+            {location.pathname === '/admin' ? (
+              <>
+                <div>
+                  <h1 className="text-3xl font-bold">Painel Administrativo</h1>
+                  <p className="text-muted-foreground">
+                    Gerencie produtos, categorias e conteúdo do site
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                  <div className="bg-card rounded-lg border p-6">
+                    <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <h3 className="text-sm font-medium">Categorias</h3>
+                      <FolderOpen className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-4">
+                      Gerencie as categorias de produtos
+                    </p>
+                    <Button asChild className="w-full">
+                      <Link to="/admin/categories">Gerenciar Categorias</Link>
+                    </Button>
+                  </div>
+
+                  <div className="bg-card rounded-lg border p-6">
+                    <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <h3 className="text-sm font-medium">Produtos</h3>
+                      <Package className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-4">
+                      Cadastre e edite produtos do catálogo
+                    </p>
+                    <Button asChild className="w-full">
+                      <Link to="/admin/products">Gerenciar Produtos</Link>
+                    </Button>
+                  </div>
+
+                  <div className="bg-card rounded-lg border p-6">
+                    <div className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <h3 className="text-sm font-medium">Blog</h3>
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-4">
+                      Publique e gerencie posts do blog
+                    </p>
+                    <Button asChild className="w-full">
+                      <Link to="/admin/blog">Gerenciar Blog</Link>
+                    </Button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <Outlet />
+            )}
           </main>
         </div>
       </div>
