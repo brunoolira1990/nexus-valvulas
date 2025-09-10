@@ -33,22 +33,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('profiles')
         .select('role')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
       
       setIsAdmin(profile?.role === 'admin');
     } catch (error) {
+      console.error('Error checking admin status:', error);
       setIsAdmin(false);
     }
   };
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          await checkAdminStatus(session.user.id);
+          // Use setTimeout to prevent blocking the auth state change
+          setTimeout(() => {
+            checkAdminStatus(session.user.id);
+          }, 0);
         } else {
           setIsAdmin(false);
         }
@@ -57,15 +61,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
+    // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
         checkAdminStatus(session.user.id);
+      } else {
+        setLoading(false);
       }
-      
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
