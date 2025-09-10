@@ -21,6 +21,7 @@ const Contato = lazy(() => import("./pages/Contato"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const Login = lazy(() => import("./pages/Login"));
+const Debug = lazy(() => import("./pages/Debug"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
 const AdminProducts = lazy(() => import("./pages/admin/AdminProducts"));
@@ -49,6 +50,7 @@ const App = () => (
                   <Route path="/blog" element={<Blog />} />
                   <Route path="/blog/:slug" element={<BlogPost />} />
                   <Route path="/login" element={<Login />} />
+                  <Route path="/debug" element={<Debug />} />
                   
                   {/* Admin Routes */}
                   <Route path="/admin/*" element={
