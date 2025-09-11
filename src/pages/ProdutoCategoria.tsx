@@ -90,7 +90,7 @@ const ProdutoCategoria = () => {
                   <div className="aspect-video rounded-t-lg overflow-hidden">
                     {produto.images && produto.images.length > 0 ? (
                       <img
-                        src={produto.images[0]}
+                        src={produto.images[0].url}
                         alt={produto.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />

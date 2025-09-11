@@ -23,8 +23,8 @@ const ProdutoDetalhes = () => {
     return <Navigate to="/produtos" replace />;
   }
 
-  const images = product.images || [];
-  const pdfs = product.pdfs || [];
+  const images = (product.images || []).map(img => img.url);
+  const pdfs = (product.pdfs || []).map(pdf => pdf.url);
 
   return (
     <Layout>

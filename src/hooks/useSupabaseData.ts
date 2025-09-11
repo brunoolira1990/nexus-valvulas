@@ -24,6 +24,7 @@ export interface Variant {
   product_id: string;
   type: string;
   size: string;
+  specifications?: any;
   drawing_url?: string | null;
 }
 
