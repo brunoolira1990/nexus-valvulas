@@ -53,31 +53,16 @@ const App = () => (
                   <Route path="/debug" element={<Debug />} />
                   
                   {/* Admin Routes */}
-                  <Route path="/admin/*" element={
+                  <Route path="/admin" element={
                     <ProtectedRoute requireAdmin>
                       <AdminLayout />
                     </ProtectedRoute>
-                  } />
-                  <Route path="/admin" element={
-                    <ProtectedRoute requireAdmin>
-                      <AdminDashboard />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/admin/categories" element={
-                    <ProtectedRoute requireAdmin>
-                      <AdminCategories />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/admin/products" element={
-                    <ProtectedRoute requireAdmin>
-                      <AdminProducts />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/admin/blog" element={
-                    <ProtectedRoute requireAdmin>
-                      <AdminBlog />
-                    </ProtectedRoute>
-                  } />
+                  }>
+                    <Route index element={<AdminDashboard />} />
+                    <Route path="categories" element={<AdminCategories />} />
+                    <Route path="products" element={<AdminProducts />} />
+                    <Route path="blog" element={<AdminBlog />} />
+                  </Route>
                   
                   <Route path="*" element={<NotFound />} />
                 </Routes>

@@ -28,37 +28,112 @@ export default function AdminProducts() {
     images: '',
     pdfs: ''
   });
+  const [imageFiles, setImageFiles] = useState<FileList | null>(null);
+  const [pdfFiles, setPdfFiles] = useState<FileList | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [variants, setVariants] = useState<any[]>([]);
+  const [variantSubmitting, setVariantSubmitting] = useState(false);
+  const [newVariant, setNewVariant] = useState<{ type: string; size: string; drawingFile: File | null }>({
+    type: '',
+    size: '',
+    drawingFile: null
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      const productData = {
-        ...formData,
-        images: formData.images ? formData.images.split(',').map(url => url.trim()).filter(Boolean) : [],
-        pdfs: formData.pdfs ? formData.pdfs.split(',').map(url => url.trim()).filter(Boolean) : []
+      setSubmitting(true);
+      const uploadedImageUrls: string[] = [];
+      const uploadedPdfUrls: string[] = [];
+
+      // Upload de imagens (se houver)
+      if (imageFiles && imageFiles.length > 0) {
+        for (const file of Array.from(imageFiles)) {
+          const filePath = `${formData.slug}/${Date.now()}-${file.name}`;
+          const { error: uploadError } = await supabase.storage
+            .from('products')
+            .upload(filePath, file, { upsert: false });
+          if (uploadError) throw uploadError;
+          const { data } = supabase.storage.from('products').getPublicUrl(filePath);
+          uploadedImageUrls.push(data.publicUrl);
+        }
+      }
+
+      // Upload de PDFs (se houver)
+      if (pdfFiles && pdfFiles.length > 0) {
+        for (const file of Array.from(pdfFiles)) {
+          const filePath = `${formData.slug}/pdfs/${Date.now()}-${file.name}`;
+          const { error: uploadError } = await supabase.storage
+            .from('products')
+            .upload(filePath, file, { upsert: false });
+          if (uploadError) throw uploadError;
+          const { data } = supabase.storage.from('products').getPublicUrl(filePath);
+          uploadedPdfUrls.push(data.publicUrl);
+        }
+      }
+
+      const imageUrls = [
+        ...uploadedImageUrls,
+        ...(formData.images ? formData.images.split(',').map(url => url.trim()).filter(Boolean) : [])
+      ];
+      const pdfUrls = [
+        ...uploadedPdfUrls,
+        ...(formData.pdfs ? formData.pdfs.split(',').map(url => url.trim()).filter(Boolean) : [])
+      ];
+
+      const coreProduct = {
+        title: formData.title,
+        slug: formData.slug,
+        description: formData.description,
+        category_id: formData.category_id,
       };
+
+      let productId = editingProduct?.id as string | undefined;
 
       if (editingProduct) {
         const { error } = await supabase
           .from('products')
-          .update(productData)
+          .update(coreProduct)
           .eq('id', editingProduct.id);
-        
         if (error) throw error;
+
+        // Substitui imagens/pdfs
+        await supabase.from('product_images').delete().eq('product_id', editingProduct.id);
+        await supabase.from('product_pdfs').delete().eq('product_id', editingProduct.id);
+        productId = editingProduct.id;
         toast({ title: 'Produto atualizado com sucesso!' });
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('products')
-          .insert(productData);
-        
+          .insert(coreProduct)
+          .select('id')
+          .single();
         if (error) throw error;
+        productId = data.id as string;
         toast({ title: 'Produto criado com sucesso!' });
       }
-      
+
+      // Insere imagens/pdfs normalizados, mantendo ordem
+      if (productId) {
+        if (imageUrls.length > 0) {
+          const imagesRows = imageUrls.map((url, idx) => ({ product_id: productId, url, position: idx }));
+          const { error: imgErr } = await supabase.from('product_images').insert(imagesRows);
+          if (imgErr) throw imgErr;
+        }
+        if (pdfUrls.length > 0) {
+          const pdfRows = pdfUrls.map((url, idx) => ({ product_id: productId, url, position: idx }));
+          const { error: pdfErr } = await supabase.from('product_pdfs').insert(pdfRows);
+          if (pdfErr) throw pdfErr;
+        }
+      }
+
       setDialogOpen(false);
       setEditingProduct(null);
       setFormData({ title: '', slug: '', description: '', category_id: '', images: '', pdfs: '' });
+      setImageFiles(null);
+      setPdfFiles(null);
+      setVariants([]);
       refetch();
     } catch (error: any) {
       toast({ 
@@ -66,6 +141,70 @@ export default function AdminProducts() {
         description: error.message,
         variant: 'destructive' 
       });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const loadVariants = async (productId: string) => {
+    const { data, error } = await supabase
+      .from('variants')
+      .select('*')
+      .eq('product_id', productId)
+      .order('type, size');
+    if (!error) setVariants(data || []);
+  };
+
+  const handleAddVariant = async () => {
+    if (!editingProduct) return;
+    if (!newVariant.type || !newVariant.size) {
+      toast({ title: 'Preencha tipo e tamanho', variant: 'destructive' });
+      return;
+    }
+    try {
+      setVariantSubmitting(true);
+      let drawingUrl: string | null = null;
+      if (newVariant.drawingFile) {
+        const file = newVariant.drawingFile;
+        const filePath = `${formData.slug}/variants/${Date.now()}-${file.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from('products')
+          .upload(filePath, file, { upsert: false });
+        if (uploadError) throw uploadError;
+        const { data } = supabase.storage.from('products').getPublicUrl(filePath);
+        drawingUrl = data.publicUrl;
+      }
+
+      const { error } = await supabase
+        .from('variants')
+        .insert({
+          product_id: editingProduct.id,
+          type: newVariant.type,
+          size: newVariant.size,
+          drawing_url: drawingUrl
+        });
+      if (error) throw error;
+      toast({ title: 'Variante adicionada com sucesso!' });
+      setNewVariant({ type: '', size: '', drawingFile: null });
+      await loadVariants(editingProduct.id);
+    } catch (error: any) {
+      toast({ title: 'Erro ao adicionar variante', description: error.message, variant: 'destructive' });
+    } finally {
+      setVariantSubmitting(false);
+    }
+  };
+
+  const handleDeleteVariant = async (variantId: string) => {
+    try {
+      const { error } = await supabase
+        .from('variants')
+        .delete()
+        .eq('id', variantId);
+      if (error) throw error;
+      toast({ title: 'Variante removida!' });
+      if (editingProduct) await loadVariants(editingProduct.id);
+    } catch (error: any) {
+      toast({ title: 'Erro ao remover variante', description: error.message, variant: 'destructive' });
     }
   };
 
@@ -79,6 +218,10 @@ export default function AdminProducts() {
       images: product.images ? product.images.join(', ') : '',
       pdfs: product.pdfs ? product.pdfs.join(', ') : ''
     });
+    setImageFiles(null);
+    setPdfFiles(null);
+    setNewVariant({ type: '', size: '', drawingFile: null });
+    loadVariants(product.id);
     setDialogOpen(true);
   };
 
@@ -137,12 +280,15 @@ export default function AdminProducts() {
               <Button onClick={() => {
                 setEditingProduct(null);
                 setFormData({ title: '', slug: '', description: '', category_id: '', images: '', pdfs: '' });
+                setImageFiles(null);
+                setPdfFiles(null);
+                setVariants([]);
               }}>
                 <Plus className="mr-2 h-4 w-4" />
                 Novo Produto
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl w-[95vw] max-h-[85vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
                   {editingProduct ? 'Editar Produto' : 'Novo Produto'}
@@ -198,6 +344,10 @@ export default function AdminProducts() {
                     onChange={(e) => setFormData(prev => ({ ...prev, images: e.target.value }))}
                     placeholder="https://exemplo.com/imagem1.jpg, https://exemplo.com/imagem2.jpg"
                   />
+                  <div className="mt-2">
+                    <Label htmlFor="imageFiles">ou envie imagens (múltiplas)</Label>
+                    <Input id="imageFiles" type="file" accept="image/*" multiple onChange={(e) => setImageFiles(e.target.files)} />
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="pdfs">PDFs (URLs separadas por vírgula)</Label>
@@ -207,15 +357,85 @@ export default function AdminProducts() {
                     onChange={(e) => setFormData(prev => ({ ...prev, pdfs: e.target.value }))}
                     placeholder="https://exemplo.com/manual1.pdf, https://exemplo.com/manual2.pdf"
                   />
+                  <div className="mt-2">
+                    <Label htmlFor="pdfFiles">ou envie PDFs (múltiplos)</Label>
+                    <Input id="pdfFiles" type="file" accept="application/pdf" multiple onChange={(e) => setPdfFiles(e.target.files)} />
+                  </div>
                 </div>
                 <div className="flex justify-end space-x-2">
                   <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                     Cancelar
                   </Button>
-                  <Button type="submit">
+                  <Button type="submit" disabled={submitting}>
                     {editingProduct ? 'Atualizar' : 'Criar'}
                   </Button>
                 </div>
+
+                {editingProduct ? (
+                  <div className="pt-6 border-t mt-6 space-y-4">
+                    <h3 className="text-lg font-semibold">Variantes</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <Label htmlFor="variantType">Tipo</Label>
+                        <Input id="variantType" value={newVariant.type} onChange={(e) => setNewVariant(prev => ({ ...prev, type: e.target.value }))} />
+                      </div>
+                      <div>
+                        <Label htmlFor="variantSize">Tamanho</Label>
+                        <Input id="variantSize" value={newVariant.size} onChange={(e) => setNewVariant(prev => ({ ...prev, size: e.target.value }))} />
+                      </div>
+                      <div>
+                        <Label htmlFor="variantDrawing">Desenho (imagem)</Label>
+                        <Input id="variantDrawing" type="file" accept="image/*" onChange={(e) => setNewVariant(prev => ({ ...prev, drawingFile: e.target.files?.[0] || null }))} />
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <Button type="button" onClick={handleAddVariant} disabled={variantSubmitting}>
+                        Adicionar Variante
+                      </Button>
+                    </div>
+
+                    <div>
+                      {variants.length === 0 ? (
+                        <div className="text-sm text-muted-foreground">Nenhuma variante cadastrada.</div>
+                      ) : (
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Tipo</TableHead>
+                              <TableHead>Tamanho</TableHead>
+                              <TableHead>Desenho</TableHead>
+                              <TableHead>Ações</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {variants.map((v) => (
+                              <TableRow key={v.id}>
+                                <TableCell>{v.type}</TableCell>
+                                <TableCell>{v.size}</TableCell>
+                                <TableCell>
+                                  {v.drawing_url ? (
+                                    <img src={v.drawing_url} alt={`${v.type} ${v.size}`} className="h-10 object-contain" />
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground">Sem desenho</span>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <Button variant="outline" size="sm" onClick={() => handleDeleteVariant(v.id)}>
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="pt-6 border-t mt-6 text-sm text-muted-foreground">
+                    Para adicionar variantes, crie o produto primeiro e depois edite-o.
+                  </div>
+                )}
               </form>
             </DialogContent>
           </Dialog>

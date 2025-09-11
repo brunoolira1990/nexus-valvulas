@@ -16,8 +16,6 @@ export function AdminLayout() {
   const { signOut } = useAuth();
   const location = useLocation();
   
-  console.log('AdminLayout: Componente renderizando', { location: location.pathname });
-
   const handleSignOut = async () => {
     await signOut();
   };
@@ -38,7 +36,7 @@ export function AdminLayout() {
             <div className="px-3">
               {navigation.map((item) => {
                 const Icon = item.icon;
-                const isActive = location.pathname === item.href;
+                const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + '/');
                 
                 return (
                   <Link
@@ -83,11 +81,7 @@ export function AdminLayout() {
           </header>
           
           <main className="p-6">
-            {location.pathname === '/admin' ? (
-              <Dashboard />
-            ) : (
-              <Outlet />
-            )}
+            <Outlet />
           </main>
         </div>
       </div>

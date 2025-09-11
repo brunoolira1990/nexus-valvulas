@@ -11,11 +11,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children, 
   requireAdmin = false 
 }) => {
-  const { user, loading, isAdmin } = useAuth();
+  const { user, loading, isAdmin, checkingAdmin } = useAuth();
   
-  console.log('ProtectedRoute:', { user: !!user, loading, isAdmin, requireAdmin });
-
-  if (loading) {
+  if (loading || (requireAdmin && checkingAdmin)) {
     return <PageLoader />;
   }
 

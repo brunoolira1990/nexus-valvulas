@@ -12,20 +12,19 @@ export interface Product {
   id: string;
   title: string;
   description: string | null;
-  images: string[] | null;
-  pdfs: string[] | null;
   category_id: string;
   slug: string;
   category?: Category;
+  images?: { url: string; position: number }[];
+  pdfs?: { url: string; position: number }[];
 }
 
 export interface Variant {
   id: string;
   product_id: string;
-  type: string | null;
-  size: string | null;
-  specifications: any;
-  drawing_url: string | null;
+  type: string;
+  size: string;
+  drawing_url?: string | null;
 }
 
 export function useCategories() {
@@ -71,7 +70,9 @@ export function useProducts(categorySlug?: string) {
         .from('products')
         .select(`
           *,
-          category:categories(*)
+          category:categories(*),
+          images:product_images(url, position),
+          pdfs:product_pdfs(url, position)
         `)
         .order('title');
 
@@ -82,7 +83,12 @@ export function useProducts(categorySlug?: string) {
       const { data, error } = await query;
 
       if (error) throw error;
-      setProducts(data || []);
+      const normalized = (data || []).map((p: any) => ({
+        ...p,
+        images: (p.images || []).sort((a: any, b: any) => a.position - b.position),
+        pdfs: (p.pdfs || []).sort((a: any, b: any) => a.position - b.position),
+      }));
+      setProducts(normalized);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar produtos');
     } finally {
@@ -110,7 +116,9 @@ export function useProduct(productSlug: string) {
           .from('products')
           .select(`
             *,
-            category:categories(*)
+            category:categories(*),
+            images:product_images(url, position),
+            pdfs:product_pdfs(url, position)
           `)
           .eq('slug', productSlug)
           .single();
@@ -118,15 +126,30 @@ export function useProduct(productSlug: string) {
         if (productError) throw productError;
 
         const { data: variantsData, error: variantsError } = await supabase
-          .from('variants')
-          .select('*')
+          .from('product_variants')
+          .select(`
+            *,
+            drawings:variant_drawings(url)
+          `)
           .eq('product_id', productData.id)
           .order('type, size');
 
         if (variantsError) throw variantsError;
 
-        setProduct(productData);
-        setVariants(variantsData || []);
+        const normalizedProduct = {
+          ...productData,
+          images: (productData.images || []).sort((a: any, b: any) => a.position - b.position),
+          pdfs: (productData.pdfs || []).sort((a: any, b: any) => a.position - b.position),
+        } as Product;
+        const normalizedVariants = (variantsData || []).map((v: any) => ({
+          id: v.id,
+          product_id: v.product_id,
+          type: v.type,
+          size: v.size,
+          drawing_url: v.drawings?.[0]?.url || null,
+        }));
+        setProduct(normalizedProduct);
+        setVariants(normalizedVariants);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erro ao carregar produto');
       } finally {
