@@ -44,6 +44,12 @@ const ProdutoDetalhes = () => {
       return num / den;
     };
     
+    // Primeiro tenta como número decimal simples (ex: "1.25", "0.5")
+    const simpleNum = parseFloat(cleaned);
+    if (!isNaN(simpleNum) && !cleaned.includes('/') && !cleaned.includes(' ')) {
+      return simpleNum;
+    }
+    
     // Verifica se tem espaço (número misto como "1 1/2")
     if (cleaned.includes(' ')) {
       const parts = cleaned.split(' ');
@@ -56,15 +62,11 @@ const ProdutoDetalhes = () => {
       }
     }
     
-    // Verifica se é uma fração (como "1/2")
-    if (cleaned.includes('/')) {
+    // Verifica se é uma fração pura (como "1/2")
+    if (cleaned.includes('/') && !cleaned.includes(' ')) {
       const fracNum = parseFraction(cleaned);
       if (!isNaN(fracNum)) return fracNum;
     }
-    
-    // Verifica se é um número simples
-    const num = parseFloat(cleaned);
-    if (!isNaN(num)) return num;
     
     // Se não conseguiu converter, retorna um valor alto para ir pro final
     return Number.MAX_VALUE;
