@@ -31,25 +31,43 @@ const ProdutoDetalhes = () => {
   // Helper para converter tamanhos em polegadas (ex: 1/2", 3/4", 1 1/2", 1") para número
   const parseInchesToNumber = (size: string): number => {
     if (!size) return Number.MAX_VALUE;
-    const cleaned = size.replace(/\"/g, '"').replace(/"/g, '').trim();
+    
+    // Remove aspas e limpa a string
+    const cleaned = size.replace(/["""'']/g, '').trim();
+    
     const parseFraction = (text: string): number => {
-      const [num, den] = text.split('/') as [string, string | undefined];
-      const n = parseFloat(num);
-      const d = den ? parseFloat(den) : 1;
-      if (!d || isNaN(n)) return NaN;
-      return n / d;
+      const parts = text.split('/');
+      if (parts.length !== 2) return NaN;
+      const num = parseFloat(parts[0]);
+      const den = parseFloat(parts[1]);
+      if (isNaN(num) || isNaN(den) || den === 0) return NaN;
+      return num / den;
     };
+    
+    // Verifica se tem espaço (número misto como "1 1/2")
     if (cleaned.includes(' ')) {
-      const [whole, frac] = cleaned.split(' ');
-      const wholeNum = parseFloat(whole);
-      const fracNum = parseFraction(frac || '0/1');
-      return (isNaN(wholeNum) ? 0 : wholeNum) + (isNaN(fracNum) ? 0 : fracNum);
+      const parts = cleaned.split(' ');
+      if (parts.length === 2) {
+        const wholeNum = parseFloat(parts[0]);
+        const fracNum = parseFraction(parts[1]);
+        if (!isNaN(wholeNum) && !isNaN(fracNum)) {
+          return wholeNum + fracNum;
+        }
+      }
     }
+    
+    // Verifica se é uma fração (como "1/2")
     if (cleaned.includes('/')) {
-      return parseFraction(cleaned);
+      const fracNum = parseFraction(cleaned);
+      if (!isNaN(fracNum)) return fracNum;
     }
-    const n = parseFloat(cleaned);
-    return isNaN(n) ? Number.MAX_VALUE : n;
+    
+    // Verifica se é um número simples
+    const num = parseFloat(cleaned);
+    if (!isNaN(num)) return num;
+    
+    // Se não conseguiu converter, retorna um valor alto para ir pro final
+    return Number.MAX_VALUE;
   };
 
   const sizeOptions = useMemo(() => {
