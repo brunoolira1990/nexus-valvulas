@@ -5,29 +5,92 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Download, Image as ImageIcon } from "lucide-react";
 import { useProduct } from "@/hooks/useSupabaseData";
 import { PageLoader } from "@/components/PageLoader";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const ProdutoDetalhes = () => {
   const { categoria, produto } = useParams<{ categoria: string; produto: string }>();
   const { product, variants, loading, error } = useProduct(produto || '');
   const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
 
-  if (loading) {
-    return <PageLoader />;
-  }
+  // Debug logs (removidos para evitar problemas de performance)
 
-  if (error || !product) {
-    return <Navigate to="/produtos" replace />;
-  }
+  const images = (product?.images || []).map(img => img.url);
+  const pdfs = (product?.pdfs || []).map(pdf => pdf.url);
 
-  const images = (product.images || []).map(img => img.url);
-  const pdfs = (product.pdfs || []).map(pdf => pdf.url);
+  const typeOptions = useMemo(() => {
+    const unique = Array.from(new Set((variants || []).map(v => v.type)));
+    return unique;
+  }, [variants]);
+
+  // Helper para converter tamanhos em polegadas (ex: 1/2", 3/4", 1 1/2", 1") para número
+  const parseInchesToNumber = (size: string): number => {
+    if (!size) return Number.MAX_VALUE;
+    const cleaned = size.replace(/\"/g, '"').replace(/"/g, '').trim();
+    const parseFraction = (text: string): number => {
+      const [num, den] = text.split('/') as [string, string | undefined];
+      const n = parseFloat(num);
+      const d = den ? parseFloat(den) : 1;
+      if (!d || isNaN(n)) return NaN;
+      return n / d;
+    };
+    if (cleaned.includes(' ')) {
+      const [whole, frac] = cleaned.split(' ');
+      const wholeNum = parseFloat(whole);
+      const fracNum = parseFraction(frac || '0/1');
+      return (isNaN(wholeNum) ? 0 : wholeNum) + (isNaN(fracNum) ? 0 : fracNum);
+    }
+    if (cleaned.includes('/')) {
+      return parseFraction(cleaned);
+    }
+    const n = parseFloat(cleaned);
+    return isNaN(n) ? Number.MAX_VALUE : n;
+  };
+
+  const sizeOptions = useMemo(() => {
+    if (!selectedType) return [] as string[];
+    const forType = (variants || []).filter(v => v.type === selectedType);
+    const unique = Array.from(new Set(forType.map(v => v.size)));
+    return unique.sort((a, b) => parseInchesToNumber(a) - parseInchesToNumber(b));
+  }, [variants, selectedType]);
+
+  const selectedVariant = useMemo(() => {
+    if (!selectedType || !selectedSize) return null as any;
+    return (variants || []).find(v => v.type === selectedType && v.size === selectedSize) || null;
+  }, [variants, selectedType, selectedSize]);
+
+  useEffect(() => {
+    if ((variants || []).length === 0) return;
+    // Define seleção inicial apenas uma vez
+    if (!selectedType) {
+      const firstType = (variants || [])[0]?.type || null;
+      setSelectedType(firstType);
+    }
+  }, [variants]);
+
+  useEffect(() => {
+    if (!selectedType) return;
+    const sizes = (variants || []).filter(v => v.type === selectedType).map(v => v.size);
+    if (sizes.length > 0 && !sizes.includes(selectedSize || '')) {
+      // Seleciona o menor tamanho por padrão (após ordenação)
+      const sorted = Array.from(new Set(sizes)).sort((a, b) => parseInchesToNumber(a) - parseInchesToNumber(b));
+      setSelectedSize(sorted[0]);
+    }
+  }, [selectedType]);
 
   return (
     <Layout>
+      {loading ? (
+        <PageLoader />
+      ) : (error || !product) ? (
+        <Navigate to="/produtos" replace />
+      ) : (
+        <>
       <SEO
         title={`${product.title} - Nexus Válvulas | Detalhes do Produto`}
         description={product.description || `Especificações técnicas e detalhes do produto ${product.title}.`}
@@ -59,9 +122,61 @@ const ProdutoDetalhes = () => {
             </Button>
           </div>
 
+          {/* Seletor de Variantes */}
+          {variants && variants.length > 0 && (
+            <div className="mb-8 p-6 bg-muted/30 rounded-lg">
+              <h3 className="text-lg font-semibold mb-4">Selecione a Variante</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Tipo</label>
+                  <Select value={selectedType || undefined} onValueChange={(val) => setSelectedType(val)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {typeOptions.map(t => (
+                        <SelectItem key={t} value={t}>{t}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Tamanho</label>
+                  <div className="flex flex-wrap gap-2">
+                    {sizeOptions.length > 0 ? (
+                      sizeOptions.map(size => (
+                        <Button
+                          key={size}
+                          type="button"
+                          variant={selectedSize === size ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setSelectedSize(size)}
+                        >
+                          {size}
+                        </Button>
+                      ))
+                    ) : (
+                      <span className="text-sm text-muted-foreground">Selecione um tipo para ver os tamanhos</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <div className="space-y-4">
-              {images.length > 0 ? (
+              {/* Imagem principal - mostra variante selecionada ou galeria normal */}
+              {selectedVariant?.drawing_url ? (
+                <div className="aspect-square rounded-lg overflow-hidden border">
+                  <img 
+                    src={selectedVariant.drawing_url} 
+                    alt={`${selectedVariant.type} ${selectedVariant.size}`} 
+                    className="w-full h-full object-contain bg-white" 
+                  />
+                </div>
+              ) : images.length > 0 ? (
                 <>
                   <div className="aspect-square rounded-lg overflow-hidden border">
                     <img src={images[selectedImage]} alt={product.title} className="w-full h-full object-cover" />
@@ -113,63 +228,11 @@ const ProdutoDetalhes = () => {
               )}
             </div>
           </div>
-
-          {variants.length > 0 && (
-            <div className="mt-16">
-              <Tabs defaultValue="specifications" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="specifications">Especificações</TabsTrigger>
-                  <TabsTrigger value="variants">Variações</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="specifications" className="space-y-6">
-                  <div className="grid gap-6">
-                    {variants.map((variant) => (
-                      <Card key={variant.id}>
-                        <CardHeader>
-                          <CardTitle>{variant.type} {variant.size && `- ${variant.size}`}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          {variant.specifications && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                              {Object.entries(variant.specifications).map(([key, value]) => (
-                                <div key={key} className="flex justify-between">
-                                  <span className="font-medium">{key}:</span>
-                                  <span>{String(value)}</span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="variants" className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {variants.map((variant) => (
-                      <Card key={variant.id} className="text-center">
-                        <CardHeader>
-                          <CardTitle className="text-lg">{variant.type}</CardTitle>
-                          {variant.size && <CardDescription>Tamanho: {variant.size}</CardDescription>}
-                        </CardHeader>
-                        {variant.drawing_url && (
-                          <CardContent>
-                            <img src={variant.drawing_url} alt={`${variant.type} ${variant.size}`} className="w-full h-32 object-contain" />
-                          </CardContent>
-                        )}
-                      </Card>
-                    ))}
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </div>
-          )}
         </div>
       </section>
+      </>
+      )}
     </Layout>
   );
 };
-
 export default ProdutoDetalhes;

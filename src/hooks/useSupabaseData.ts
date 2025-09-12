@@ -127,13 +127,11 @@ export function useProduct(productSlug: string) {
         if (productError) throw productError;
 
         const { data: variantsData, error: variantsError } = await supabase
-          .from('product_variants')
-          .select(`
-            *,
-            drawings:variant_drawings(url)
-          `)
+          .from('variants')
+          .select(`*`)
           .eq('product_id', productData.id)
-          .order('type, size');
+          .order('type')
+          .order('size');
 
         if (variantsError) throw variantsError;
 
@@ -147,8 +145,10 @@ export function useProduct(productSlug: string) {
           product_id: v.product_id,
           type: v.type,
           size: v.size,
-          drawing_url: v.drawings?.[0]?.url || null,
+          specifications: v.specifications || null,
+          drawing_url: v.drawing_url || null,
         }));
+        
         setProduct(normalizedProduct);
         setVariants(normalizedVariants);
       } catch (err) {
