@@ -299,6 +299,7 @@ export type Database = {
           created_at: string
           drawing_url: string | null
           id: string
+          position: number | null
           product_id: string
           size: string | null
           specifications: Json | null
@@ -309,6 +310,7 @@ export type Database = {
           created_at?: string
           drawing_url?: string | null
           id?: string
+          position?: number | null
           product_id: string
           size?: string | null
           specifications?: Json | null
@@ -319,6 +321,7 @@ export type Database = {
           created_at?: string
           drawing_url?: string | null
           id?: string
+          position?: number | null
           product_id?: string
           size?: string | null
           specifications?: Json | null

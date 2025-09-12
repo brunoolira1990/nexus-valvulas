@@ -9,9 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useProducts, useCategories } from '@/hooks/useSupabaseData';
+import { DraggableVariantList } from '@/components/admin/DraggableVariantList';
 
 export default function AdminProducts() {
   const { products, loading, refetch } = useProducts();
@@ -151,7 +152,9 @@ export default function AdminProducts() {
       .from('variants')
       .select('*')
       .eq('product_id', productId)
-      .order('type, size');
+      .order('position')
+      .order('type')
+      .order('size');
     if (!error) setVariants(data || []);
   };
 
@@ -175,13 +178,17 @@ export default function AdminProducts() {
         drawingUrl = data.publicUrl;
       }
 
+      // Calcula a próxima posição
+      const maxPosition = variants.length > 0 ? Math.max(...variants.map(v => v.position || 0)) : 0;
+      
       const { error } = await supabase
         .from('variants')
         .insert({
           product_id: editingProduct.id,
           type: newVariant.type,
           size: newVariant.size,
-          drawing_url: drawingUrl
+          drawing_url: drawingUrl,
+          position: maxPosition + 1
         });
       if (error) throw error;
       toast({ title: 'Variante adicionada com sucesso!' });
@@ -191,6 +198,24 @@ export default function AdminProducts() {
       toast({ title: 'Erro ao adicionar variante', description: error.message, variant: 'destructive' });
     } finally {
       setVariantSubmitting(false);
+    }
+  };
+
+  const handleReorderVariants = async (reorderedVariants: any[]) => {
+    try {
+      // Atualiza as posições no banco
+      const updates = reorderedVariants.map((variant, index) => 
+        supabase
+          .from('variants')
+          .update({ position: index + 1 })
+          .eq('id', variant.id)
+      );
+      
+      await Promise.all(updates);
+      setVariants(reorderedVariants);
+      toast({ title: 'Ordem das variantes atualizada!' });
+    } catch (error: any) {
+      toast({ title: 'Erro ao reordenar variantes', description: error.message, variant: 'destructive' });
     }
   };
 
@@ -395,40 +420,29 @@ export default function AdminProducts() {
                     </div>
 
                     <div>
-                      {variants.length === 0 ? (
-                        <div className="text-sm text-muted-foreground">Nenhuma variante cadastrada.</div>
-                      ) : (
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Tipo</TableHead>
-                              <TableHead>Tamanho</TableHead>
-                              <TableHead>Desenho</TableHead>
-                              <TableHead>Ações</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {variants.map((v) => (
-                              <TableRow key={v.id}>
-                                <TableCell>{v.type}</TableCell>
-                                <TableCell>{v.size}</TableCell>
-                                <TableCell>
-                                  {v.drawing_url ? (
-                                    <img src={v.drawing_url} alt={`${v.type} ${v.size}`} className="h-10 object-contain" />
-                                  ) : (
-                                    <span className="text-xs text-muted-foreground">Sem desenho</span>
-                                  )}
-                                </TableCell>
-                                <TableCell>
-                                  <Button variant="outline" size="sm" onClick={() => handleDeleteVariant(v.id)}>
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      )}
+                      <h4 className="text-md font-medium mb-3">Variantes Cadastradas</h4>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Arraste e solte para reordenar as variantes
+                      </p>
+                      
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-8"></TableHead>
+                            <TableHead>Tipo</TableHead>
+                            <TableHead>Tamanho</TableHead>
+                            <TableHead>Desenho</TableHead>
+                            <TableHead>Ações</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          <DraggableVariantList
+                            variants={variants}
+                            onReorder={handleReorderVariants}
+                            onDelete={handleDeleteVariant}
+                          />
+                        </TableBody>
+                      </Table>
                     </div>
                   </div>
                 ) : (

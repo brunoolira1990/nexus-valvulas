@@ -28,12 +28,18 @@ const ProdutoDetalhes = () => {
     return unique;
   }, [variants]);
 
-  // Helper para converter tamanhos em polegadas (ex: 1/2", 3/4", 1 1/2", 1") para número
+  // Helper para converter tamanhos em polegadas para ordenação manual quando necessário
   const parseInchesToNumber = (size: string): number => {
     if (!size) return Number.MAX_VALUE;
     
     // Remove aspas e limpa a string
     const cleaned = size.replace(/["""'']/g, '').trim();
+    
+    // Primeiro tenta converter como decimal direto (ex: "1.25")
+    const directNum = parseFloat(cleaned);
+    if (!isNaN(directNum) && !cleaned.includes('/') && !cleaned.includes(' ')) {
+      return directNum;
+    }
     
     const parseFraction = (text: string): number => {
       const parts = text.split('/');
@@ -43,12 +49,6 @@ const ProdutoDetalhes = () => {
       if (isNaN(num) || isNaN(den) || den === 0) return NaN;
       return num / den;
     };
-    
-    // Primeiro tenta como número decimal simples (ex: "1.25", "0.5")
-    const simpleNum = parseFloat(cleaned);
-    if (!isNaN(simpleNum) && !cleaned.includes('/') && !cleaned.includes(' ')) {
-      return simpleNum;
-    }
     
     // Verifica se tem espaço (número misto como "1 1/2")
     if (cleaned.includes(' ')) {
@@ -75,8 +75,18 @@ const ProdutoDetalhes = () => {
   const sizeOptions = useMemo(() => {
     if (!selectedType) return [] as string[];
     const forType = (variants || []).filter(v => v.type === selectedType);
-    const unique = Array.from(new Set(forType.map(v => v.size)));
-    return unique.sort((a, b) => parseInchesToNumber(a) - parseInchesToNumber(b));
+    
+    // Usa a ordenação por position primariamente, fallback para ordenação numérica
+    const sortedVariants = forType.sort((a, b) => {
+      // Se ambas têm position definida, usa position
+      if (a.position && b.position) {
+        return a.position - b.position;
+      }
+      // Senão, usa ordenação numérica por tamanho
+      return parseInchesToNumber(a.size) - parseInchesToNumber(b.size);
+    });
+    
+    return sortedVariants.map(v => v.size);
   }, [variants, selectedType]);
 
   const selectedVariant = useMemo(() => {

@@ -26,6 +26,7 @@ export interface Variant {
   size: string;
   specifications?: any;
   drawing_url?: string | null;
+  position: number;
 }
 
 export function useCategories() {
@@ -130,6 +131,7 @@ export function useProduct(productSlug: string) {
           .from('variants')
           .select(`*`)
           .eq('product_id', productData.id)
+          .order('position')
           .order('type')
           .order('size');
 
@@ -147,6 +149,7 @@ export function useProduct(productSlug: string) {
           size: v.size,
           specifications: v.specifications || null,
           drawing_url: v.drawing_url || null,
+          position: v.position || 0,
         }));
         
         setProduct(normalizedProduct);
