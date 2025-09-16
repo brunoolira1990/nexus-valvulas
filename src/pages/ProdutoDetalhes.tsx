@@ -113,6 +113,24 @@ const ProdutoDetalhes = () => {
     }
   }, [selectedType]);
 
+  // Função para gerar JSON-LD do produto
+  const generateProductSchema = () => {
+    if (!product) return null;
+    
+    return {
+      "@context": "https://schema.org/",
+      "@type": "Product",
+      "name": product.title,
+      "description": product.description,
+      "category": product.category?.name,
+      "offers": {
+        "@type": "Offer",
+        "availability": "InStock",
+        "priceCurrency": "BRL"
+      }
+    };
+  };
+
   return (
     <Layout>
       {loading ? (
@@ -126,6 +144,11 @@ const ProdutoDetalhes = () => {
         description={product.description || `Especificações técnicas e detalhes do produto ${product.title}.`}
         keywords={`${product.title}, válvulas industriais, especificações técnicas`}
       />
+      
+      {/* Schema.org para SEO */}
+      <script type="application/ld+json">
+        {JSON.stringify(generateProductSchema())}
+      </script>
       
       <section className="bg-muted/30 py-4">
         <div className="container mx-auto px-4">

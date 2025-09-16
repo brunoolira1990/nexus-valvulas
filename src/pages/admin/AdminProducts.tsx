@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -290,6 +290,26 @@ export default function AdminProducts() {
     }));
   };
 
+  const handleExportCSV = () => {
+    // Criar CSV com dados dos produtos
+    let csvContent = "ID,Título,Descrição,Categoria,Slug\n";
+    
+    products.forEach(product => {
+      csvContent += `${product.id},${product.title},${product.description || ''},${product.category?.name || ''},${product.slug}\n`;
+    });
+    
+    // Criar e baixar arquivo
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'produtos_exportados.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <>
       <Helmet>
@@ -300,159 +320,164 @@ export default function AdminProducts() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-foreground">Produtos</h1>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => {
-                setEditingProduct(null);
-                setFormData({ title: '', slug: '', description: '', category_id: '', images: '', pdfs: '' });
-                setImageFiles(null);
-                setPdfFiles(null);
-                setVariants([]);
-              }}>
-                <Plus className="mr-2 h-4 w-4" />
-                Novo Produto
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl w-[95vw] max-h-[85vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingProduct ? 'Editar Produto' : 'Novo Produto'}
-                </DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="title">Título</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => handleTitleChange(e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="slug">Slug</Label>
-                  <Input
-                    id="slug"
-                    value={formData.slug}
-                    onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="category">Categoria</Label>
-                  <Select value={formData.category_id} onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma categoria" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories?.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="description">Descrição</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="images">Imagens (URLs separadas por vírgula)</Label>
-                  <Textarea
-                    id="images"
-                    value={formData.images}
-                    onChange={(e) => setFormData(prev => ({ ...prev, images: e.target.value }))}
-                    placeholder="https://exemplo.com/imagem1.jpg, https://exemplo.com/imagem2.jpg"
-                  />
-                  <div className="mt-2">
-                    <Label htmlFor="imageFiles">ou envie imagens (múltiplas)</Label>
-                    <Input id="imageFiles" type="file" accept="image/*" multiple onChange={(e) => setImageFiles(e.target.files)} />
+          <div className="flex space-x-2">
+            <Button onClick={handleExportCSV} variant="outline">
+              <Download className="mr-2 h-4 w-4" />
+              Exportar CSV
+            </Button>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => {
+                  setEditingProduct(null);
+                  setFormData({ title: '', slug: '', description: '', category_id: '', images: '', pdfs: '' });
+                  setImageFiles(null);
+                  setPdfFiles(null);
+                  setVariants([]);
+                }}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Novo Produto
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl w-[95vw] max-h-[85vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingProduct ? 'Editar Produto' : 'Novo Produto'}
+                  </DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <Label htmlFor="title">Título</Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => handleTitleChange(e.target.value)}
+                      required
+                    />
                   </div>
-                </div>
-                <div>
-                  <Label htmlFor="pdfs">PDFs (URLs separadas por vírgula)</Label>
-                  <Textarea
-                    id="pdfs"
-                    value={formData.pdfs}
-                    onChange={(e) => setFormData(prev => ({ ...prev, pdfs: e.target.value }))}
-                    placeholder="https://exemplo.com/manual1.pdf, https://exemplo.com/manual2.pdf"
-                  />
-                  <div className="mt-2">
-                    <Label htmlFor="pdfFiles">ou envie PDFs (múltiplos)</Label>
-                    <Input id="pdfFiles" type="file" accept="application/pdf" multiple onChange={(e) => setPdfFiles(e.target.files)} />
+                  <div>
+                    <Label htmlFor="slug">Slug</Label>
+                    <Input
+                      id="slug"
+                      value={formData.slug}
+                      onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                      required
+                    />
                   </div>
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                    Cancelar
-                  </Button>
-                  <Button type="submit" disabled={submitting}>
-                    {editingProduct ? 'Atualizar' : 'Criar'}
-                  </Button>
-                </div>
-
-                {editingProduct ? (
-                  <div className="pt-6 border-t mt-6 space-y-4">
-                    <h3 className="text-lg font-semibold">Variantes</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <Label htmlFor="variantType">Tipo</Label>
-                        <Input id="variantType" value={newVariant.type} onChange={(e) => setNewVariant(prev => ({ ...prev, type: e.target.value }))} />
-                      </div>
-                      <div>
-                        <Label htmlFor="variantSize">Tamanho</Label>
-                        <Input id="variantSize" value={newVariant.size} onChange={(e) => setNewVariant(prev => ({ ...prev, size: e.target.value }))} />
-                      </div>
-                      <div>
-                        <Label htmlFor="variantDrawing">Desenho (imagem)</Label>
-                        <Input id="variantDrawing" type="file" accept="image/*" onChange={(e) => setNewVariant(prev => ({ ...prev, drawingFile: e.target.files?.[0] || null }))} />
-                      </div>
+                  <div>
+                    <Label htmlFor="category">Categoria</Label>
+                    <Select value={formData.category_id} onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma categoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories?.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="description">Descrição</Label>
+                    <Textarea
+                      id="description"
+                      value={formData.description}
+                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="images">Imagens (URLs separadas por vírgula)</Label>
+                    <Textarea
+                      id="images"
+                      value={formData.images}
+                      onChange={(e) => setFormData(prev => ({ ...prev, images: e.target.value }))}
+                      placeholder="https://exemplo.com/imagem1.jpg, https://exemplo.com/imagem2.jpg"
+                    />
+                    <div className="mt-2">
+                      <Label htmlFor="imageFiles">ou envie imagens (múltiplas)</Label>
+                      <Input id="imageFiles" type="file" accept="image/*" multiple onChange={(e) => setImageFiles(e.target.files)} />
                     </div>
-                    <div className="flex justify-end">
-                      <Button type="button" onClick={handleAddVariant} disabled={variantSubmitting}>
-                        Adicionar Variante
-                      </Button>
+                  </div>
+                  <div>
+                    <Label htmlFor="pdfs">PDFs (URLs separadas por vírgula)</Label>
+                    <Textarea
+                      id="pdfs"
+                      value={formData.pdfs}
+                      onChange={(e) => setFormData(prev => ({ ...prev, pdfs: e.target.value }))}
+                      placeholder="https://exemplo.com/manual1.pdf, https://exemplo.com/manual2.pdf"
+                    />
+                    <div className="mt-2">
+                      <Label htmlFor="pdfFiles">ou envie PDFs (múltiplos)</Label>
+                      <Input id="pdfFiles" type="file" accept="application/pdf" multiple onChange={(e) => setPdfFiles(e.target.files)} />
                     </div>
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                    <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                      Cancelar
+                    </Button>
+                    <Button type="submit" disabled={submitting}>
+                      {editingProduct ? 'Atualizar' : 'Criar'}
+                    </Button>
+                  </div>
 
-                    <div>
-                      <h4 className="text-md font-medium mb-3">Variantes Cadastradas</h4>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Arraste e solte para reordenar as variantes
-                      </p>
+                  {editingProduct ? (
+                    <div className="pt-6 border-t mt-6 space-y-4">
+                      <h3 className="text-lg font-semibold">Variantes</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <Label htmlFor="variantType">Tipo</Label>
+                          <Input id="variantType" value={newVariant.type} onChange={(e) => setNewVariant(prev => ({ ...prev, type: e.target.value }))} />
+                        </div>
+                        <div>
+                          <Label htmlFor="variantSize">Tamanho</Label>
+                          <Input id="variantSize" value={newVariant.size} onChange={(e) => setNewVariant(prev => ({ ...prev, size: e.target.value }))} />
+                        </div>
+                        <div>
+                          <Label htmlFor="variantDrawing">Desenho (imagem)</Label>
+                          <Input id="variantDrawing" type="file" accept="image/*" onChange={(e) => setNewVariant(prev => ({ ...prev, drawingFile: e.target.files?.[0] || null }))} />
+                        </div>
+                      </div>
+                      <div className="flex justify-end">
+                        <Button type="button" onClick={handleAddVariant} disabled={variantSubmitting}>
+                          Adicionar Variante
+                        </Button>
+                      </div>
+
+                      <div>
+                        <h4 className="text-md font-medium mb-3">Variantes Cadastradas</h4>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Arraste e solte para reordenar as variantes
+                        </p>
                       
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="w-8"></TableHead>
-                            <TableHead>Tipo</TableHead>
-                            <TableHead>Tamanho</TableHead>
-                            <TableHead>Desenho</TableHead>
-                            <TableHead>Ações</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          <DraggableVariantList
-                            variants={variants}
-                            onReorder={handleReorderVariants}
-                            onDelete={handleDeleteVariant}
-                          />
-                        </TableBody>
-                      </Table>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-8"></TableHead>
+                              <TableHead>Tipo</TableHead>
+                              <TableHead>Tamanho</TableHead>
+                              <TableHead>Desenho</TableHead>
+                              <TableHead>Ações</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            <DraggableVariantList
+                              variants={variants}
+                              onReorder={handleReorderVariants}
+                              onDelete={handleDeleteVariant}
+                            />
+                          </TableBody>
+                        </Table>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="pt-6 border-t mt-6 text-sm text-muted-foreground">
-                    Para adicionar variantes, crie o produto primeiro e depois edite-o.
-                  </div>
-                )}
-              </form>
-            </DialogContent>
-          </Dialog>
+                  ) : (
+                    <div className="pt-6 border-t mt-6 text-sm text-muted-foreground">
+                      Para adicionar variantes, crie o produto primeiro e depois edite-o.
+                    </div>
+                  )}
+                </form>
+              </DialogContent>
+            </Dialog>
         </div>
 
         <Card>

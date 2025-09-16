@@ -5,8 +5,83 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
+import { z } from "zod";
+import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
-const Contato = () => {
+// Schema de validação com Zod
+const contactFormSchema = z.object({
+  nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  empresa: z.string().optional(),
+  email: z.string().email("E-mail inválido"),
+  telefone: z.string().optional(),
+  assunto: z.string().min(1, "Assunto é obrigatório"),
+  mensagem: z.string().min(10, "Mensagem deve ter pelo menos 10 caracteres"),
+});
+
+export default function Contato() {
+  const { toast } = useToast();
+  const [formData, setFormData] = useState({
+    nome: "",
+    empresa: "",
+    email: "",
+    telefone: "",
+    assunto: "",
+    mensagem: "",
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({ ...prev, [id]: value }));
+    
+    // Limpar erro quando o usuário digita
+    if (errors[id]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[id];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      // Validar dados com Zod
+      contactFormSchema.parse(formData);
+      
+      // Se passar na validação, mostrar sucesso
+      toast({
+        title: "Mensagem enviada!",
+        description: "Recebemos sua mensagem e entraremos em contato em breve.",
+      });
+      
+      // Resetar formulário
+      setFormData({
+        nome: "",
+        empresa: "",
+        email: "",
+        telefone: "",
+        assunto: "",
+        mensagem: "",
+      });
+      setErrors({});
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        // Converter erros do Zod para objeto de erros
+        const formattedErrors: Record<string, string> = {};
+        error.errors.forEach(err => {
+          if (err.path[0]) {
+            formattedErrors[err.path[0]] = err.message;
+          }
+        });
+        setErrors(formattedErrors);
+      }
+    }
+  };
+
   return (
     <Layout>
       <section className="bg-primary text-primary-foreground py-16">
@@ -27,37 +102,76 @@ const Contato = () => {
                 <CardTitle>Envie sua Mensagem</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="nome">Nome *</Label>
-                    <Input id="nome" required />
+                <form onSubmit={handleSubmit}>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="nome">Nome *</Label>
+                      <Input 
+                        id="nome" 
+                        value={formData.nome}
+                        onChange={handleChange}
+                        required 
+                      />
+                      {errors.nome && <p className="text-sm text-red-500">{errors.nome}</p>}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="empresa">Empresa</Label>
+                      <Input 
+                        id="empresa" 
+                        value={formData.empresa}
+                        onChange={handleChange}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">E-mail *</Label>
+                      <Input 
+                        id="email" 
+                        type="email" 
+                        value={formData.email}
+                        onChange={handleChange}
+                        required 
+                      />
+                      {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="telefone">Telefone</Label>
+                      <Input 
+                        id="telefone" 
+                        value={formData.telefone}
+                        onChange={handleChange}
+                      />
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="empresa">Empresa</Label>
-                    <Input id="empresa" />
+                    <Label htmlFor="assunto">Assunto *</Label>
+                    <Input 
+                      id="assunto" 
+                      value={formData.assunto}
+                      onChange={handleChange}
+                      required 
+                    />
+                    {errors.assunto && <p className="text-sm text-red-500">{errors.assunto}</p>}
                   </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">E-mail *</Label>
-                    <Input id="email" type="email" required />
+                    <Label htmlFor="mensagem">Mensagem *</Label>
+                    <Textarea 
+                      id="mensagem" 
+                      rows={5} 
+                      value={formData.mensagem}
+                      onChange={handleChange}
+                      required 
+                    />
+                    {errors.mensagem && <p className="text-sm text-red-500">{errors.mensagem}</p>}
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="telefone">Telefone</Label>
-                    <Input id="telefone" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="assunto">Assunto *</Label>
-                  <Input id="assunto" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="mensagem">Mensagem *</Label>
-                  <Textarea id="mensagem" rows={5} required />
-                </div>
-                <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-                  Enviar Mensagem
-                </Button>
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
+                  >
+                    Enviar Mensagem
+                  </Button>
+                </form>
               </CardContent>
             </Card>
 
@@ -121,6 +235,4 @@ const Contato = () => {
       </section>
     </Layout>
   );
-};
-
-export default Contato;
+}
