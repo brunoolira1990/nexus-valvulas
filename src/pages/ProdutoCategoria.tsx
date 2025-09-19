@@ -1,7 +1,7 @@
 import { useParams, Navigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { SEO } from "@/components/SEO";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Package, ArrowLeft } from "lucide-react";
@@ -62,6 +62,11 @@ const ProdutoCategoria = () => {
             </Button>
           </div>
           <div className="text-center">
+            {(currentCategory as any).image && (
+              <div className="mb-4 flex justify-center">
+                <img src={(currentCategory as any).image} alt={currentCategory.name} className="h-32 object-contain" />
+              </div>
+            )}
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               {currentCategory.name}
             </h1>
@@ -104,9 +109,6 @@ const ProdutoCategoria = () => {
                     <CardTitle className="group-hover:text-accent transition-colors">
                       {produto.title}
                     </CardTitle>
-                    <CardDescription>
-                      {produto.description}
-                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center justify-between">

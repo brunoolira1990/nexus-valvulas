@@ -9,11 +9,27 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { useCategories } from '@/hooks/useSupabaseData';
+import { useEffect } from 'react';
+
+const API_BASE = process.env.VITE_API_BASE || 'http://localhost:4000';
 
 export default function AdminCategories() {
-  const { categories, loading, refetch } = useCategories();
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const refetch = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/categories`);
+      const data = await res.json();
+      setCategories(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { refetch(); }, []);
   const { toast } = useToast();
   
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -21,34 +37,67 @@ export default function AdminCategories() {
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
-    description: ''
+    description: '',
+    image: ''
   });
+
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
+      // Validate slug uniqueness by querying backend
+      try {
+        const res = await fetch(`${API_BASE}/categories`);
+        const all = await res.json();
+        const exists = all.find((c: any) => c.slug === formData.slug && c.id !== editingCategory?.id);
+        if (exists) {
+          toast({ title: 'Erro', description: 'Slug já existe. Use outro slug.', variant: 'destructive' });
+          return;
+        }
+      } catch (err: any) {
+        toast({ title: 'Erro', description: 'Erro ao validar slug', variant: 'destructive' });
+        return;
+      }
+
+      // First create or update category (without image reference)
+      let categoryId = editingCategory?.id;
       if (editingCategory) {
-        const { error } = await supabase
-          .from('categories')
-          .update(formData)
-          .eq('id', editingCategory.id);
-        
-        if (error) throw error;
+        const res = await fetch(`${API_BASE}/categories/${editingCategory.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: formData.name, slug: formData.slug, description: formData.description })
+        });
+        if (!res.ok) throw new Error('Erro ao atualizar categoria');
         toast({ title: 'Categoria atualizada com sucesso!' });
       } else {
-        const { error } = await supabase
-          .from('categories')
-          .insert(formData);
-        
-        if (error) throw error;
+        const res = await fetch(`${API_BASE}/categories`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: formData.name, slug: formData.slug, description: formData.description })
+        });
+        if (!res.ok) throw new Error('Erro ao criar categoria');
+        const insertData = await res.json();
+        categoryId = insertData.id;
         toast({ title: 'Categoria criada com sucesso!' });
       }
+
+      // If there's a new image selected, upload and insert into category_images
+      if (imageFile && categoryId) {
+        const form = new FormData();
+        form.append('image', imageFile);
+        const res = await fetch(`${API_BASE}/categories/${categoryId}/image`, { method: 'POST', body: form });
+        if (!res.ok) throw new Error('Erro ao enviar imagem');
+      }
       
-      setDialogOpen(false);
-      setEditingCategory(null);
-      setFormData({ name: '', slug: '', description: '' });
-      refetch();
+  setDialogOpen(false);
+  setEditingCategory(null);
+  setFormData({ name: '', slug: '', description: '', image: '' });
+  setImageFile(null);
+  setImagePreview(null);
+  refetch();
     } catch (error: any) {
       toast({ 
         title: 'Erro', 
@@ -63,21 +112,33 @@ export default function AdminCategories() {
     setFormData({
       name: category.name,
       slug: category.slug,
-      description: category.description || ''
+      description: category.description || '',
+      image: category.image || ''
     });
+    setImagePreview(category.image || null);
     setDialogOpen(true);
+  };
+
+  const handleImageChange = (file?: File | null) => {
+    if (!file) {
+      setImageFile(null);
+      setImagePreview(null);
+      setFormData(prev => ({ ...prev, image: '' }));
+      return;
+    }
+
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setImagePreview(String(reader.result));
+    reader.readAsDataURL(file);
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir esta categoria?')) return;
     
     try {
-      const { error } = await supabase
-        .from('categories')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
+  const res = await fetch(`${API_BASE}/categories/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error('Erro ao deletar categoria');
       toast({ title: 'Categoria excluída com sucesso!' });
       refetch();
     } catch (error: any) {
@@ -122,7 +183,7 @@ export default function AdminCategories() {
             <DialogTrigger asChild>
               <Button onClick={() => {
                 setEditingCategory(null);
-                setFormData({ name: '', slug: '', description: '' });
+                          setFormData({ name: '', slug: '', description: '', image: '' });
               }}>
                 <Plus className="mr-2 h-4 w-4" />
                 Nova Categoria
@@ -143,6 +204,21 @@ export default function AdminCategories() {
                     onChange={(e) => handleNameChange(e.target.value)}
                     required
                   />
+                </div>
+                <div>
+                  <Label htmlFor="image">Imagem (opcional)</Label>
+                  <input
+                    id="image"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageChange(e.target.files?.[0] || null)}
+                    className="mt-2"
+                  />
+                  {imagePreview ? (
+                    <img src={imagePreview} alt="preview" className="mt-2 h-24 object-contain" />
+                  ) : formData.image ? (
+                    <img src={formData.image} alt="preview" className="mt-2 h-24 object-contain" />
+                  ) : null}
                 </div>
                 <div>
                   <Label htmlFor="slug">Slug</Label>
@@ -185,6 +261,7 @@ export default function AdminCategories() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Imagem</TableHead>
                     <TableHead>Nome</TableHead>
                     <TableHead>Slug</TableHead>
                     <TableHead>Descrição</TableHead>
@@ -194,6 +271,13 @@ export default function AdminCategories() {
                 <TableBody>
                   {categories?.map((category) => (
                     <TableRow key={category.id}>
+                      <TableCell>
+                        {((category as any).image) ? (
+                          <img src={(category as any).image} alt={category.name} className="h-12 object-contain" />
+                        ) : (
+                          <div className="h-12 w-20 bg-muted" />
+                        )}
+                      </TableCell>
                       <TableCell className="font-medium">{category.name}</TableCell>
                       <TableCell>{category.slug}</TableCell>
                       <TableCell>{category.description}</TableCell>

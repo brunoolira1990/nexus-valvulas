@@ -10,9 +10,25 @@ import { Suspense, lazy } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import './lib/i18n';
-import { I18nextProvider } from 'react-i18next';
-import i18n from './lib/i18n';
+
+// Páginas públicas
+const Index = lazy(() => import("@/pages/Index"));
+const Produtos = lazy(() => import("@/pages/Produtos"));
+const ProdutoCategoria = lazy(() => import("@/pages/ProdutoCategoria"));
+const ProdutoDetalhes = lazy(() => import("@/pages/ProdutoDetalhes"));
+const Sobre = lazy(() => import("@/pages/Sobre"));
+const Contato = lazy(() => import("@/pages/Contato"));
+const Blog = lazy(() => import("@/pages/Blog"));
+const BlogPost = lazy(() => import("@/pages/BlogPost"));
+const Login = lazy(() => import("@/pages/Login"));
+const Debug = lazy(() => import("@/pages/Debug"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
+
+// Páginas administrativas
+const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
+const AdminCategories = lazy(() => import("@/pages/admin/AdminCategories"));
+const AdminProducts = lazy(() => import("@/pages/admin/AdminProducts"));
+const AdminBlog = lazy(() => import("@/pages/admin/AdminBlog"));
 
 const queryClient = new QueryClient();
 
@@ -21,42 +37,40 @@ const App = () => (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <I18nextProvider i18n={i18n}>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <Suspense fallback={<PageLoader />}>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/produtos" element={<Produtos />} />
-                    <Route path="/produtos/:categoria" element={<ProdutoCategoria />} />
-                    <Route path="/produtos/:categoria/:produto" element={<ProdutoDetalhes />} />
-                    <Route path="/sobre" element={<Sobre />} />
-                    <Route path="/contato" element={<Contato />} />
-                    <Route path="/blog" element={<Blog />} />
-                    <Route path="/blog/:slug" element={<BlogPost />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/debug" element={<Debug />} />
-                    
-                    {/* Admin Routes */}
-                    <Route path="/admin" element={
-                      <ProtectedRoute requireAdmin>
-                        <AdminLayout />
-                      </ProtectedRoute>
-                    }>
-                      <Route index element={<AdminDashboard />} />
-                      <Route path="categories" element={<AdminCategories />} />
-                      <Route path="products" element={<AdminProducts />} />
-                      <Route path="blog" element={<AdminBlog />} />
-                    </Route>
-                    
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </Suspense>
-              </BrowserRouter>
-            </TooltipProvider>
-          </I18nextProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/produtos" element={<Produtos />} />
+                  <Route path="/produtos/:categoria" element={<ProdutoCategoria />} />
+                  <Route path="/produtos/:categoria/:produto" element={<ProdutoDetalhes />} />
+                  <Route path="/sobre" element={<Sobre />} />
+                  <Route path="/contato" element={<Contato />} />
+                  <Route path="/blog" element={<Blog />} />
+                  <Route path="/blog/:slug" element={<BlogPost />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/debug" element={<Debug />} />
+                  
+                  {/* Admin Routes */}
+                  <Route path="/admin" element={
+                    <ProtectedRoute requireAdmin>
+                      <AdminLayout />
+                    </ProtectedRoute>
+                  }>
+                    <Route index element={<AdminDashboard />} />
+                    <Route path="categories" element={<AdminCategories />} />
+                    <Route path="products" element={<AdminProducts />} />
+                    <Route path="blog" element={<AdminBlog />} />
+                  </Route>
+                  
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+          </TooltipProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>

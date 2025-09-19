@@ -1,8 +1,62 @@
-# Welcome to your Lovable project
+# Nexus Válvulas
 
-## Project info
+Site institucional da Nexus Válvulas com catálogo de produtos e área administrativa.
 
-**URL**: https://lovable.dev/projects/eae600b1-8112-4cab-b2f1-ccfab94ddb86
+## Desenvolvimento Local
+
+### Frontend
+
+1. Instalar dependências:
+```bash
+npm install
+```
+
+2. Configurar variáveis de ambiente:
+- Criar arquivo `.env` com:
+```
+VITE_API_BASE=http://localhost:4000  # URL do backend
+VITE_DISABLE_AUTH=1                  # Bypass auth em dev
+```
+
+3. Iniciar em modo desenvolvimento:
+```bash
+npm run dev
+```
+
+O frontend irá rodar em http://localhost:5173
+
+### Backend
+
+O backend está na pasta `backend/`. 
+
+1. Instalar dependências:
+```bash
+cd backend
+npm install
+```
+
+2. Criar banco de dados:
+```bash
+npx prisma generate
+npx prisma migrate dev --name init
+```
+
+3. Criar usuário admin:
+```bash
+node scripts/create-admin.js
+```
+Credenciais padrão:
+- Email: admin@nexus.com
+- Senha: admin123
+
+4. Iniciar servidor:
+```bash
+npm run dev
+```
+
+O backend roda em http://localhost:4000
+
+## Tecnologias Utilizadas
 
 ## How can I edit this code?
 

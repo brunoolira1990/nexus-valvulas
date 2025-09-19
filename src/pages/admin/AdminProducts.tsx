@@ -88,9 +88,9 @@ export default function AdminProducts() {
         slug: formData.slug,
         description: formData.description,
         category_id: formData.category_id,
+        images: imageUrls, // Array de URLs diretamente na tabela products
+        pdfs: pdfUrls     // Array de URLs diretamente na tabela products
       };
-
-      let productId = editingProduct?.id as string | undefined;
 
       if (editingProduct) {
         const { error } = await supabase
@@ -98,35 +98,13 @@ export default function AdminProducts() {
           .update(coreProduct)
           .eq('id', editingProduct.id);
         if (error) throw error;
-
-        // Substitui imagens/pdfs
-        await supabase.from('product_images').delete().eq('product_id', editingProduct.id);
-        await supabase.from('product_pdfs').delete().eq('product_id', editingProduct.id);
-        productId = editingProduct.id;
         toast({ title: 'Produto atualizado com sucesso!' });
       } else {
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('products')
-          .insert(coreProduct)
-          .select('id')
-          .single();
+          .insert(coreProduct);
         if (error) throw error;
-        productId = data.id as string;
         toast({ title: 'Produto criado com sucesso!' });
-      }
-
-      // Insere imagens/pdfs normalizados, mantendo ordem
-      if (productId) {
-        if (imageUrls.length > 0) {
-          const imagesRows = imageUrls.map((url, idx) => ({ product_id: productId, url, position: idx }));
-          const { error: imgErr } = await supabase.from('product_images').insert(imagesRows);
-          if (imgErr) throw imgErr;
-        }
-        if (pdfUrls.length > 0) {
-          const pdfRows = pdfUrls.map((url, idx) => ({ product_id: productId, url, position: idx }));
-          const { error: pdfErr } = await supabase.from('product_pdfs').insert(pdfRows);
-          if (pdfErr) throw pdfErr;
-        }
       }
 
       setDialogOpen(false);
@@ -240,8 +218,9 @@ export default function AdminProducts() {
       slug: product.slug,
       description: product.description || '',
       category_id: product.category_id,
-      images: product.images ? product.images.join(', ') : '',
-      pdfs: product.pdfs ? product.pdfs.join(', ') : ''
+      // Converte arrays de objetos em strings separadas por vírgula
+      images: product.images ? product.images.map((img: any) => img.url).join(', ') : '',
+      pdfs: product.pdfs ? product.pdfs.map((pdf: any) => pdf.url).join(', ') : ''
     });
     setImageFiles(null);
     setPdfFiles(null);
@@ -478,6 +457,7 @@ export default function AdminProducts() {
                 </form>
               </DialogContent>
             </Dialog>
+          </div>
         </div>
 
         <Card>

@@ -24,25 +24,16 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const { error } = await signIn(email, password);
-      
-      if (error) {
-        toast({
-          title: 'Erro no login',
-          description: error.message,
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Login realizado com sucesso',
-          description: 'Bem-vindo ao painel administrativo!',
-        });
-        navigate('/admin');
-      }
-    } catch (error) {
+      await signIn(email, password);
       toast({
-        title: 'Erro inesperado',
-        description: 'Tente novamente em alguns momentos.',
+        title: 'Login realizado com sucesso',
+        description: 'Bem-vindo ao painel administrativo!',
+      });
+      navigate('/admin');
+    } catch (error: any) {
+      toast({
+        title: 'Erro no login',
+        description: error.message || 'Erro ao fazer login',
         variant: 'destructive',
       });
     } finally {

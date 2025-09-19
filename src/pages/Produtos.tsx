@@ -1,6 +1,6 @@
 import { Layout } from "@/components/layout/Layout";
 import { SEO } from "@/components/SEO";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Package } from "lucide-react";
 import { useCategories } from "@/hooks/useSupabaseData";
@@ -64,9 +64,6 @@ const Produtos = () => {
                   <CardTitle className="group-hover:text-accent transition-colors">
                     {categoria.name}
                   </CardTitle>
-                  <CardDescription>
-                    {categoria.description}
-                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between">

@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
 
 export interface Category {
   id: string;
   name: string;
   description: string | null;
+  image?: string | null;
   slug: string;
 }
 
@@ -38,13 +40,10 @@ export function useCategories() {
     setLoading(true);
     setError(null);
     try {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .order('name');
-
-      if (error) throw error;
-      setCategories(data || []);
+  const res = await fetch(`${API_BASE}/categories`);
+  if (!res.ok) throw new Error('Erro ao buscar categorias');
+  const data = await res.json();
+  setCategories(data || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar categorias');
     } finally {
@@ -68,29 +67,10 @@ export function useProducts(categorySlug?: string) {
     setLoading(true);
     setError(null);
     try {
-      let query = supabase
-        .from('products')
-        .select(`
-          *,
-          category:categories(*),
-          images:product_images(url, position),
-          pdfs:product_pdfs(url, position)
-        `)
-        .order('title');
-
-      if (categorySlug) {
-        query = query.eq('categories.slug', categorySlug);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      const normalized = (data || []).map((p: any) => ({
-        ...p,
-        images: (p.images || []).sort((a: any, b: any) => a.position - b.position),
-        pdfs: (p.pdfs || []).sort((a: any, b: any) => a.position - b.position),
-      }));
-      setProducts(normalized);
+      const res = await fetch(`${API_BASE}/products${categorySlug ? `?category=${categorySlug}` : ''}`);
+      if (!res.ok) throw new Error('Erro ao buscar produtos');
+      const data = await res.json();
+      setProducts(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar produtos');
     } finally {
@@ -114,46 +94,11 @@ export function useProduct(productSlug: string) {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const { data: productData, error: productError } = await supabase
-          .from('products')
-          .select(`
-            *,
-            category:categories(*),
-            images:product_images(url, position),
-            pdfs:product_pdfs(url, position)
-          `)
-          .eq('slug', productSlug)
-          .single();
-
-        if (productError) throw productError;
-
-        const { data: variantsData, error: variantsError } = await supabase
-          .from('variants')
-          .select(`*`)
-          .eq('product_id', productData.id)
-          .order('position')
-          .order('type')
-          .order('size');
-
-        if (variantsError) throw variantsError;
-
-        const normalizedProduct = {
-          ...productData,
-          images: (productData.images || []).sort((a: any, b: any) => a.position - b.position),
-          pdfs: (productData.pdfs || []).sort((a: any, b: any) => a.position - b.position),
-        } as Product;
-        const normalizedVariants = (variantsData || []).map((v: any) => ({
-          id: v.id,
-          product_id: v.product_id,
-          type: v.type,
-          size: v.size,
-          specifications: v.specifications || null,
-          drawing_url: v.drawing_url || null,
-          position: v.position || 0,
-        }));
-        
-        setProduct(normalizedProduct);
-        setVariants(normalizedVariants);
+        const res = await fetch(`${API_BASE}/products/${productSlug}`);
+        if (!res.ok) throw new Error('Erro ao buscar produto');
+        const data = await res.json();
+        setProduct(data.product);
+        setVariants(data.variants);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erro ao carregar produto');
       } finally {

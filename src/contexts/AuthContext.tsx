@@ -1,17 +1,22 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+
+interface User {
+  id: string;
+  email: string;
+  name?: string | null;
+  role: string; // "USER" ou "ADMIN"
+}
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
+  token: string | null;
   loading: boolean;
   isAdmin: boolean;
-  checkingAdmin: boolean;
-  signIn: (email: string, password: string) => Promise<{ error?: any }>;
-  signOut: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signOut: () => void;
 }
 
+const API_BASE = process.env.VITE_API_BASE || 'http://localhost:4000';
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
@@ -24,84 +29,55 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [checkingAdmin, setCheckingAdmin] = useState(false);
-
-  const checkAdminStatus = async (userId: string) => {
-    try {
-      setCheckingAdmin(true);
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('user_id', userId)
-        .maybeSingle();
-      setIsAdmin(profile?.role === 'admin');
-    } catch (error) {
-      console.error('Error checking admin status:', error);
-      setIsAdmin(false);
-    } finally {
-      setCheckingAdmin(false);
-    }
-  };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          // Evita janela de corrida: marca como checando antes de agendar
-          setCheckingAdmin(true);
-          // Use setTimeout para não bloquear a mudança de auth
-          setTimeout(() => {
-            checkAdminStatus(session.user.id);
-          }, 0);
-        } else {
-          setIsAdmin(false);
-        }
-        
-        setLoading(false);
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        // Evita janela de corrida: marca como checando antes de iniciar
-        setCheckingAdmin(true);
-        checkAdminStatus(session.user.id);
-      } else {
-        setLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    const savedToken = localStorage.getItem('authToken');
+    const savedUser = localStorage.getItem('authUser');
+    if (savedToken && savedUser) {
+      setToken(savedToken);
+      setUser(JSON.parse(savedUser));
+    }
+    setLoading(false);
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
+    try {
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Login falhou');
+      }
+
+      const data = await res.json();
+      setUser(data.user);
+      setToken(data.token);
+      localStorage.setItem('authToken', data.token);
+      localStorage.setItem('authUser', JSON.stringify(data.user));
+    } catch (err: any) {
+      console.error('Login error:', err);
+      throw err;
+    }
   };
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
+  const signOut = () => {
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('authUser');
   };
 
   const value = {
     user,
-    session,
+    token,
     loading,
-    isAdmin,
-    checkingAdmin,
+    isAdmin: user?.role === 'ADMIN',
     signIn,
     signOut,
   };
