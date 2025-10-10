@@ -7,11 +7,18 @@ O projeto Nexus Válvulas é composto por duas partes principais:
 1. **Frontend (React + Vite)** - Cliente web responsivo
 2. **Backend (Node.js + Express)** - API REST com PostgreSQL
 
+### Arquitetura de Domínios
+
+O projeto utiliza uma arquitetura de frontend e backend separados:
+
+- **Frontend**: nexusvalvulas.com.br
+- **Backend/API**: api.nexusvalvulas.com.br
+
 ## 🗄️ Banco de Dados
 
 - **Sistema**: PostgreSQL
 - **ORM**: Prisma
-- **Localização**: Servidor local ou cloud (não utiliza Supabase)
+- **Localização**: Servidor local ou cloud
 
 ## 🚀 Processo de Deployment
 
@@ -32,13 +39,13 @@ DATABASE_URL=postgresql://usuario:senha@host:porta/nome_do_banco?schema=public
 JWT_SECRET=sua_chave_secreta_forte_aqui
 
 # URL pública da API (para acesso externo)
-PUBLIC_URL=https://sua-api.dominio.com
+PUBLIC_URL=https://api.nexusvalvulas.com.br
 ```
 
 #### Frontend (.env)
 ```bash
 # URL base da API (deve apontar para o backend em produção)
-VITE_API_BASE=https://sua-api.dominio.com
+VITE_API_BASE=https://api.nexusvalvulas.com.br
 ```
 
 ### 3. Build do Projeto
@@ -78,53 +85,186 @@ npm run build
 #### Usando Nginx (recomendado)
 
 ```nginx
-server {
-    listen 80;
-    server_name seu-dominio.com;
+# Configuração Nginx para Nexus Válvulas em Produção
 
-    # Redirecionar HTTP para HTTPS
-    return 301 https://$server_name$request_uri;
+# Configurações de eventos
+events {
+    worker_connections 1024;
 }
 
-server {
-    listen 443 ssl http2;
-    server_name seu-dominio.com;
+# Configurações HTTP
+http {
+    # Tipos MIME
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
 
-    # Configurações SSL (Let's Encrypt recomendado)
-    ssl_certificate /caminho/para/cert.pem;
-    ssl_certificate_key /caminho/para/key.pem;
+    # Formato de log
+    log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                    '$status $body_bytes_sent "$http_referer" '
+                    '"$http_user_agent" "$http_x_forwarded_for"';
+
+    # Arquivos de log
+    access_log /var/log/nginx/access.log main;
+    error_log /var/log/nginx/error.log;
+
+    # Configurações de performance
+    sendfile            on;
+    tcp_nopush          on;
+    tcp_nodelay         on;
+    keepalive_timeout   65;
+    types_hash_max_size 2048;
+
+    # Gzip
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_types
+        text/plain
+        text/css
+        text/xml
+        text/javascript
+        application/javascript
+        application/json
+        application/xml
+        application/xml+rss
+        application/xhtml+xml
+        application/x-font-ttf
+        application/x-font-opentype
+        application/vnd.ms-fontobject
+        image/svg+xml
+        image/x-icon
+        application/wasm;
 
     # Configurações de segurança
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384;
-    ssl_prefer_server_ciphers off;
+    server_tokens off;
 
-    # Servir arquivos estáticos do frontend
-    location / {
-        root /caminho/para/build;
+    # Servidor HTTP para frontend (redireciona para HTTPS)
+    server {
+        listen 80;
+        server_name nexusvalvulas.com.br www.nexusvalvulas.com.br;
+        return 301 https://$server_name$request_uri;
+    }
+
+    # Servidor HTTP para API (redireciona para HTTPS)
+    server {
+        listen 80;
+        server_name api.nexusvalvulas.com.br;
+        return 301 https://$server_name$request_uri;
+    }
+
+    # Servidor HTTPS para frontend
+    server {
+        listen 443 ssl http2;
+        server_name nexusvalvulas.com.br www.nexusvalvulas.com.br;
+
+        # Configurações SSL (ajustar caminhos para seus certificados)
+        ssl_certificate /caminho/para/seu-certificado-frontend.pem;
+        ssl_certificate_key /caminho/para/sua-chave-privada-frontend.pem;
+        
+        # Configurações SSL recomendadas
+        ssl_protocols TLSv1.2 TLSv1.3;
+        ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
+        ssl_prefer_server_ciphers off;
+        ssl_session_cache shared:SSL:10m;
+        ssl_session_timeout 10m;
+
+        # Headers de segurança
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "no-referrer-when-downgrade" always;
+        add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+        # Root directory for frontend static files
+        root /var/www/nexus-valvulas/dist;
         index index.html;
-        try_files $uri $uri/ /index.html;
+
+        # Localização para arquivos estáticos
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+
+        # Bloquear acesso a arquivos sensíveis
+        location ~ /\. {
+            deny all;
+            access_log off;
+            log_not_found off;
+        }
+
+        # Configurações específicas para tipos de arquivos
+        location ~* \.(jpg|jpeg|png|gif|ico|svg|webp)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+
+        location ~* \.(css|js)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+
+        location ~* \.(woff|woff2|ttf|eot)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
     }
 
-    # Proxy para API backend
-    location /api/ {
-        proxy_pass http://localhost:4000/;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
+    # Servidor HTTPS para API
+    server {
+        listen 443 ssl http2;
+        server_name api.nexusvalvulas.com.br;
 
-    # Configurações de segurança adicionais
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header Referrer-Policy "no-referrer-when-downgrade" always;
-    add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
+        # Configurações SSL (ajustar caminhos para seus certificados)
+        ssl_certificate /caminho/para/seu-certificado-api.pem;
+        ssl_certificate_key /caminho/para/sua-chave-privada-api.pem;
+        
+        # Configurações SSL recomendadas
+        ssl_protocols TLSv1.2 TLSv1.3;
+        ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
+        ssl_prefer_server_ciphers off;
+        ssl_session_cache shared:SSL:10m;
+        ssl_session_timeout 10m;
+
+        # Headers de segurança
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "no-referrer-when-downgrade" always;
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+        # Localização para API backend (proxy para localhost:4000)
+        location / {
+            proxy_pass http://localhost:4000/;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_cache_bypass $http_upgrade;
+            
+            # Timeout settings
+            proxy_connect_timeout 60s;
+            proxy_send_timeout 60s;
+            proxy_read_timeout 60s;
+        }
+
+        # Localização para uploads
+        location /uploads/ {
+            proxy_pass http://localhost:4000/uploads/;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_cache_bypass $http_upgrade;
+        }
+    }
 }
 ```
 

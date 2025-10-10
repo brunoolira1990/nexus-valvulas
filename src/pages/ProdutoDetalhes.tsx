@@ -1,3 +1,4 @@
+import { useState, useEffect, useMemo } from "react";
 import { useParams, Navigate, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { SEO } from "@/components/SEO";
@@ -7,27 +8,49 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Download, Image as ImageIcon } from "lucide-react";
-import { useProduct } from "@/hooks/useSupabaseData";
 import { PageLoader } from "@/components/PageLoader";
-import { useEffect, useMemo, useState } from "react";
 import { BreadcrumbStandard } from "@/components/Breadcrumb";
 import { ScrollAnimation } from "@/components/ScrollAnimation";
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+
 const ProdutoDetalhes = () => {
   const { categoria, produto } = useParams<{ categoria: string; produto: string }>();
-  const { product, variants, loading, error } = useProduct(produto || '');
+  const [product, setProduct] = useState<any>(null);
+  const [variants, setVariants] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
 
-  // Debug logs (removidos para evitar problemas de performance)
+  // Fetch product data
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/products/${produto}`);
+        if (!res.ok) throw new Error('Erro ao buscar produto');
+        const data = await res.json();
+        setProduct(data.product || null);
+        setVariants(data.variants || []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erro ao carregar produto');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const images = (product?.images || []).map(img => img.url);
-  const pdfs = (product?.pdfs || []).map(pdf => pdf.url);
+    if (produto) {
+      fetchProduct();
+    }
+  }, [produto]);
+
+  const images = useMemo(() => (product?.images || []).map((img: any) => img.url), [product]);
+  const pdfs = useMemo(() => (product?.pdfs || []).map((pdf: any) => pdf.url), [product]);
 
   const typeOptions = useMemo(() => {
-    const unique = Array.from(new Set((variants || []).map(v => v.type)));
-    return unique;
+    const unique = Array.from(new Set((variants || []).map((v: any) => v.type)));
+    return unique as string[];
   }, [variants]);
 
   // Helper para converter tamanhos em polegadas para ordenação (suporta "1/2", "1 1/2", "1.1/4", "2 x 3")
@@ -85,26 +108,25 @@ const ProdutoDetalhes = () => {
 
   const sizeOptions = useMemo(() => {
     if (!selectedType) return [] as string[];
-    const forType = (variants || []).filter(v => v.type === selectedType);
+    const forType = (variants || []).filter((v: any) => v.type === selectedType);
     // Usa a ordenação por position primariamente, fallback para ordenação numérica
-    const sortedVariants = forType.sort((a, b) => {
+    const sortedVariants = forType.sort((a: any, b: any) => {
       if (a.position && b.position) {
         return a.position - b.position;
       }
       return parseInchesToNumber(a.size) - parseInchesToNumber(b.size);
     });
-    return sortedVariants.map(v => v.size);
+    return sortedVariants.map((v: any) => v.size);
   }, [variants, selectedType]);
 
   const selectedVariant = useMemo(() => {
-    if (!selectedType || !selectedSize) return null as any;
-    return (variants || []).find(v => v.type === selectedType && v.size === selectedSize) || null;
+    if (!selectedType || !selectedSize) return null;
+    return (variants || []).find((v: any) => v.type === selectedType && v.size === selectedSize) || null;
   }, [variants, selectedType, selectedSize]);
 
   // Modal simples para "Pedir Cotação"
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [quoteForm, setQuoteForm] = useState({ name: '', email: '', phone: '', message: '' });
-  const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
 
   const submitQuote = async () => {
     if (!product) return;
@@ -139,13 +161,13 @@ const ProdutoDetalhes = () => {
 
   useEffect(() => {
     if (!selectedType) return;
-    const sizes = (variants || []).filter(v => v.type === selectedType).map(v => v.size);
+    const sizes = (variants || []).filter((v: any) => v.type === selectedType).map((v: any) => v.size);
     if (sizes.length > 0 && !sizes.includes(selectedSize || '')) {
       // Seleciona o menor tamanho por padrão (após ordenação)
       const sorted = Array.from(new Set(sizes)).sort((a, b) => parseInchesToNumber(a) - parseInchesToNumber(b));
-      setSelectedSize(sorted[0]);
+      setSelectedSize(sorted[0] as string);
     }
-  }, [selectedType]);
+  }, [selectedType, variants, selectedSize]);
 
   // Função para gerar JSON-LD do produto
   const generateProductSchema = () => {

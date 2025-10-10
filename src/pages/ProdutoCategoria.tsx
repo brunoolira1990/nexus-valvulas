@@ -1,28 +1,57 @@
-import { useParams, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, Link, Navigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { SEO } from "@/components/SEO";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Package, ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
-import { useProducts, useCategories } from "@/hooks/useSupabaseData";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Image as ImageIcon } from "lucide-react";
 import { PageLoader } from "@/components/PageLoader";
 import { BreadcrumbStandard } from "@/components/Breadcrumb";
 import { ScrollAnimation } from "@/components/ScrollAnimation";
 
-const ProdutoCategoria = () => {
-  const { categoria } = useParams<{ categoria: string }>();
-  const { categories } = useCategories();
-  const { products, loading, error } = useProducts(categoria);
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
 
-  const currentCategory = categories.find(cat => cat.slug === categoria);
+export default function ProdutoCategoria() {
+  const { slug } = useParams<{ slug: string }>();
+  const [category, setCategory] = useState<any>(null);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCategoryAndProducts = async () => {
+      try {
+        // Fetch category
+        const categoryRes = await fetch(`${API_BASE}/categories?slug=${slug}`);
+        if (!categoryRes.ok) throw new Error('Categoria não encontrada');
+        const categoryData = await categoryRes.json();
+        const category = categoryData?.[0];
+        if (!category) throw new Error('Categoria não encontrada');
+        setCategory(category);
+
+        // Fetch products
+        const productsRes = await fetch(`${API_BASE}/products?category=${slug}`);
+        if (!productsRes.ok) throw new Error('Erro ao buscar produtos');
+        const productsData = await productsRes.json();
+        setProducts(productsData || []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erro ao carregar dados');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (slug) {
+      fetchCategoryAndProducts();
+    }
+  }, [slug]);
 
   if (loading) {
     return <PageLoader />;
   }
 
-  if (!currentCategory) {
+  if (!category) {
     return <Navigate to="/produtos" replace />;
   }
 
@@ -42,9 +71,9 @@ const ProdutoCategoria = () => {
   return (
     <Layout>
       <SEO
-        title={`${currentCategory.name} - Nexus Válvulas | Produtos Industriais`}
-        description={`Explore nossa linha de ${currentCategory.name.toLowerCase()}. ${currentCategory.description || 'Produtos de alta qualidade para aplicações industriais.'}`}
-        keywords={`${currentCategory.name.toLowerCase()}, válvulas industriais, produtos industriais`}
+        title={`${category.name} - Nexus Válvulas | Produtos Industriais`}
+        description={`Explore nossa linha de ${category.name.toLowerCase()}. ${category.description || 'Produtos de alta qualidade para aplicações industriais.'}`}
+        keywords={`${category.name.toLowerCase()}, válvulas industriais, produtos industriais`}
       />
       
       {/* Header Section */}
@@ -52,7 +81,7 @@ const ProdutoCategoria = () => {
         <div className="container mx-auto px-4">
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              {currentCategory.name}
+              {category.name}
             </h1>
           </div>
         </div>
@@ -63,7 +92,7 @@ const ProdutoCategoria = () => {
           <BreadcrumbStandard 
             items={[
               { label: "Produtos", href: "/produtos" },
-              { label: currentCategory.name }
+              { label: category.name }
             ]}
           />
         </div>
@@ -89,7 +118,7 @@ const ProdutoCategoria = () => {
           {products.length === 0 ? (
             <ScrollAnimation animation="fade-up">
               <div className="text-center py-12">
-                <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <ImageIcon className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
                 <h2 className="text-2xl font-bold mb-2">Nenhum produto encontrado</h2>
                 <p className="text-muted-foreground">
                   Esta categoria ainda não possui produtos cadastrados.
@@ -116,7 +145,7 @@ const ProdutoCategoria = () => {
                         </div>
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                          <Package className="h-16 w-16 text-primary" />
+                          <ImageIcon className="h-16 w-16 text-primary" />
                         </div>
                       )}
                     </div>
@@ -131,7 +160,7 @@ const ProdutoCategoria = () => {
                           Industrial
                         </Badge>
                         <Link 
-                          to={`/produtos/${categoria}/${produto.slug}`}
+                          to={`/produtos/${slug}/${produto.slug}`}
                           className="text-accent hover:text-accent/80 font-medium"
                         >
                           Ver detalhes →
@@ -148,5 +177,3 @@ const ProdutoCategoria = () => {
     </Layout>
   );
 };
-
-export default ProdutoCategoria;

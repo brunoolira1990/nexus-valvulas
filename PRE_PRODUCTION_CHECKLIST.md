@@ -36,7 +36,7 @@
 - [ ] **Domínios**
   - [ ] DNS configurado corretamente
   - [ ] Registros A/CNAME criados
-  - [ ] Subdomínios configurados (api.seu-dominio.com)
+  - [ ] Subdomínios configurados (api.nexusvalvulas.com.br)
 
 - [ ] **Firewall e Segurança**
   - [ ] Portas necessárias abertas (80, 443, 4000)

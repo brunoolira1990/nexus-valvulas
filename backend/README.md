@@ -23,4 +23,4 @@ Endpoints:
 
 Notes:
 - Uploads vão para backend/uploads/categories e são servidos em /uploads/categories
-- Em produção troque SQLite por Postgres e armazene arquivos em S3/Supabase Storage
+- Em produção troque SQLite por Postgres

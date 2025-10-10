@@ -2,41 +2,59 @@ import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Package, FolderOpen, FileText, Users, TrendingUp, AlertCircle } from 'lucide-react';
-import { useProducts, useCategories } from '@/hooks/useSupabaseData';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Package, 
+  FolderOpen, 
+  FileText, 
+  Users, 
+  TrendingUp, 
+  AlertCircle 
+} from 'lucide-react';
 import { ScrollAnimation } from '@/components/ScrollAnimation';
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+
 export default function AdminDashboard() {
-  const { products } = useProducts();
-  const { categories } = useCategories();
-  const [blogPosts, setBlogPosts] = useState<any[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    products: 0,
+    categories: 0,
+    blogPosts: 0
+  });
+  const [users] = useState([
+    { id: 1, name: 'Admin User' }
+  ]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchStats = async () => {
       try {
-        // Simular carregamento de dados do blog
-        const blogData = [
-          { id: 1, title: 'Novo Produto Lançado', status: 'Publicado' },
-          { id: 2, title: 'Manutenção Programada', status: 'Rascunho' },
-        ];
-        setBlogPosts(blogData);
+        // Fetch products count
+        const productsRes = await fetch(`${API_BASE}/products`);
+        const productsData = await productsRes.json();
         
-        // Simular carregamento de usuários
-        const userData = [
-          { id: 1, name: 'Admin User', email: 'admin@nexusvalvulas.com', role: 'Administrador' },
-          { id: 2, name: 'Cliente Exemplo', email: 'cliente@exemplo.com', role: 'Cliente' },
-        ];
-        setUsers(userData);
+        // Fetch categories count
+        const categoriesRes = await fetch(`${API_BASE}/categories`);
+        const categoriesData = await categoriesRes.json();
+        
+        // Fetch blog posts count
+        const blogPostsRes = await fetch(`${API_BASE}/blog/posts`);
+        const blogPostsData = await blogPostsRes.json();
+        
+        setStats({
+          products: productsData?.length || 0,
+          categories: categoriesData?.length || 0,
+          blogPosts: blogPostsData?.length || 0
+        });
       } catch (error) {
-        console.error('Erro ao carregar dados:', error);
+        console.error('Erro ao buscar estatísticas:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    fetchStats();
   }, []);
 
   if (loading) {
@@ -73,7 +91,7 @@ export default function AdminDashboard() {
                 <Package className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{products?.length || 0}</div>
+                <div className="text-2xl font-bold">{stats.products}</div>
                 <p className="text-xs text-muted-foreground">+12% em relação ao mês passado</p>
               </CardContent>
             </Card>
@@ -84,7 +102,7 @@ export default function AdminDashboard() {
                 <FolderOpen className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{categories?.length || 0}</div>
+                <div className="text-2xl font-bold">{stats.categories}</div>
                 <p className="text-xs text-muted-foreground">+3 novas este mês</p>
               </CardContent>
             </Card>
@@ -95,7 +113,7 @@ export default function AdminDashboard() {
                 <FileText className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{blogPosts.length}</div>
+                <div className="text-2xl font-bold">{stats.blogPosts}</div>
                 <p className="text-xs text-muted-foreground">2 rascunhos</p>
               </CardContent>
             </Card>

@@ -1,16 +1,38 @@
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link } from "react-router-dom";
-import { Package } from "lucide-react";
-import { useCategories } from "@/hooks/useSupabaseData";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Image as ImageIcon, ArrowRight, Package } from "lucide-react";
 import { PageLoader } from "@/components/PageLoader";
 import { BreadcrumbStandard } from "@/components/Breadcrumb";
 import { ScrollAnimation } from "@/components/ScrollAnimation";
 
-const Produtos = () => {
-  const { categories, loading, error } = useCategories();
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+
+export default function Produtos() {
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/categories`);
+        if (!res.ok) throw new Error('Erro ao buscar categorias');
+        const data = await res.json();
+        setCategories(data || []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Erro ao carregar categorias');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   if (loading) {
     return <PageLoader />;
@@ -150,5 +172,3 @@ const Produtos = () => {
     </Layout>
   );
 };
-
-export default Produtos;

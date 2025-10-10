@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Plus, Edit, Trash2, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,15 +10,15 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-// removed supabase; using backend API instead
-import { useProducts, useCategories } from '@/hooks/useSupabaseData';
 import { DraggableVariantList } from '@/components/admin/DraggableVariantList';
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+
 export default function AdminProducts() {
-  const { products, loading, refetch } = useProducts();
-  const { categories } = useCategories();
+  const [products, setProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
   
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
@@ -40,6 +40,48 @@ export default function AdminProducts() {
     size: '',
     drawingFile: null
   });
+
+  // Fetch products and categories
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch products
+        const productsRes = await fetch(`${API_BASE}/products`);
+        const productsData = await productsRes.json();
+        setProducts(productsData || []);
+        
+        // Fetch categories
+        const categoriesRes = await fetch(`${API_BASE}/categories`);
+        const categoriesData = await categoriesRes.json();
+        setCategories(categoriesData || []);
+      } catch (error) {
+        console.error('Erro ao buscar dados:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const refetch = async () => {
+    setLoading(true);
+    try {
+      // Fetch products
+      const productsRes = await fetch(`${API_BASE}/products`);
+      const productsData = await productsRes.json();
+      setProducts(productsData || []);
+      
+      // Fetch categories
+      const categoriesRes = await fetch(`${API_BASE}/categories`);
+      const categoriesData = await categoriesRes.json();
+      setCategories(categoriesData || []);
+    } catch (error) {
+      console.error('Erro ao atualizar dados:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

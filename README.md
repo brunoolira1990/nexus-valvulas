@@ -58,6 +58,86 @@ O backend roda em http://localhost:4000
 
 ## Tecnologias Utilizadas
 
+- React + Vite
+- TypeScript
+- Tailwind CSS
+- React Router
+- Axios
+- React Hook Form
+- Zod (validação)
+- React Query
+- Prisma ORM
+- PostgreSQL
+- Express.js
+- Nginx (produção)
+- PM2 (gerenciamento de processos)
+
+## Deployment em Produção
+
+### Arquitetura
+
+O projeto utiliza uma arquitetura de frontend e backend separados:
+
+- **Frontend**: nexusvalvulas.com.br
+- **Backend/API**: api.nexusvalvulas.com.br
+
+### Configuração de Ambiente
+
+#### Backend (.env.production)
+```bash
+DATABASE_URL=postgresql://usuario:senha@host:porta/nome_do_banco?schema=public
+JWT_SECRET=sua_chave_secreta_forte_aqui
+PUBLIC_URL=https://api.nexusvalvulas.com.br
+PORT=4000
+```
+
+#### Frontend (.env.production)
+```bash
+VITE_API_BASE=https://api.nexusvalvulas.com.br
+```
+
+### Servidor
+
+O deployment em produção utiliza:
+
+1. **Nginx** como servidor web e proxy reverso
+2. **PM2** para gerenciamento de processos do backend
+3. **PostgreSQL** como banco de dados
+4. **SSL/TLS** com Let's Encrypt
+
+### Processo de Deployment
+
+1. Configurar ambiente de produção (variáveis de ambiente)
+2. Build do frontend: `npm run build:prod`
+3. Deploy do backend: `pm2 start backend/src/index.js`
+4. Configurar Nginx com os arquivos de configuração fornecidos
+5. Configurar SSL/TLS
+6. Testar a aplicação
+7. Monitorar logs e performance
+
+## SEO e Performance
+
+O site foi otimizado para:
+
+- SEO profissional com meta tags, Open Graph, sitemap.xml
+- Performance com lazy loading, code splitting e PWA
+- Core Web Vitals otimizados
+- Mobile-first e responsivo
+
+## Segurança
+
+- HTTPS obrigatório
+- Headers de segurança (CSP, X-Frame-Options, etc.)
+- Validação de entrada em formulários
+- Proteção CSRF
+- Rate limiting
+
+## Monitoramento
+
+- Analytics com Google Analytics 4
+- Web Vitals para monitoramento de performance
+- Logs estruturados para debugging
+
 ## How can I edit this code?
 
 There are several ways of editing your application.
