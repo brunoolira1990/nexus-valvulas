@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:prod": "vite build --mode production",
     "build:dev": "vite build --mode development",
+    "preview": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
@@ -14,14 +16,14 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "preview": "vite preview",
     "prepare": "husky install",
     "sitemap": "node scripts/generate-sitemap.cjs",
     "optimize-images": "node scripts/optimize-images.cjs",
     "audit-performance": "node scripts/audit-performance.cjs",
     "optimize-performance": "node scripts/optimize-performance.cjs",
     "check-mobile": "node scripts/check-mobile-responsiveness.cjs",
-    "seo-audit": "node scripts/seo-audit.cjs"
+    "seo-audit": "node scripts/seo-audit.cjs",
+    "monitoring": "node scripts/monitoring-dashboard.cjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

@@ -1,0 +1,22 @@
+{
+  "timestamp": "2025-10-10T16:10:03.514Z",
+  "system": {
+    "nodeVersion": "v20.19.5",
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "services": {
+    "frontend": "Static files served by Nginx",
+    "backend": "Node.js Express app (PM2)",
+    "database": "PostgreSQL"
+  },
+  "monitoring": {
+    "logs": [],
+    "healthChecks": [
+      "API endpoints",
+      "Database connectivity",
+      "Static file serving",
+      "SSL certificates"
+    ]
+  }
+}

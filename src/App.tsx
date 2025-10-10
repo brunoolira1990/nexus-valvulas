@@ -10,7 +10,8 @@ import { Suspense, lazy, useEffect } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import AOS from 'aos';
+import { Analytics } from "@/components/Analytics";
+import AOS from "aos";
 
 // Páginas públicas
 const Index = lazy(() => import("@/pages/Index"));
@@ -52,6 +53,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <Analytics />
               <AOSInitializer />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
@@ -65,19 +67,22 @@ const App = () => (
                   <Route path="/blog/:slug" element={<BlogPost />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/debug" element={<Debug />} />
-                  
+
                   {/* Admin Routes */}
-                  <Route path="/admin" element={
-                    <ProtectedRoute requireAdmin>
-                      <AdminLayout />
-                    </ProtectedRoute>
-                  }>
+                  <Route
+                    path="/admin"
+                    element={
+                      <ProtectedRoute requireAdmin>
+                        <AdminLayout />
+                      </ProtectedRoute>
+                    }
+                  >
                     <Route index element={<AdminDashboard />} />
                     <Route path="categories" element={<AdminCategories />} />
                     <Route path="products" element={<AdminProducts />} />
                     <Route path="blog" element={<AdminBlog />} />
                   </Route>
-                  
+
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
