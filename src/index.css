@@ -103,3 +103,33 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Estilos personalizados para AOS */
+[data-aos] {
+  visibility: hidden;
+}
+
+[data-aos].aos-animate {
+  visibility: visible;
+}
+
+/* Classes de delay para animações sequenciais */
+.delay-100 {
+  transition-delay: 0.1s;
+}
+
+.delay-200 {
+  transition-delay: 0.2s;
+}
+
+.delay-300 {
+  transition-delay: 0.3s;
+}
+
+.delay-400 {
+  transition-delay: 0.4s;
+}
+
+.delay-500 {
+  transition-delay: 0.5s;
+}

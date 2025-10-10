@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+// removed supabase; using backend API instead
 import { useProducts, useCategories } from '@/hooks/useSupabaseData';
 import { DraggableVariantList } from '@/components/admin/DraggableVariantList';
 
@@ -18,6 +18,7 @@ export default function AdminProducts() {
   const { products, loading, refetch } = useProducts();
   const { categories } = useCategories();
   const { toast } = useToast();
+  const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
   
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
@@ -45,65 +46,65 @@ export default function AdminProducts() {
     
     try {
       setSubmitting(true);
-      const uploadedImageUrls: string[] = [];
-      const uploadedPdfUrls: string[] = [];
+      const existingImageUrls = (formData.images ? formData.images.split(',').map(url => url.trim()).filter(Boolean) : []);
+      const existingPdfUrls = (formData.pdfs ? formData.pdfs.split(',').map(url => url.trim()).filter(Boolean) : []);
 
-      // Upload de imagens (se houver)
-      if (imageFiles && imageFiles.length > 0) {
-        for (const file of Array.from(imageFiles)) {
-          const filePath = `${formData.slug}/${Date.now()}-${file.name}`;
-          const { error: uploadError } = await supabase.storage
-            .from('products')
-            .upload(filePath, file, { upsert: false });
-          if (uploadError) throw uploadError;
-          const { data } = supabase.storage.from('products').getPublicUrl(filePath);
-          uploadedImageUrls.push(data.publicUrl);
-        }
-      }
-
-      // Upload de PDFs (se houver)
-      if (pdfFiles && pdfFiles.length > 0) {
-        for (const file of Array.from(pdfFiles)) {
-          const filePath = `${formData.slug}/pdfs/${Date.now()}-${file.name}`;
-          const { error: uploadError } = await supabase.storage
-            .from('products')
-            .upload(filePath, file, { upsert: false });
-          if (uploadError) throw uploadError;
-          const { data } = supabase.storage.from('products').getPublicUrl(filePath);
-          uploadedPdfUrls.push(data.publicUrl);
-        }
-      }
-
-      const imageUrls = [
-        ...uploadedImageUrls,
-        ...(formData.images ? formData.images.split(',').map(url => url.trim()).filter(Boolean) : [])
-      ];
-      const pdfUrls = [
-        ...uploadedPdfUrls,
-        ...(formData.pdfs ? formData.pdfs.split(',').map(url => url.trim()).filter(Boolean) : [])
-      ];
-
-      const coreProduct = {
-        title: formData.title,
-        slug: formData.slug,
-        description: formData.description,
-        category_id: formData.category_id,
-        images: imageUrls, // Array de URLs diretamente na tabela products
-        pdfs: pdfUrls     // Array de URLs diretamente na tabela products
-      };
+      const authHeader = localStorage.getItem('authToken') ? { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` } : {};
 
       if (editingProduct) {
-        const { error } = await supabase
-          .from('products')
-          .update(coreProduct)
-          .eq('id', editingProduct.id);
-        if (error) throw error;
+        const res = await fetch(`${API_BASE}/products/${editingProduct.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', ...authHeader },
+          body: JSON.stringify({
+            title: formData.title,
+            slug: formData.slug,
+            description: formData.description,
+            category_id: formData.category_id,
+            images: existingImageUrls,
+            pdfs: existingPdfUrls,
+          })
+        });
+        if (!res.ok) throw new Error('Erro ao atualizar produto');
+        if (imageFiles && imageFiles.length > 0) {
+          const form = new FormData();
+          Array.from(imageFiles).forEach(file => form.append('images', file));
+          const up = await fetch(`${API_BASE}/products/${editingProduct.id}/images`, { method: 'POST', headers: { ...authHeader }, body: form });
+          if (!up.ok) throw new Error('Erro ao enviar imagens');
+        }
+        if (pdfFiles && pdfFiles.length > 0) {
+          const form = new FormData();
+          Array.from(pdfFiles).forEach(file => form.append('pdfs', file));
+          const up = await fetch(`${API_BASE}/products/${editingProduct.id}/pdfs`, { method: 'POST', headers: { ...authHeader }, body: form });
+          if (!up.ok) throw new Error('Erro ao enviar PDFs');
+        }
         toast({ title: 'Produto atualizado com sucesso!' });
       } else {
-        const { error } = await supabase
-          .from('products')
-          .insert(coreProduct);
-        if (error) throw error;
+        const res = await fetch(`${API_BASE}/products`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...authHeader },
+          body: JSON.stringify({
+            title: formData.title,
+            slug: formData.slug,
+            description: formData.description,
+            category_id: formData.category_id,
+            images: existingImageUrls,
+            pdfs: existingPdfUrls,
+          })
+        });
+        if (!res.ok) throw new Error('Erro ao criar produto');
+        const created = await res.json();
+        if (imageFiles && imageFiles.length > 0) {
+          const form = new FormData();
+          Array.from(imageFiles).forEach(file => form.append('images', file));
+          const up = await fetch(`${API_BASE}/products/${created.id}/images`, { method: 'POST', headers: { ...authHeader }, body: form });
+          if (!up.ok) throw new Error('Erro ao enviar imagens');
+        }
+        if (pdfFiles && pdfFiles.length > 0) {
+          const form = new FormData();
+          Array.from(pdfFiles).forEach(file => form.append('pdfs', file));
+          const up = await fetch(`${API_BASE}/products/${created.id}/pdfs`, { method: 'POST', headers: { ...authHeader }, body: form });
+          if (!up.ok) throw new Error('Erro ao enviar PDFs');
+        }
         toast({ title: 'Produto criado com sucesso!' });
       }
 
@@ -126,14 +127,11 @@ export default function AdminProducts() {
   };
 
   const loadVariants = async (productId: string) => {
-    const { data, error } = await supabase
-      .from('variants')
-      .select('*')
-      .eq('product_id', productId)
-      .order('position')
-      .order('type')
-      .order('size');
-    if (!error) setVariants(data || []);
+    const res = await fetch(`${API_BASE}/products/${productId}/variants`);
+    if (res.ok) {
+      const data = await res.json();
+      setVariants(data || []);
+    }
   };
 
   const handleAddVariant = async () => {
@@ -144,31 +142,23 @@ export default function AdminProducts() {
     }
     try {
       setVariantSubmitting(true);
-      let drawingUrl: string | null = null;
+      const createRes = await fetch(`${API_BASE}/products/${editingProduct.id}/variants`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(localStorage.getItem('authToken') ? { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` } : {}) },
+        body: JSON.stringify({ type: newVariant.type, size: newVariant.size, drawing_url: null })
+      });
+      if (!createRes.ok) throw new Error('Erro ao criar variante');
+      const created = await createRes.json();
       if (newVariant.drawingFile) {
-        const file = newVariant.drawingFile;
-        const filePath = `${formData.slug}/variants/${Date.now()}-${file.name}`;
-        const { error: uploadError } = await supabase.storage
-          .from('products')
-          .upload(filePath, file, { upsert: false });
-        if (uploadError) throw uploadError;
-        const { data } = supabase.storage.from('products').getPublicUrl(filePath);
-        drawingUrl = data.publicUrl;
-      }
-
-      // Calcula a próxima posição
-      const maxPosition = variants.length > 0 ? Math.max(...variants.map(v => v.position || 0)) : 0;
-      
-      const { error } = await supabase
-        .from('variants')
-        .insert({
-          product_id: editingProduct.id,
-          type: newVariant.type,
-          size: newVariant.size,
-          drawing_url: drawingUrl,
-          position: maxPosition + 1
+        const form = new FormData();
+        form.append('drawing', newVariant.drawingFile);
+        const up = await fetch(`${API_BASE}/variants/${created.id}/drawing`, {
+          method: 'POST',
+          headers: { ...(localStorage.getItem('authToken') ? { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` } : {}) },
+          body: form
         });
-      if (error) throw error;
+        if (!up.ok) throw new Error('Erro ao enviar desenho');
+      }
       toast({ title: 'Variante adicionada com sucesso!' });
       setNewVariant({ type: '', size: '', drawingFile: null });
       await loadVariants(editingProduct.id);
@@ -181,15 +171,13 @@ export default function AdminProducts() {
 
   const handleReorderVariants = async (reorderedVariants: any[]) => {
     try {
-      // Atualiza as posições no banco
-      const updates = reorderedVariants.map((variant, index) => 
-        supabase
-          .from('variants')
-          .update({ position: index + 1 })
-          .eq('id', variant.id)
-      );
-      
-      await Promise.all(updates);
+      const payload = reorderedVariants.map((v, index) => ({ id: v.id, position: index + 1 }));
+      const res = await fetch(`${API_BASE}/variants/reorder`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...(localStorage.getItem('authToken') ? { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` } : {}) },
+        body: JSON.stringify({ items: payload })
+      });
+      if (!res.ok) throw new Error('Erro ao reordenar variantes');
       setVariants(reorderedVariants);
       toast({ title: 'Ordem das variantes atualizada!' });
     } catch (error: any) {
@@ -199,11 +187,11 @@ export default function AdminProducts() {
 
   const handleDeleteVariant = async (variantId: string) => {
     try {
-      const { error } = await supabase
-        .from('variants')
-        .delete()
-        .eq('id', variantId);
-      if (error) throw error;
+      const res = await fetch(`${API_BASE}/variants/${variantId}`, {
+        method: 'DELETE',
+        headers: { ...(localStorage.getItem('authToken') ? { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` } : {}) }
+      });
+      if (!res.ok) throw new Error('Erro ao remover variante');
       toast({ title: 'Variante removida!' });
       if (editingProduct) await loadVariants(editingProduct.id);
     } catch (error: any) {
@@ -233,12 +221,11 @@ export default function AdminProducts() {
     if (!confirm('Tem certeza que deseja excluir este produto?')) return;
     
     try {
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
+      const res = await fetch(`${API_BASE}/products/${id}`, {
+        method: 'DELETE',
+        headers: { ...(localStorage.getItem('authToken') ? { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` } : {}) }
+      });
+      if (!res.ok) throw new Error('Erro ao excluir produto');
       toast({ title: 'Produto excluído com sucesso!' });
       refetch();
     } catch (error: any) {

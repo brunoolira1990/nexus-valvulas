@@ -1,4 +1,4 @@
-const API_BASE = process.env.VITE_API_BASE || 'http://localhost:4000';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
 
 interface ApiOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
@@ -25,8 +25,7 @@ async function apiCall(path: string, options: ApiOptions = {}) {
 
   const config: RequestInit = {
     method,
-    headers,
-    credentials: 'include'
+    headers
   };
 
   if (body) {
@@ -107,4 +106,13 @@ export async function register(data: any) {
     method: 'POST',
     body: data
   });
+}
+
+// Blog
+export async function getBlogPosts() {
+  return apiCall('/blog/posts');
+}
+
+export async function getBlogPostBySlug(slug: string) {
+  return apiCall(`/blog/posts/slug/${slug}`);
 }

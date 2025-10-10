@@ -58,6 +58,7 @@ export function useCategories() {
   return { categories, loading, error, refetch: fetchCategories };
 }
 
+// Mantemos a função de produtos baseada no backend por ora.
 export function useProducts(categorySlug?: string) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,7 +71,7 @@ export function useProducts(categorySlug?: string) {
       const res = await fetch(`${API_BASE}/products${categorySlug ? `?category=${categorySlug}` : ''}`);
       if (!res.ok) throw new Error('Erro ao buscar produtos');
       const data = await res.json();
-      setProducts(data);
+      setProducts(data || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao carregar produtos');
     } finally {
@@ -97,8 +98,8 @@ export function useProduct(productSlug: string) {
         const res = await fetch(`${API_BASE}/products/${productSlug}`);
         if (!res.ok) throw new Error('Erro ao buscar produto');
         const data = await res.json();
-        setProduct(data.product);
-        setVariants(data.variants);
+        setProduct(data.product || null);
+        setVariants(data.variants || []);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erro ao carregar produto');
       } finally {

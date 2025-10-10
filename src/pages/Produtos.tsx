@@ -1,10 +1,13 @@
 import { Layout } from "@/components/layout/Layout";
 import { SEO } from "@/components/SEO";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { Package } from "lucide-react";
 import { useCategories } from "@/hooks/useSupabaseData";
 import { PageLoader } from "@/components/PageLoader";
+import { BreadcrumbStandard } from "@/components/Breadcrumb";
+import { ScrollAnimation } from "@/components/ScrollAnimation";
 
 const Produtos = () => {
   const { categories, loading, error } = useCategories();
@@ -20,6 +23,14 @@ const Produtos = () => {
           <div className="text-center">
             <h1 className="text-2xl font-bold text-destructive mb-4">Erro ao carregar categorias</h1>
             <p className="text-muted-foreground">{error}</p>
+            <div className="mt-6">
+              <Link 
+                to="/contato" 
+                className="text-primary hover:underline font-medium"
+              >
+                Entre em contato conosco para obter assistência →
+              </Link>
+            </div>
           </div>
         </div>
       </Layout>
@@ -29,9 +40,10 @@ const Produtos = () => {
   return (
     <Layout>
       <SEO
-        title="Produtos - Nexus Válvulas | Catálogo Completo de Válvulas Industriais"
-        description="Explore nosso catálogo completo de válvulas industriais, conexões, flanges e acessórios. Soluções para química, refinarias, siderúrgicas e mais."
-        keywords="válvulas industriais, catálogo produtos, válvulas esfera, válvulas gaveta, válvulas globo, válvulas retenção"
+        title="Catálogo de Produtos - Nexus Válvulas | Válvulas Industriais"
+        description="Explore nosso catálogo completo de válvulas industriais, conexões, flanges e acessórios. Soluções para química, refinarias, siderúrgicas e mais. Qualidade e durabilidade garantidas."
+        keywords="válvulas industriais, catálogo produtos, válvulas esfera, válvulas gaveta, válvulas globo, válvulas retenção, conexões industriais, flanges"
+        canonical="/produtos"
       />
       
       {/* Header Section */}
@@ -48,36 +60,91 @@ const Produtos = () => {
           </div>
         </div>
       </section>
+      
+      <section className="bg-muted/30 py-4">
+        <div className="container mx-auto px-4">
+          <BreadcrumbStandard 
+            items={[
+              { label: "Home", href: "/" },
+              { label: "Produtos" }
+            ]}
+          />
+        </div>
+      </section>
 
       {/* Categories Grid */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {categories.map((categoria) => (
-              <Card key={categoria.id} className="group hover:shadow-lg transition-all duration-300">
-                <div className="aspect-video rounded-t-lg overflow-hidden">
-                  <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                    <Package className="h-16 w-16 text-primary" />
+            {categories.map((categoria, index) => (
+              <ScrollAnimation 
+                key={categoria.id} 
+                animation="fade-up" 
+                delay={index * 100}
+              >
+                <Card className="group hover:shadow-lg transition-all duration-300">
+                  <div className="aspect-video rounded-t-lg overflow-hidden bg-white">
+                    {(categoria as any).image ? (
+                      <div className="w-full h-full p-4 flex items-center justify-center">
+                        <img 
+                          src={(categoria as any).image} 
+                          alt={`Imagem da categoria ${categoria.name}`}
+                          className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-r from-blue-100 to-orange-100 flex items-center justify-center">
+                        <Package className="h-16 w-16 text-blue-600" />
+                      </div>
+                    )}
                   </div>
-                </div>
-                <CardHeader>
-                  <CardTitle className="group-hover:text-accent transition-colors">
-                    {categoria.name}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <Link 
-                      to={`/produtos/${categoria.slug}`}
-                      className="text-accent hover:text-accent/80 font-medium"
-                    >
-                      Ver produtos →
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
+                  <CardHeader>
+                    <CardTitle className="group-hover:text-accent transition-colors text-orange-600 font-bold">
+                      {categoria.name}
+                    </CardTitle>
+                    {categoria.description && (
+                      <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+                        {categoria.description}
+                      </p>
+                    )}
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <Link 
+                        to={`/produtos/${categoria.slug}`}
+                        className="text-orange-600 hover:text-orange-700 font-medium"
+                      >
+                        Ver produtos →
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
+              </ScrollAnimation>
             ))}
           </div>
+          
+          {/* CTA Section */}
+          <ScrollAnimation animation="fade-up" className="mt-16 text-center">
+            <div className="bg-muted/30 rounded-lg p-8 max-w-3xl mx-auto">
+              <h3 className="text-2xl font-bold mb-4">Não encontrou o que procurava?</h3>
+              <p className="text-muted-foreground mb-6">
+                Nossa equipe técnica pode ajudar você a encontrar a solução ideal para sua aplicação específica.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button asChild size="lg" variant="default" className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                  <Link to="/contato">
+                    Solicitar Consultoria Técnica
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline">
+                  <Link to="/blog">
+                    Ler Artigos Técnicos
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </ScrollAnimation>
         </div>
       </section>
     </Layout>

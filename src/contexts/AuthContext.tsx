@@ -12,11 +12,11 @@ interface AuthContextType {
   token: string | null;
   loading: boolean;
   isAdmin: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{ error?: Error } | void>;
   signOut: () => void;
 }
 
-const API_BASE = process.env.VITE_API_BASE || 'http://localhost:4000';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
@@ -42,7 +42,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(false);
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string): Promise<{ error?: Error } | void> => {
     try {
       const res = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
@@ -62,7 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('authUser', JSON.stringify(data.user));
     } catch (err: any) {
       console.error('Login error:', err);
-      throw err;
+      return { error: err };
     }
   };
 

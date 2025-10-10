@@ -6,10 +6,11 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PageLoader } from "@/components/PageLoader";
 import { HelmetProvider } from "react-helmet-async";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import AOS from 'aos';
 
 // Páginas públicas
 const Index = lazy(() => import("@/pages/Index"));
@@ -32,6 +33,16 @@ const AdminBlog = lazy(() => import("@/pages/admin/AdminBlog"));
 
 const queryClient = new QueryClient();
 
+// Componente para reinicializar o AOS em cada navegação
+const AOSInitializer = () => {
+  useEffect(() => {
+    // Reinicializar AOS quando a página mudar
+    AOS.refresh();
+  }, []);
+
+  return null;
+};
+
 const App = () => (
   <HelmetProvider>
     <ErrorBoundary>
@@ -41,6 +52,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <AOSInitializer />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<Index />} />

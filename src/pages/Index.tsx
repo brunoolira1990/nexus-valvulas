@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Factory, Wrench, Settings, Shield } from "lucide-react";
+import { ScrollAnimation } from "@/components/ScrollAnimation";
+import { Link } from "react-router-dom";
 
 const Index = () => {
   const segments = useMemo(() => [
@@ -49,10 +51,13 @@ const Index = () => {
   return (
     <Layout>
       <SEO
-        title="Nexus Válvulas E Conexões Industriais"
-        description="Com mais de 20 anos de experiência no mercado, a Nexus é uma das principais fornecedoras de válvulas e conexões industriais no Brasil. Atendemos química, refinarias, siderúrgicas, usinas, metalúrgicas e petroquímicas."
-        keywords="válvulas industriais, conexões industriais, válvulas química, válvulas refinaria, válvulas siderúrgica, válvulas usina, válvulas metalúrgica, válvulas petroquímica, nexus, brasil"
+        title="Nexus Válvulas E Conexões Industriais - Soluções para Indústria"
+        description="Mais de 20 anos fornecendo válvulas industriais de alta qualidade para química, refinarias, siderúrgicas, usinas, metalúrgicas e petroquímicas. Qualidade, atendimento e entrega garantidos."
+        keywords="válvulas industriais, conexões industriais, válvulas química, válvulas refinaria, válvulas siderúrgica, válvulas usina, válvulas metalúrgica, válvulas petroquímica, nexus, brasil, fornecedor industrial"
+        image="/src/assets/hero-industrial.jpg"
+        canonical="/"
       />
+      
       {/* Hero Section */}
       <section className="relative min-h-[80vh] flex items-center justify-center bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
         <div 
@@ -62,76 +67,105 @@ const Index = () => {
           }}
         />
         <div className="relative z-10 container mx-auto px-4 text-center">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6">
-            Nexus Válvulas E<br />
-            Conexões Industriais
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
-            Com mais de 20 anos de experiência no mercado, a Nexus é uma das 
-            principais fornecedoras de válvulas e conexões industriais no Brasil.
-          </p>
-          <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground text-lg px-8 py-4">
-            Saiba Mais
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </Button>
+          <ScrollAnimation animation="fade-in" duration={800}>
+            <h1 className="text-5xl md:text-6xl font-bold mb-6">
+              Nexus Válvulas E<br />
+              Conexões Industriais
+            </h1>
+            <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
+              Com mais de 20 anos de experiência no mercado, a Nexus é uma das 
+              principais fornecedoras de válvulas e conexões industriais no Brasil.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground text-lg px-8 py-4">
+                <Link to="/produtos" className="flex items-center">
+                  Ver Produtos
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+              <Button size="lg" variant="outline" className="text-lg px-8 py-4">
+                <Link to="/sobre" className="flex items-center">
+                  Sobre Nós
+                </Link>
+              </Button>
+            </div>
+          </ScrollAnimation>
         </div>
       </section>
 
       {/* Partners/Certifications */}      
       <section className="py-8 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="flex justify-center items-center space-x-8 md:space-x-16">
-            {partners.map((partner, index) => (
-              <div key={index} className="flex items-center">
-                <img 
-                  src={partner.logo}   // caminho da imagem
-                  alt={partner.name}   // nome para acessibilidade
-                  className="h-12 object-contain"  // ajusta altura e mantém proporção
-                />
-              </div>
-            ))}
-          </div>
+          <ScrollAnimation animation="fade-up" duration={600}>
+            <div className="flex justify-center items-center space-x-8 md:space-x-16">
+              {partners.map((partner, index) => (
+                <div key={index} className="flex items-center">
+                  <img 
+                    src={partner.logo}
+                    alt={`Parceiro ${partner.name}`}
+                    className="h-12 object-contain"
+                    loading="lazy"
+                  />
+                </div>
+              ))}
+            </div>
+          </ScrollAnimation>
         </div>
       </section>
 
       {/* Segments Section */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
+          <ScrollAnimation animation="fade-up" className="text-center mb-12">
             <h2 className="text-4xl font-bold mb-4">Segmentos Atendidos</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Atendemos diversos setores industriais com soluções especializadas 
               e produtos de alta qualidade
             </p>
-          </div>
+          </ScrollAnimation>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {segments.map((segment, index) => (
-              <Card key={index} className="group hover:shadow-lg transition-all duration-300 cursor-pointer">
-                <div className="aspect-video rounded-t-lg overflow-hidden">
-                  {segment.image ? (
-                    <img
-                      src={segment.image}        // caminho da imagem
-                      alt={segment.title}
-                      className="w-full h-full object-cover" // cobre todo o card mantendo proporção
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                      <Factory className="h-16 w-16 text-primary" />
+              <ScrollAnimation 
+                key={index} 
+                animation="fade-up" 
+                delay={index * 100}
+              >
+                <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer">
+                  <div className="aspect-video rounded-t-lg overflow-hidden">
+                    {segment.image ? (
+                      <img
+                        src={segment.image}
+                        alt={`Válvulas industriais para ${segment.title}`}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                        <Factory className="h-16 w-16 text-primary" />
+                      </div>
+                    )}
+                  </div>
+                  <CardHeader>
+                    <CardTitle className="group-hover:text-accent transition-colors">
+                      {segment.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription className="text-base">
+                      {segment.description}
+                    </CardDescription>
+                    <div className="mt-4">
+                      <Link 
+                        to="/contato" 
+                        className="text-primary hover:underline font-medium text-sm"
+                      >
+                        Saiba mais →
+                      </Link>
                     </div>
-                  )}
-                </div>
-                <CardHeader>
-                  <CardTitle className="group-hover:text-accent transition-colors">
-                    {segment.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-base">
-                    {segment.description}
-                  </CardDescription>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </ScrollAnimation>
             ))}
           </div>
         </div>
@@ -140,41 +174,96 @@ const Index = () => {
       {/* Features Section */}
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
+          <ScrollAnimation animation="fade-up" className="text-center mb-12">
             <h2 className="text-4xl font-bold mb-4">Por que escolher a Nexus?</h2>
-          </div>
+          </ScrollAnimation>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="bg-accent/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-                <Shield className="h-10 w-10 text-accent" />
+            <ScrollAnimation animation="fade-up">
+              <div className="text-center">
+                <div className="bg-accent/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+                  <Shield className="h-10 w-10 text-accent" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Qualidade</h3>
+                <p className="text-muted-foreground">
+                  Produtos certificados e testados para garantir máxima segurança e durabilidade
+                </p>
+                <div className="mt-4">
+                  <Link 
+                    to="/sobre" 
+                    className="text-primary hover:underline font-medium text-sm"
+                  >
+                    Nossas certificações →
+                  </Link>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Qualidade</h3>
-              <p className="text-muted-foreground">
-                Produtos certificados e testados para garantir máxima segurança e durabilidade
-              </p>
-            </div>
+            </ScrollAnimation>
             
-            <div className="text-center">
-              <div className="bg-accent/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-                <Wrench className="h-10 w-10 text-accent" />
+            <ScrollAnimation animation="fade-up" delay={200}>
+              <div className="text-center">
+                <div className="bg-accent/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+                  <Wrench className="h-10 w-10 text-accent" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Atendimento</h3>
+                <p className="text-muted-foreground">
+                  Suporte técnico especializado e atendimento personalizado para cada cliente
+                </p>
+                <div className="mt-4">
+                  <Link 
+                    to="/contato" 
+                    className="text-primary hover:underline font-medium text-sm"
+                  >
+                    Fale com um especialista →
+                  </Link>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Atendimento</h3>
-              <p className="text-muted-foreground">
-                Suporte técnico especializado e atendimento personalizado para cada cliente
-              </p>
-            </div>
+            </ScrollAnimation>
             
-            <div className="text-center">
-              <div className="bg-accent/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-                <Settings className="h-10 w-10 text-accent" />
+            <ScrollAnimation animation="fade-up" delay={400}>
+              <div className="text-center">
+                <div className="bg-accent/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+                  <Settings className="h-10 w-10 text-accent" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Entrega</h3>
+                <p className="text-muted-foreground">
+                  Logística eficiente e prazos cumpridos para manter sua operação funcionando
+                </p>
+                <div className="mt-4">
+                  <Link 
+                    to="/sobre" 
+                    className="text-primary hover:underline font-medium text-sm"
+                  >
+                    Conheça nossa estrutura →
+                  </Link>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Entrega</h3>
-              <p className="text-muted-foreground">
-                Logística eficiente e prazos cumpridos para manter sua operação funcionando
-              </p>
-            </div>
+            </ScrollAnimation>
           </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16 bg-primary text-primary-foreground">
+        <div className="container mx-auto px-4 text-center">
+          <ScrollAnimation animation="fade-up">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">Pronto para encontrar a solução ideal?</h2>
+            <p className="text-xl mb-8 max-w-2xl mx-auto">
+              Nossa equipe técnica está pronta para ajudar você a escolher as válvulas e conexões perfeitas para sua aplicação.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button size="lg" variant="secondary" className="text-lg px-8 py-4">
+                <Link to="/contato" className="flex items-center">
+                  Solicitar Orçamento
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+              <Button size="lg" variant="outline" className="text-primary-foreground border-primary-foreground hover:bg-primary-foreground hover:text-primary text-lg px-8 py-4">
+                <Link to="/blog" className="flex items-center">
+                  Ler Artigos Técnicos
+                </Link>
+              </Button>
+            </div>
+          </ScrollAnimation>
         </div>
       </section>
     </Layout>

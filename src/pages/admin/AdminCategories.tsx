@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { useEffect } from 'react';
 
-const API_BASE = process.env.VITE_API_BASE || 'http://localhost:4000';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -67,7 +67,10 @@ export default function AdminCategories() {
       if (editingCategory) {
         const res = await fetch(`${API_BASE}/categories/${editingCategory.id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(localStorage.getItem('authToken') ? { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` } : {})
+          },
           body: JSON.stringify({ name: formData.name, slug: formData.slug, description: formData.description })
         });
         if (!res.ok) throw new Error('Erro ao atualizar categoria');
@@ -75,7 +78,10 @@ export default function AdminCategories() {
       } else {
         const res = await fetch(`${API_BASE}/categories`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(localStorage.getItem('authToken') ? { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` } : {})
+          },
           body: JSON.stringify({ name: formData.name, slug: formData.slug, description: formData.description })
         });
         if (!res.ok) throw new Error('Erro ao criar categoria');
@@ -88,7 +94,13 @@ export default function AdminCategories() {
       if (imageFile && categoryId) {
         const form = new FormData();
         form.append('image', imageFile);
-        const res = await fetch(`${API_BASE}/categories/${categoryId}/image`, { method: 'POST', body: form });
+        const res = await fetch(`${API_BASE}/categories/${categoryId}/image`, {
+          method: 'POST',
+          headers: {
+            ...(localStorage.getItem('authToken') ? { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` } : {})
+          },
+          body: form
+        });
         if (!res.ok) throw new Error('Erro ao enviar imagem');
       }
       
@@ -137,7 +149,12 @@ export default function AdminCategories() {
     if (!confirm('Tem certeza que deseja excluir esta categoria?')) return;
     
     try {
-  const res = await fetch(`${API_BASE}/categories/${id}`, { method: 'DELETE' });
+  const res = await fetch(`${API_BASE}/categories/${id}`, {
+    method: 'DELETE',
+    headers: {
+      ...(localStorage.getItem('authToken') ? { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` } : {})
+    }
+  });
   if (!res.ok) throw new Error('Erro ao deletar categoria');
       toast({ title: 'Categoria excluída com sucesso!' });
       refetch();

@@ -1,8 +1,8 @@
 import { useParams, Navigate, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { SEO } from "@/components/SEO";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,6 +10,8 @@ import { ArrowLeft, Download, Image as ImageIcon } from "lucide-react";
 import { useProduct } from "@/hooks/useSupabaseData";
 import { PageLoader } from "@/components/PageLoader";
 import { useEffect, useMemo, useState } from "react";
+import { BreadcrumbStandard } from "@/components/Breadcrumb";
+import { ScrollAnimation } from "@/components/ScrollAnimation";
 
 const ProdutoDetalhes = () => {
   const { categoria, produto } = useParams<{ categoria: string; produto: string }>();
@@ -28,19 +30,29 @@ const ProdutoDetalhes = () => {
     return unique;
   }, [variants]);
 
-  // Helper para converter tamanhos em polegadas para ordenação manual quando necessário
+  // Helper para converter tamanhos em polegadas para ordenação (suporta "1/2", "1 1/2", "1.1/4", "2 x 3")
   const parseInchesToNumber = (size: string): number => {
     if (!size) return Number.MAX_VALUE;
-    
-    // Remove aspas e limpa a string
-    const cleaned = size.replace(/["""'']/g, '').trim();
-    
-    // Primeiro tenta converter como decimal direto (ex: "1.25")
+
+    // Trata formato "A x B" (ou "A X B"): usa o menor lado para ordenação primária
+    if (size.includes('x') || size.includes('X')) {
+      const parts = size.split(/x|X/).map(s => s.trim());
+      const nums = parts.map(p => parseInchesToNumber(p));
+      return Math.min(...nums);
+    }
+
+    // Remove aspas/com aspas curvas e espaços desnecessários
+    const cleanedRaw = size.replace(/[""''”]/g, '').trim();
+
+    // Normaliza padrões como "1.1/4" para "1 1/4"
+    const cleaned = cleanedRaw.replace(/(\d+)\.(\d+)\/(\d+)/g, (_m, a, b, c) => `${a} ${b}/${c}`);
+
+    // Tenta decimal direto (ex: "1.25")
     const directNum = parseFloat(cleaned);
     if (!isNaN(directNum) && !cleaned.includes('/') && !cleaned.includes(' ')) {
       return directNum;
     }
-    
+
     const parseFraction = (text: string): number => {
       const parts = text.split('/');
       if (parts.length !== 2) return NaN;
@@ -49,8 +61,8 @@ const ProdutoDetalhes = () => {
       if (isNaN(num) || isNaN(den) || den === 0) return NaN;
       return num / den;
     };
-    
-    // Verifica se tem espaço (número misto como "1 1/2")
+
+    // Número misto (ex: "1 1/2")
     if (cleaned.includes(' ')) {
       const parts = cleaned.split(' ');
       if (parts.length === 2) {
@@ -61,31 +73,26 @@ const ProdutoDetalhes = () => {
         }
       }
     }
-    
-    // Verifica se é uma fração pura (como "1/2")
+
+    // Fração simples (ex: "1/2")
     if (cleaned.includes('/') && !cleaned.includes(' ')) {
       const fracNum = parseFraction(cleaned);
       if (!isNaN(fracNum)) return fracNum;
     }
-    
-    // Se não conseguiu converter, retorna um valor alto para ir pro final
+
     return Number.MAX_VALUE;
   };
 
   const sizeOptions = useMemo(() => {
     if (!selectedType) return [] as string[];
     const forType = (variants || []).filter(v => v.type === selectedType);
-    
     // Usa a ordenação por position primariamente, fallback para ordenação numérica
     const sortedVariants = forType.sort((a, b) => {
-      // Se ambas têm position definida, usa position
       if (a.position && b.position) {
         return a.position - b.position;
       }
-      // Senão, usa ordenação numérica por tamanho
       return parseInchesToNumber(a.size) - parseInchesToNumber(b.size);
     });
-    
     return sortedVariants.map(v => v.size);
   }, [variants, selectedType]);
 
@@ -93,6 +100,33 @@ const ProdutoDetalhes = () => {
     if (!selectedType || !selectedSize) return null as any;
     return (variants || []).find(v => v.type === selectedType && v.size === selectedSize) || null;
   }, [variants, selectedType, selectedSize]);
+
+  // Modal simples para "Pedir Cotação"
+  const [quoteOpen, setQuoteOpen] = useState(false);
+  const [quoteForm, setQuoteForm] = useState({ name: '', email: '', phone: '', message: '' });
+  const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+
+  const submitQuote = async () => {
+    if (!product) return;
+    const payload = {
+      productId: product.id,
+      variantType: selectedType,
+      variantSize: selectedSize,
+      name: quoteForm.name,
+      email: quoteForm.email,
+      phone: quoteForm.phone,
+      message: quoteForm.message,
+    };
+    try {
+      const res = await fetch(`${API_BASE}/quotes`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      if (!res.ok) throw new Error('Falha ao enviar cotação');
+      setQuoteOpen(false);
+      setQuoteForm({ name: '', email: '', phone: '', message: '' });
+      alert('Cotação enviada com sucesso!');
+    } catch (e) {
+      alert('Erro ao enviar cotação');
+    }
+  };
 
   useEffect(() => {
     if ((variants || []).length === 0) return;
@@ -141,8 +175,9 @@ const ProdutoDetalhes = () => {
         <>
       <SEO
         title={`${product.title} - Nexus Válvulas | Detalhes do Produto`}
-        description={product.description || `Especificações técnicas e detalhes do produto ${product.title}.`}
-        keywords={`${product.title}, válvulas industriais, especificações técnicas`}
+        description={product.description || `Especificações técnicas e detalhes do produto ${product.title}. Soluções industriais de alta qualidade.`}
+        keywords={`${product.title}, válvulas industriais, especificações técnicas, ${product.category?.name || ''}, conexões industriais`}
+        canonical={`/produtos/${categoria}/${produto}`}
       />
       
       {/* Schema.org para SEO */}
@@ -150,17 +185,26 @@ const ProdutoDetalhes = () => {
         {JSON.stringify(generateProductSchema())}
       </script>
       
+      {/* Header Section */}
+      <section className="bg-primary text-primary-foreground py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              {product.title}
+            </h1>
+          </div>
+        </div>
+      </section>
+      
       <section className="bg-muted/30 py-4">
         <div className="container mx-auto px-4">
-          <div className="flex items-center space-x-2 text-sm">
-            <Link to="/produtos" className="text-accent hover:underline">Produtos</Link>
-            <span className="text-muted-foreground">/</span>
-            <Link to={`/produtos/${categoria}`} className="text-accent hover:underline">
-              {product.category?.name}
-            </Link>
-            <span className="text-muted-foreground">/</span>
-            <span className="text-foreground">{product.title}</span>
-          </div>
+          <BreadcrumbStandard 
+            items={[
+              { label: "Produtos", href: "/produtos" },
+              { label: product.category?.name || "", href: `/produtos/${categoria}` },
+              { label: product.title }
+            ]}
+          />
         </div>
       </section>
 
@@ -177,7 +221,7 @@ const ProdutoDetalhes = () => {
 
           {/* Seletor de Variantes */}
           {variants && variants.length > 0 && (
-            <div className="mb-8 p-6 bg-muted/30 rounded-lg">
+            <ScrollAnimation animation="fade-up" className="mb-8 p-6 bg-muted/30 rounded-lg">
               <h3 className="text-lg font-semibold mb-4">Selecione a Variante</h3>
               <div className="space-y-4">
                 <div>
@@ -215,75 +259,133 @@ const ProdutoDetalhes = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </ScrollAnimation>
           )}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            <div className="space-y-4">
-              {/* Imagem principal - mostra variante selecionada ou galeria normal */}
-              {selectedVariant?.drawing_url ? (
-                <div className="aspect-square rounded-lg overflow-hidden border">
-                  <img 
-                    src={selectedVariant.drawing_url} 
-                    alt={`${selectedVariant.type} ${selectedVariant.size}`} 
-                    className="w-full h-full object-contain bg-white" 
-                  />
-                </div>
-              ) : images.length > 0 ? (
-                <>
+            <ScrollAnimation animation="fade-right" duration={800}>
+              <div className="space-y-4">
+                {/* Imagem principal - mostra variante selecionada ou galeria normal */}
+                {selectedVariant?.drawing_url ? (
                   <div className="aspect-square rounded-lg overflow-hidden border">
-                    <img src={images[selectedImage]} alt={product.title} className="w-full h-full object-cover" />
+                    <img 
+                      src={selectedVariant.drawing_url} 
+                      alt={`Desenho técnico ${selectedVariant.type} ${selectedVariant.size}`} 
+                      className="w-full h-full object-contain bg-white" 
+                      loading="lazy"
+                    />
                   </div>
-                  {images.length > 1 && (
-                    <div className="grid grid-cols-4 gap-2">
-                      {images.map((image, index) => (
-                        <button
-                          key={index}
-                          onClick={() => setSelectedImage(index)}
-                          className={`aspect-square rounded border overflow-hidden ${selectedImage === index ? 'ring-2 ring-accent' : ''}`}
-                        >
-                          <img src={image} alt={`${product.title} - Imagem ${index + 1}`} className="w-full h-full object-cover" />
-                        </button>
-                      ))}
+                ) : images.length > 0 ? (
+                  <>
+                    <div className="aspect-square rounded-lg overflow-hidden border">
+                      <img src={images[selectedImage]} alt={product.title} className="w-full h-full object-cover" loading="lazy" />
                     </div>
-                  )}
-                </>
-              ) : (
-                <div className="aspect-square rounded-lg border bg-muted flex items-center justify-center">
-                  <ImageIcon className="h-24 w-24 text-muted-foreground" />
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-6">
-              <div>
-                <h1 className="text-4xl font-bold mb-4">{product.title}</h1>
-                <Badge variant="secondary" className="mb-4">{product.category?.name}</Badge>
-                {product.description && (
-                  <p className="text-lg text-muted-foreground">{product.description}</p>
+                    {images.length > 1 && (
+                      <div className="grid grid-cols-4 gap-2">
+                        {images.map((image, index) => (
+                          <button
+                            key={index}
+                            onClick={() => setSelectedImage(index)}
+                            className={`aspect-square rounded border overflow-hidden ${selectedImage === index ? 'ring-2 ring-accent' : ''}`}
+                            aria-label={`Ver imagem ${index + 1}`}
+                          >
+                            <img src={image} alt={`${product.title} - Imagem ${index + 1}`} className="w-full h-full object-cover" loading="lazy" />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="aspect-square rounded-lg border bg-muted flex items-center justify-center">
+                    <ImageIcon className="h-24 w-24 text-muted-foreground" />
+                  </div>
                 )}
               </div>
+            </ScrollAnimation>
 
-              {pdfs.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="text-lg font-semibold">Downloads</h3>
-                  <div className="space-y-2">
-                    {pdfs.map((pdf, index) => (
-                      <Button key={index} variant="outline" size="sm" asChild className="w-full justify-start">
-                        <a href={pdf} target="_blank" rel="noopener noreferrer">
-                          <Download className="h-4 w-4 mr-2" />
-                          Catálogo Técnico {index + 1}
-                        </a>
-                      </Button>
-                    ))}
-                  </div>
+            <ScrollAnimation animation="fade-left" duration={800}>
+              <div className="space-y-6">
+                <div>
+                  <h1 className="text-4xl font-bold mb-4">{product.title}</h1>
+                  <Badge variant="secondary" className="mb-4">{product.category?.name}</Badge>
+                  {product.description && (
+                    <p className="text-lg text-muted-foreground">{product.description}</p>
+                  )}
                 </div>
-              )}
-            </div>
+
+                {pdfs.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold">Downloads</h3>
+                    <div className="space-y-2">
+                      {pdfs.map((pdf, index) => (
+                        <Button key={index} variant="outline" size="sm" asChild className="w-full justify-start">
+                          <a href={pdf} target="_blank" rel="noopener noreferrer">
+                            <Download className="h-4 w-4 mr-2" />
+                            Catálogo Técnico {index + 1}
+                          </a>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-2">
+                  <Button size="sm" onClick={() => setQuoteOpen(true)}>Pedir Cotação</Button>
+                </div>
+                
+                {/* Related Products CTA */}
+                <div className="pt-8 border-t">
+                  <h3 className="text-lg font-semibold mb-4">Precisa de ajuda na escolha?</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Nossa equipe técnica pode ajudar você a selecionar o produto ideal para sua aplicação.
+                  </p>
+                  <Button asChild variant="outline" size="sm">
+                    <Link to="/contato">
+                      Solicitar Consultoria Técnica
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </ScrollAnimation>
           </div>
         </div>
       </section>
-      </>
+      {quoteOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-background rounded-lg p-6 w-full max-w-md shadow-lg">
+            <h3 className="text-lg font-semibold mb-4">Pedir Cotação</h3>
+            <div className="space-y-3">
+              <div className="text-sm text-muted-foreground">
+                Produto: <span className="text-foreground font-medium">{product.title}</span>
+                {selectedType && selectedSize ? (
+                  <> — {selectedType} • {selectedSize}</>
+                ) : null}
+              </div>
+              <div>
+                <label className="block text-sm mb-1">Nome</label>
+                <input className="w-full border rounded px-3 py-2" value={quoteForm.name} onChange={(e) => setQuoteForm(v => ({ ...v, name: e.target.value }))} />
+              </div>
+              <div>
+                <label className="block text-sm mb-1">Email</label>
+                <input type="email" className="w-full border rounded px-3 py-2" value={quoteForm.email} onChange={(e) => setQuoteForm(v => ({ ...v, email: e.target.value }))} />
+              </div>
+              <div>
+                <label className="block text-sm mb-1">Telefone</label>
+                <input className="w-full border rounded px-3 py-2" value={quoteForm.phone} onChange={(e) => setQuoteForm(v => ({ ...v, phone: e.target.value }))} />
+              </div>
+              <div>
+                <label className="block text-sm mb-1">Mensagem</label>
+                <textarea className="w-full border rounded px-3 py-2" rows={4} value={quoteForm.message} onChange={(e) => setQuoteForm(v => ({ ...v, message: e.target.value }))} />
+              </div>
+            </div>
+            <div className="mt-4 flex gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={() => setQuoteOpen(false)}>Cancelar</Button>
+              <Button size="sm" onClick={submitQuote}>Enviar</Button>
+            </div>
+          </div>
+        </div>
+      )}
+        </>
       )}
     </Layout>
   );

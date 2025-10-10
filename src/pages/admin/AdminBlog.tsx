@@ -10,7 +10,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 
 interface BlogPost {
@@ -44,15 +43,26 @@ export default function AdminBlog() {
     meta_description: '',
     keywords: ''
   });
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const fetchPosts = async () => {
     try {
-      const { data, error } = await supabase
-        .from('blog_posts')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+      const token = localStorage.getItem('authToken');
       
-      if (error) throw error;
+      const response = await fetch(`${API_BASE}/blog/posts`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
       setPosts(data || []);
     } catch (error: any) {
       toast({ 
@@ -73,31 +83,37 @@ export default function AdminBlog() {
     e.preventDefault();
     
     try {
+      const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+      const token = localStorage.getItem('authToken');
+      
       const postData = {
         ...formData,
         keywords: formData.keywords ? formData.keywords.split(',').map(k => k.trim()).filter(Boolean) : []
       };
 
-      if (editingPost) {
-        const { error } = await supabase
-          .from('blog_posts')
-          .update(postData)
-          .eq('id', editingPost.id);
-        
-        if (error) throw error;
-        toast({ title: 'Post atualizado com sucesso!' });
-      } else {
-        const { error } = await supabase
-          .from('blog_posts')
-          .insert(postData);
-        
-        if (error) throw error;
-        toast({ title: 'Post criado com sucesso!' });
+      const url = editingPost ? `${API_BASE}/blog/posts/${editingPost.id}` : `${API_BASE}/blog/posts`;
+      const method = editingPost ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(postData)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Erro ${response.status}: ${errorText}`);
       }
+
+      toast({ title: editingPost ? 'Post atualizado com sucesso!' : 'Post criado com sucesso!' });
       
       setDialogOpen(false);
       setEditingPost(null);
       setFormData({ title: '', slug: '', content: '', summary: '', cover_image: '', published: false, meta_description: '', keywords: '' });
+      setCoverImageFile(null);
       fetchPosts();
     } catch (error: any) {
       toast({ 
@@ -127,12 +143,22 @@ export default function AdminBlog() {
     if (!confirm('Tem certeza que deseja excluir este post?')) return;
     
     try {
-      const { error } = await supabase
-        .from('blog_posts')
-        .delete()
-        .eq('id', id);
+      const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+      const token = localStorage.getItem('authToken');
       
-      if (error) throw error;
+      const response = await fetch(`${API_BASE}/blog/posts/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Erro ${response.status}: ${errorText}`);
+      }
+
       toast({ title: 'Post excluído com sucesso!' });
       fetchPosts();
     } catch (error: any) {
@@ -163,6 +189,97 @@ export default function AdminBlog() {
     }));
   };
 
+  const testAuth = async () => {
+    try {
+      const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+      const token = localStorage.getItem('authToken');
+      
+      console.log('Testing auth with token:', token ? `${token.substring(0, 20)}...` : 'null');
+      
+      if (!token) {
+        toast({ title: 'Erro de autenticação', description: 'Token não encontrado. Faça login novamente.', variant: 'destructive' });
+        return;
+      }
+      
+      const response = await fetch(`${API_BASE}/blog/debug-auth`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('Auth test response status:', response.status);
+      const result = await response.text();
+      console.log('Auth test result:', result);
+      
+      if (response.ok) {
+        toast({ title: 'Autenticação OK!' });
+      } else {
+        toast({ title: 'Erro de autenticação', description: result, variant: 'destructive' });
+      }
+    } catch (error: any) {
+      console.error('Auth test error:', error);
+      toast({ title: 'Erro no teste de auth', description: error.message, variant: 'destructive' });
+    }
+  };
+
+  const handleImageUpload = async (file: File) => {
+    setUploadingImage(true);
+    try {
+      console.log('Starting upload for file:', file.name, file.size);
+      const formData = new FormData();
+      formData.append('cover_image', file);
+      
+      const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+      const token = localStorage.getItem('authToken');
+      
+      console.log('Uploading to:', `${API_BASE}/blog/upload-cover`);
+      console.log('Token exists:', !!token);
+      console.log('Token value:', token ? `${token.substring(0, 20)}...` : 'null');
+      
+      if (!token) {
+        throw new Error('Token de autenticação não encontrado. Faça login novamente.');
+      }
+      
+      const response = await fetch(`${API_BASE}/blog/upload-cover`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        
+        if (response.status === 401) {
+          throw new Error('Token de autenticação inválido ou expirado. Faça login novamente.');
+        }
+        
+        throw new Error(`Erro ao fazer upload: ${response.status} - ${errorText}`);
+      }
+      
+      const result = await response.json();
+      console.log('Upload result:', result);
+      setFormData(prev => ({ ...prev, cover_image: result.url }));
+      toast({ title: 'Imagem enviada com sucesso!' });
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast({ 
+        title: 'Erro ao fazer upload', 
+        description: error.message,
+        variant: 'destructive' 
+      });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   return (
     <>
       <Helmet>
@@ -173,116 +290,149 @@ export default function AdminBlog() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-foreground">Blog</h1>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => {
-                setEditingPost(null);
-                setFormData({ title: '', slug: '', content: '', summary: '', cover_image: '', published: false, meta_description: '', keywords: '' });
-              }}>
-                <Plus className="mr-2 h-4 w-4" />
-                Novo Post
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>
-                  {editingPost ? 'Editar Post' : 'Novo Post'}
-                </DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+          <div className="flex gap-2">
+            <Button onClick={testAuth} variant="outline">
+              Testar Auth
+            </Button>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => {
+                  setEditingPost(null);
+                  setFormData({ title: '', slug: '', content: '', summary: '', cover_image: '', published: false, meta_description: '', keywords: '' });
+                  setCoverImageFile(null);
+                }}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Novo Post
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingPost ? 'Editar Post' : 'Novo Post'}
+                  </DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="title">Título</Label>
+                      <Input
+                        id="title"
+                        value={formData.title}
+                        onChange={(e) => handleTitleChange(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="slug">Slug</Label>
+                      <Input
+                        id="slug"
+                        value={formData.slug}
+                        onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                        required
+                      />
+                    </div>
+                  </div>
+                  
                   <div>
-                    <Label htmlFor="title">Título</Label>
-                    <Input
-                      id="title"
-                      value={formData.title}
-                      onChange={(e) => handleTitleChange(e.target.value)}
+                    <Label htmlFor="summary">Resumo</Label>
+                    <Textarea
+                      id="summary"
+                      value={formData.summary}
+                      onChange={(e) => setFormData(prev => ({ ...prev, summary: e.target.value }))}
+                      rows={2}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="content">Conteúdo</Label>
+                    <Textarea
+                      id="content"
+                      value={formData.content}
+                      onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+                      rows={10}
                       required
                     />
                   </div>
+
                   <div>
-                    <Label htmlFor="slug">Slug</Label>
-                    <Input
-                      id="slug"
-                      value={formData.slug}
-                      onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-                      required
+                    <Label htmlFor="cover_image">Imagem de Capa</Label>
+                    <div className="space-y-2">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setCoverImageFile(file);
+                            handleImageUpload(file);
+                          }
+                        }}
+                        disabled={uploadingImage}
+                      />
+                      {formData.cover_image && (
+                        <div className="mt-2">
+                          <img 
+                            src={formData.cover_image} 
+                            alt="Preview" 
+                            className="w-32 h-20 object-cover rounded border"
+                          />
+                          <p className="text-sm text-muted-foreground mt-1">
+                            URL: {formData.cover_image}
+                          </p>
+                        </div>
+                      )}
+                      <Input
+                        id="cover_image"
+                        value={formData.cover_image}
+                        onChange={(e) => setFormData(prev => ({ ...prev, cover_image: e.target.value }))}
+                        placeholder="Ou cole uma URL aqui"
+                        className="mt-2"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="meta_description">Meta Descrição</Label>
+                    <Textarea
+                      id="meta_description"
+                      value={formData.meta_description}
+                      onChange={(e) => setFormData(prev => ({ ...prev, meta_description: e.target.value }))}
+                      rows={2}
+                      placeholder="Descrição para SEO (máx. 160 caracteres)"
                     />
                   </div>
-                </div>
-                
-                <div>
-                  <Label htmlFor="summary">Resumo</Label>
-                  <Textarea
-                    id="summary"
-                    value={formData.summary}
-                    onChange={(e) => setFormData(prev => ({ ...prev, summary: e.target.value }))}
-                    rows={2}
-                  />
-                </div>
 
-                <div>
-                  <Label htmlFor="content">Conteúdo</Label>
-                  <Textarea
-                    id="content"
-                    value={formData.content}
-                    onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                    rows={10}
-                    required
-                  />
-                </div>
+                  <div>
+                    <Label htmlFor="keywords">Palavras-chave (separadas por vírgula)</Label>
+                    <Input
+                      id="keywords"
+                      value={formData.keywords}
+                      onChange={(e) => setFormData(prev => ({ ...prev, keywords: e.target.value }))}
+                      placeholder="válvulas, industrial, automação"
+                    />
+                  </div>
 
-                <div>
-                  <Label htmlFor="cover_image">Imagem de Capa (URL)</Label>
-                  <Input
-                    id="cover_image"
-                    value={formData.cover_image}
-                    onChange={(e) => setFormData(prev => ({ ...prev, cover_image: e.target.value }))}
-                    placeholder="https://exemplo.com/imagem.jpg"
-                  />
-                </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="published"
+                      checked={formData.published}
+                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, published: checked }))}
+                    />
+                    <Label htmlFor="published">Publicado</Label>
+                  </div>
 
-                <div>
-                  <Label htmlFor="meta_description">Meta Descrição</Label>
-                  <Textarea
-                    id="meta_description"
-                    value={formData.meta_description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, meta_description: e.target.value }))}
-                    rows={2}
-                    placeholder="Descrição para SEO (máx. 160 caracteres)"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="keywords">Palavras-chave (separadas por vírgula)</Label>
-                  <Input
-                    id="keywords"
-                    value={formData.keywords}
-                    onChange={(e) => setFormData(prev => ({ ...prev, keywords: e.target.value }))}
-                    placeholder="válvulas, industrial, automação"
-                  />
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="published"
-                    checked={formData.published}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, published: checked }))}
-                  />
-                  <Label htmlFor="published">Publicado</Label>
-                </div>
-
-                <div className="flex justify-end space-x-2">
-                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                    Cancelar
-                  </Button>
-                  <Button type="submit">
-                    {editingPost ? 'Atualizar' : 'Criar'}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+                  <div className="flex justify-end space-x-2">
+                    <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                      Cancelar
+                    </Button>
+                    <Button type="submit">
+                      {editingPost ? 'Atualizar' : 'Criar'}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         <Card>
