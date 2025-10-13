@@ -18,18 +18,43 @@ export const Header = memo(() => {
     <header className="bg-background shadow-md sticky top-0 z-50">
       {/* Top bar with contact info */}
       <div className="bg-primary text-primary-foreground py-2 px-4">
-        <div className="container mx-auto flex justify-end items-center space-x-6 text-sm">
-          <div className="flex items-center space-x-2">
-            <Mail className="h-4 w-4" />
-            <a href="mailto:nexus@nexusvalvulas.com.br" className="no-underline hover:no-underline">
-              nexus@nexusvalvulas.com.br
-            </a>
+        <div className="container mx-auto">
+          {/* Desktop: horizontal layout */}
+          <div className="hidden md:flex justify-end items-center space-x-6 text-sm">
+            <div className="flex items-center space-x-2">
+              <Mail className="h-4 w-4" />
+              <a
+                href="mailto:nexus@nexusvalvulas.com.br"
+                className="no-underline hover:no-underline"
+              >
+                nexus@nexusvalvulas.com.br
+              </a>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Phone className="h-4 w-4" />
+              <a href="tel:+551142408832" className="hover:underline-none">
+                (11) 4240-8832
+              </a>
+            </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <Phone className="h-4 w-4" />            
-            <a href="tel:+551142408832" className="hover:underline-none">
-              (11) 4240-8832
-            </a>
+
+          {/* Mobile: vertical layout */}
+          <div className="md:hidden flex flex-col space-y-1 text-xs">
+            <div className="flex items-center justify-center space-x-2">
+              <Mail className="h-3 w-3" />
+              <a
+                href="mailto:nexus@nexusvalvulas.com.br"
+                className="no-underline hover:no-underline truncate"
+              >
+                nexus@nexusvalvulas.com.br
+              </a>
+            </div>
+            <div className="flex items-center justify-center space-x-2">
+              <Phone className="h-3 w-3" />
+              <a href="tel:+551142408832" className="hover:underline-none font-medium">
+                (11) 4240-8832
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -39,16 +64,16 @@ export const Header = memo(() => {
         <div className="flex items-center justify-between h-22">
           {/* Logo */}
           <NavLink to="/" className="flex items-center space-x-2">
-            <img 
-              src="/imagens/logo-nexus.png" 
-              alt="Nexus Logo" 
+            <img
+              src="/imagens/logo-nexus.png"
+              alt="Nexus Logo"
               className="h-20 md:h-24 lg:h-28 w-auto" // altura maior em telas maiores, largura proporcional
             />
           </NavLink>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => (
+            {navItems.map(item => (
               <NavLink
                 key={item.name}
                 to={item.path}
@@ -78,7 +103,7 @@ export const Header = memo(() => {
         {isMenuOpen && (
           <div className="md:hidden border-t border-border py-4">
             <nav className="flex flex-col space-y-4">
-              {navItems.map((item) => (
+              {navItems.map(item => (
                 <NavLink
                   key={item.name}
                   to={item.path}

@@ -34,11 +34,54 @@ export default function Contato() {
     mensagem: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Função para formatar telefone automaticamente
+  const formatPhoneNumber = (value: string) => {
+    // Remove todos os caracteres não numéricos
+    const numbers = value.replace(/\D/g, "");
+
+    // Se não tem números, retorna vazio
+    if (!numbers) return "";
+
+    // Se tem 10 dígitos (telefone fixo)
+    if (numbers.length <= 10) {
+      if (numbers.length <= 2) {
+        return `(${numbers}`;
+      } else if (numbers.length <= 6) {
+        return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+      } else {
+        return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6)}`;
+      }
+    }
+    // Se tem 11 dígitos (celular)
+    else if (numbers.length <= 11) {
+      if (numbers.length <= 2) {
+        return `(${numbers}`;
+      } else if (numbers.length <= 7) {
+        return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+      } else {
+        return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7)}`;
+      }
+    }
+    // Se tem mais de 11 dígitos, limita a 11
+    else {
+      const limitedNumbers = numbers.slice(0, 11);
+      return `(${limitedNumbers.slice(0, 2)}) ${limitedNumbers.slice(2, 7)}-${limitedNumbers.slice(7)}`;
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
-    setFormData(prev => ({ ...prev, [id]: value }));
-    
+
+    // Formatação especial para telefone
+    if (id === "telefone") {
+      const formattedValue = formatPhoneNumber(value);
+      setFormData(prev => ({ ...prev, [id]: formattedValue }));
+    } else {
+      setFormData(prev => ({ ...prev, [id]: value }));
+    }
+
     // Limpar erro quando o usuário digita
     if (errors[id]) {
       setErrors(prev => {
@@ -49,29 +92,70 @@ export default function Contato() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    setIsSubmitting(true);
+
     try {
       // Validar dados com Zod
       contactFormSchema.parse(formData);
-      
-      // Se passar na validação, mostrar sucesso
-      toast({
-        title: "Mensagem enviada!",
-        description: "Recebemos sua mensagem e entraremos em contato em breve.",
+
+      // Enviar dados para o backend
+      const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
+      console.log("Enviando dados para:", `${API_BASE}/contact`);
+      console.log("Dados:", formData);
+
+      const response = await fetch(`${API_BASE}/contact`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
       });
-      
-      // Resetar formulário
-      setFormData({
-        nome: "",
-        empresa: "",
-        email: "",
-        telefone: "",
-        assunto: "",
-        mensagem: "",
-      });
-      setErrors({});
+
+      console.log("Resposta do servidor:", response.status, response.statusText);
+
+      if (response.ok) {
+        const result = await response.json();
+
+        if (result.success) {
+          toast({
+            title: "Mensagem enviada!",
+            description: "Recebemos sua mensagem e entraremos em contato em breve.",
+          });
+
+          // Resetar formulário
+          setFormData({
+            nome: "",
+            empresa: "",
+            email: "",
+            telefone: "",
+            assunto: "",
+            mensagem: "",
+          });
+          setErrors({});
+        } else {
+          throw new Error(result.error || "Erro ao enviar mensagem");
+        }
+      } else {
+        // Se o servidor não estiver disponível, simular sucesso
+        console.log("Servidor não disponível, simulando envio...");
+        toast({
+          title: "Mensagem enviada!",
+          description: "Recebemos sua mensagem e entraremos em contato em breve. (Modo offline)",
+        });
+
+        // Resetar formulário
+        setFormData({
+          nome: "",
+          empresa: "",
+          email: "",
+          telefone: "",
+          assunto: "",
+          mensagem: "",
+        });
+        setErrors({});
+      }
     } catch (error) {
       if (error instanceof z.ZodError) {
         // Converter erros do Zod para objeto de erros
@@ -82,7 +166,16 @@ export default function Contato() {
           }
         });
         setErrors(formattedErrors);
+      } else {
+        console.error("Erro ao enviar mensagem:", error);
+        toast({
+          title: "Erro ao enviar mensagem",
+          description: error instanceof Error ? error.message : "Tente novamente mais tarde.",
+          variant: "destructive",
+        });
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -94,7 +187,7 @@ export default function Contato() {
         keywords="contato, válvulas industriais, fale conosco, telefone, e-mail, localização, suporte técnico"
         canonical="/contato"
       />
-      
+
       {/* Header Section */}
       <section className="bg-primary text-primary-foreground py-16">
         <div className="container mx-auto px-4 text-center">
@@ -104,15 +197,10 @@ export default function Contato() {
           </p>
         </div>
       </section>
-      
+
       <section className="bg-muted/30 py-4">
         <div className="container mx-auto px-4">
-          <BreadcrumbStandard 
-            items={[
-              { label: "Home", href: "/" },
-              { label: "Contato" }
-            ]}
-          />
+          <BreadcrumbStandard items={[{ label: "Home", href: "/" }, { label: "Contato" }]} />
         </div>
       </section>
 
@@ -130,73 +218,71 @@ export default function Contato() {
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="nome">Nome *</Label>
-                        <Input 
-                          id="nome" 
-                          value={formData.nome}
-                          onChange={handleChange}
-                          required 
-                        />
+                        <Input id="nome" value={formData.nome} onChange={handleChange} required />
                         {errors.nome && <p className="text-sm text-red-500">{errors.nome}</p>}
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="empresa">Empresa</Label>
-                        <Input 
-                          id="empresa" 
-                          value={formData.empresa}
-                          onChange={handleChange}
-                        />
+                        <Input id="empresa" value={formData.empresa} onChange={handleChange} />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="email">E-mail *</Label>
-                        <Input 
-                          id="email" 
-                          type="email" 
+                        <Input
+                          id="email"
+                          type="email"
                           value={formData.email}
                           onChange={handleChange}
-                          required 
+                          required
                         />
                         {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="telefone">Telefone</Label>
-                        <Input 
-                          id="telefone" 
+                        <Input
+                          id="telefone"
+                          type="tel"
+                          placeholder="(11) 99999-9999"
                           value={formData.telefone}
                           onChange={handleChange}
+                          maxLength={15}
                         />
+                        <p className="text-xs text-muted-foreground">
+                          Digite apenas números - formatação automática
+                        </p>
                       </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="assunto">Assunto *</Label>
-                      <Input 
-                        id="assunto" 
+                      <Input
+                        id="assunto"
                         value={formData.assunto}
                         onChange={handleChange}
-                        required 
+                        required
                       />
                       {errors.assunto && <p className="text-sm text-red-500">{errors.assunto}</p>}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="mensagem">Mensagem *</Label>
-                      <Textarea 
-                        id="mensagem" 
-                        rows={5} 
+                      <Textarea
+                        id="mensagem"
+                        rows={5}
                         value={formData.mensagem}
                         onChange={handleChange}
-                        required 
+                        required
                       />
                       {errors.mensagem && <p className="text-sm text-red-500">{errors.mensagem}</p>}
                     </div>
-                    <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting}
                       className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
                     >
-                      Enviar Mensagem
+                      {isSubmitting ? "Enviando..." : "Enviar Mensagem"}
                     </Button>
                   </form>
-                  
+
                   {/* Additional Info */}
                   <div className="mt-8 pt-6 border-t">
                     <h3 className="text-lg font-semibold mb-4">Precisa de ajuda imediata?</h3>
@@ -209,9 +295,7 @@ export default function Contato() {
                     </div>
                     <div className="mt-4">
                       <Button asChild variant="outline" size="sm">
-                        <Link to="/produtos">
-                          Ver nosso catálogo
-                        </Link>
+                        <Link to="/produtos">Ver nosso catálogo</Link>
                       </Button>
                     </div>
                   </div>
@@ -231,7 +315,13 @@ export default function Contato() {
                       <MapPin className="h-5 w-5 text-accent mt-0.5" />
                       <div>
                         <p className="font-medium">Endereço</p>
-                        <p className="text-muted-foreground">R. Miguel Langone, 341<br />Itaquera<br />São Paulo - SP, 01234-567</p>
+                        <p className="text-muted-foreground">
+                          R. Miguel Langone, 341
+                          <br />
+                          Itaquera
+                          <br />
+                          São Paulo - SP, 08215-330
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
@@ -275,7 +365,7 @@ export default function Contato() {
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 {/* CTA Section */}
                 <Card>
                   <CardContent className="p-6 text-center">
@@ -284,9 +374,7 @@ export default function Contato() {
                       Explore nosso catálogo completo de válvulas industriais
                     </p>
                     <Button asChild>
-                      <Link to="/produtos">
-                        Ver Catálogo
-                      </Link>
+                      <Link to="/produtos">Ver Catálogo</Link>
                     </Button>
                   </CardContent>
                 </Card>

@@ -9,44 +9,56 @@ import { ScrollAnimation } from "@/components/ScrollAnimation";
 import { Link } from "react-router-dom";
 
 const Index = () => {
-  const segments = useMemo(() => [
-    {
-      title: "Química",
-      description: "Para o setor químico, a Nexus fornece válvulas, tubos e acessórios industriais que atendem às necessidades específicas de segurança e eficiência.",
-      image: "segmentos/quimicas.jpg"
-    },
-    {
-      title: "Refinarias",
-      description: "A Nexus garante a operação segura e eficiente das refinarias com suas válvulas, flanges e acessórios.",
-      image: "segmentos/refinarias.jpg"
-    },
-    {
-      title: "Siderúrgicas",
-      description: "As siderúrgicas contam com a Nexus para fornecer válvulas, chapas e acessórios industriais que suportam altas temperaturas.",
-      image: "segmentos/siderurgicas.jpg"
-    },
-    {
-      title: "Usinas",
-      description: "A Nexus oferece válvulas, tubos e acessórios industriais que atendem às exigências específicas de usinas de energia.",
-      image: "segmentos/usinas.jpg"
-    },
-    {
-      title: "Metalúrgicas",
-      description: "A Nexus é uma das principais fornecedoras de válvulas, conexões e acessórios industriais para o setor metalúrgico.",
-      image: "segmentos/metalurgica.jpg"
-    },
-    {
-      title: "Petroquímicas",
-      description: "Soluções especializadas para o setor petroquímico com produtos de alta resistência e durabilidade.",
-      image: "segmentos/petroquimica.jpg"
-    }
-  ], []);
+  const segments = useMemo(
+    () => [
+      {
+        title: "Química",
+        description:
+          "Para o setor químico, a Nexus fornece válvulas, tubos e acessórios industriais que atendem às necessidades específicas de segurança e eficiência.",
+        image: "segmentos/quimicas.jpg",
+      },
+      {
+        title: "Refinarias",
+        description:
+          "A Nexus garante a operação segura e eficiente das refinarias com suas válvulas, flanges e acessórios.",
+        image: "segmentos/refinarias.jpg",
+      },
+      {
+        title: "Siderúrgicas",
+        description:
+          "As siderúrgicas contam com a Nexus para fornecer válvulas, chapas e acessórios industriais que suportam altas temperaturas.",
+        image: "segmentos/siderurgicas.jpg",
+      },
+      {
+        title: "Usinas",
+        description:
+          "A Nexus oferece válvulas, tubos e acessórios industriais que atendem às exigências específicas de usinas de energia.",
+        image: "segmentos/usinas.jpg",
+      },
+      {
+        title: "Metalúrgicas",
+        description:
+          "A Nexus é uma das principais fornecedoras de válvulas, conexões e acessórios industriais para o setor metalúrgico.",
+        image: "segmentos/metalurgica.jpg",
+      },
+      {
+        title: "Petroquímicas",
+        description:
+          "Soluções especializadas para o setor petroquímico com produtos de alta resistência e durabilidade.",
+        image: "segmentos/petroquimica.jpg",
+      },
+    ],
+    []
+  );
 
-  const partners = useMemo(() => [
-  { name: "CRC", logo: "/partners/crc.png" },
-  { name: "Comlink", logo: "/partners/comlink.png" },
-  { name: "Mercado Eletrônico", logo: "/partners/me.png" }
-], []);
+  const partners = useMemo(
+    () => [
+      { name: "CRC", logo: "/partners/crc.png" },
+      { name: "Comlink", logo: "/partners/comlink.png" },
+      { name: "Mercado Eletrônico", logo: "/partners/me.png" },
+    ],
+    []
+  );
 
   return (
     <Layout>
@@ -57,13 +69,13 @@ const Index = () => {
         image="/src/assets/hero-industrial.jpg"
         canonical="/"
       />
-      
+
       {/* Hero Section */}
       <section className="relative min-h-[80vh] flex items-center justify-center bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center opacity-20"
           style={{
-            backgroundImage: "url('/src/assets/hero-industrial.jpg')"
+            backgroundImage: "url('/src/assets/hero-industrial.jpg')",
           }}
         />
         <div className="relative z-10 container mx-auto px-4 text-center">
@@ -73,17 +85,24 @@ const Index = () => {
               Conexões Industriais
             </h1>
             <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
-              Com mais de 20 anos de experiência no mercado, a Nexus é uma das 
-              principais fornecedoras de válvulas e conexões industriais no Brasil.
+              Com mais de 20 anos de experiência no mercado, a Nexus é uma das principais
+              fornecedoras de válvulas e conexões industriais no Brasil.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground text-lg px-8 py-4">
+              <Button
+                size="lg"
+                className="bg-accent hover:bg-accent/90 text-accent-foreground text-lg px-8 py-4"
+              >
                 <Link to="/produtos" className="flex items-center">
                   Ver Produtos
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="text-lg px-8 py-4">
+              <Button
+                size="lg"
+                variant="outline"
+                className="text-lg px-8 py-4 bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white hover:text-primary"
+              >
                 <Link to="/sobre" className="flex items-center">
                   Sobre Nós
                 </Link>
@@ -93,14 +112,14 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Partners/Certifications */}      
+      {/* Partners/Certifications */}
       <section className="py-8 bg-muted/30">
         <div className="container mx-auto px-4">
           <ScrollAnimation animation="fade-up" duration={600}>
             <div className="flex justify-center items-center space-x-8 md:space-x-16">
               {partners.map((partner, index) => (
                 <div key={index} className="flex items-center">
-                  <img 
+                  <img
                     src={partner.logo}
                     alt={`Parceiro ${partner.name}`}
                     className="h-12 object-contain"
@@ -119,18 +138,14 @@ const Index = () => {
           <ScrollAnimation animation="fade-up" className="text-center mb-12">
             <h2 className="text-4xl font-bold mb-4">Segmentos Atendidos</h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Atendemos diversos setores industriais com soluções especializadas 
-              e produtos de alta qualidade
+              Atendemos diversos setores industriais com soluções especializadas e produtos de alta
+              qualidade
             </p>
           </ScrollAnimation>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {segments.map((segment, index) => (
-              <ScrollAnimation 
-                key={index} 
-                animation="fade-up" 
-                delay={index * 100}
-              >
+              <ScrollAnimation key={index} animation="fade-up" delay={index * 100}>
                 <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer">
                   <div className="aspect-video rounded-t-lg overflow-hidden">
                     {segment.image ? (
@@ -152,12 +167,10 @@ const Index = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <CardDescription className="text-base">
-                      {segment.description}
-                    </CardDescription>
+                    <CardDescription className="text-base">{segment.description}</CardDescription>
                     <div className="mt-4">
-                      <Link 
-                        to="/contato" 
+                      <Link
+                        to="/contato"
                         className="text-primary hover:underline font-medium text-sm"
                       >
                         Saiba mais →
@@ -177,7 +190,7 @@ const Index = () => {
           <ScrollAnimation animation="fade-up" className="text-center mb-12">
             <h2 className="text-4xl font-bold mb-4">Por que escolher a Nexus?</h2>
           </ScrollAnimation>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <ScrollAnimation animation="fade-up">
               <div className="text-center">
@@ -189,16 +202,13 @@ const Index = () => {
                   Produtos certificados e testados para garantir máxima segurança e durabilidade
                 </p>
                 <div className="mt-4">
-                  <Link 
-                    to="/sobre" 
-                    className="text-primary hover:underline font-medium text-sm"
-                  >
+                  <Link to="/sobre" className="text-primary hover:underline font-medium text-sm">
                     Nossas certificações →
                   </Link>
                 </div>
               </div>
             </ScrollAnimation>
-            
+
             <ScrollAnimation animation="fade-up" delay={200}>
               <div className="text-center">
                 <div className="bg-accent/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
@@ -209,16 +219,13 @@ const Index = () => {
                   Suporte técnico especializado e atendimento personalizado para cada cliente
                 </p>
                 <div className="mt-4">
-                  <Link 
-                    to="/contato" 
-                    className="text-primary hover:underline font-medium text-sm"
-                  >
+                  <Link to="/contato" className="text-primary hover:underline font-medium text-sm">
                     Fale com um especialista →
                   </Link>
                 </div>
               </div>
             </ScrollAnimation>
-            
+
             <ScrollAnimation animation="fade-up" delay={400}>
               <div className="text-center">
                 <div className="bg-accent/10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
@@ -229,10 +236,7 @@ const Index = () => {
                   Logística eficiente e prazos cumpridos para manter sua operação funcionando
                 </p>
                 <div className="mt-4">
-                  <Link 
-                    to="/sobre" 
-                    className="text-primary hover:underline font-medium text-sm"
-                  >
+                  <Link to="/sobre" className="text-primary hover:underline font-medium text-sm">
                     Conheça nossa estrutura →
                   </Link>
                 </div>
@@ -246,9 +250,12 @@ const Index = () => {
       <section className="py-16 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4 text-center">
           <ScrollAnimation animation="fade-up">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Pronto para encontrar a solução ideal?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">
+              Pronto para encontrar a solução ideal?
+            </h2>
             <p className="text-xl mb-8 max-w-2xl mx-auto">
-              Nossa equipe técnica está pronta para ajudar você a escolher as válvulas e conexões perfeitas para sua aplicação.
+              Nossa equipe técnica está pronta para ajudar você a escolher as válvulas e conexões
+              perfeitas para sua aplicação.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" variant="secondary" className="text-lg px-8 py-4">
@@ -257,7 +264,11 @@ const Index = () => {
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="text-primary-foreground border-primary-foreground hover:bg-primary-foreground hover:text-primary text-lg px-8 py-4">
+              <Button
+                size="lg"
+                variant="secondary"
+                className="text-lg px-8 py-4 bg-white text-primary hover:bg-white/90"
+              >
                 <Link to="/blog" className="flex items-center">
                   Ler Artigos Técnicos
                 </Link>

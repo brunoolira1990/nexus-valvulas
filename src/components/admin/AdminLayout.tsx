@@ -1,23 +1,28 @@
-import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
-import { LogOut, Home, Package, FolderOpen, FileText } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Dashboard } from './Dashboard';
+import { Outlet, Link, useLocation } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { LogOut, Home, Package, FolderOpen, FileText } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Dashboard } from "./Dashboard";
 
 const navigation = [
-  { name: 'Dashboard', href: '/admin', icon: Home },
-  { name: 'Categorias', href: '/admin/categories', icon: FolderOpen },
-  { name: 'Produtos', href: '/admin/products', icon: Package },
-  { name: 'Blog', href: '/admin/blog', icon: FileText },
+  { name: "Dashboard", href: "/admin", icon: Home },
+  { name: "Categorias", href: "/admin/categories", icon: FolderOpen },
+  { name: "Produtos", href: "/admin/products", icon: Package },
+  { name: "Blog", href: "/admin/blog", icon: FileText },
 ];
 
 export function AdminLayout() {
   const { signOut } = useAuth();
   const location = useLocation();
-  
+
   const handleSignOut = async () => {
-    await signOut();
+    try {
+      await signOut();
+      // O redirecionamento será feito automaticamente pelo AuthContext
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+    }
   };
 
   return (
@@ -31,22 +36,23 @@ export function AdminLayout() {
             </Link>
             <p className="text-sm text-muted-foreground mt-1">Admin</p>
           </div>
-          
+
           <nav className="mt-6">
             <div className="px-3">
-              {navigation.map((item) => {
+              {navigation.map(item => {
                 const Icon = item.icon;
-                const isActive = location.pathname === item.href || location.pathname.startsWith(item.href + '/');
-                
+                const isActive =
+                  location.pathname === item.href || location.pathname.startsWith(item.href + "/");
+
                 return (
                   <Link
                     key={item.name}
                     to={item.href}
                     className={cn(
-                      'flex items-center px-3 py-2 text-sm font-medium rounded-md mb-1 transition-colors',
+                      "flex items-center px-3 py-2 text-sm font-medium rounded-md mb-1 transition-colors",
                       isActive
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-foreground hover:bg-accent hover:text-accent-foreground'
+                        ? "bg-primary text-primary-foreground"
+                        : "text-foreground hover:bg-accent hover:text-accent-foreground"
                     )}
                   >
                     <Icon className="mr-3 h-4 w-4" />
@@ -60,11 +66,15 @@ export function AdminLayout() {
           <div className="absolute bottom-4 left-4 right-4">
             <Button
               variant="outline"
-              className="w-full"
-              onClick={handleSignOut}
+              className="w-full hover:bg-destructive hover:text-destructive-foreground transition-colors"
+              onClick={() => {
+                if (window.confirm("Tem certeza que deseja sair do painel administrativo?")) {
+                  handleSignOut();
+                }
+              }}
             >
               <LogOut className="mr-2 h-4 w-4" />
-              Sair
+              Sair do Painel
             </Button>
           </div>
         </div>
@@ -74,12 +84,26 @@ export function AdminLayout() {
           <header className="bg-card border-b px-6 py-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Painel Administrativo</h2>
-              <Button asChild variant="outline">
-                <Link to="/">Ver Site</Link>
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button asChild variant="outline">
+                  <Link to="/">Ver Site</Link>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (window.confirm("Tem certeza que deseja sair do painel administrativo?")) {
+                      handleSignOut();
+                    }
+                  }}
+                  className="hover:bg-destructive hover:text-destructive-foreground"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </header>
-          
+
           <main className="p-6">
             <Outlet />
           </main>

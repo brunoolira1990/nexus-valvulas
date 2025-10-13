@@ -9,6 +9,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { ensureDir, removeFileIfExists } = require('./utils');
 const { hashPassword, comparePasswords, generateToken, authMiddleware } = require('./auth');
+const { sendContactEmail, sendConfirmationEmail } = require('./email');
 
 const app = express();
 app.use(cors());
@@ -63,6 +64,122 @@ app.post('/auth/login', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erro ao fazer login' });
+  }
+});
+
+// Contact form endpoint
+app.post('/contact', async (req, res) => {
+  try {
+    console.log('=== NOVA REQUISIÇÃO DE CONTATO ===');
+    console.log('Headers:', req.headers);
+    console.log('Body:', req.body);
+    console.log('Method:', req.method);
+    console.log('URL:', req.url);
+    
+    const { nome, empresa, email, telefone, assunto, mensagem } = req.body;
+    
+    // Validação básica
+    if (!nome || !email || !assunto || !mensagem) {
+      console.log('Campos obrigatórios ausentes');
+      return res.status(400).json({ 
+        error: 'Campos obrigatórios: nome, email, assunto e mensagem' 
+      });
+    }
+
+    // Validar email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      console.log('Email inválido:', email);
+      return res.status(400).json({ error: 'E-mail inválido' });
+    }
+
+    const contactData = {
+      nome,
+      empresa: empresa || '',
+      email,
+      telefone: telefone || '',
+      assunto,
+      mensagem
+    };
+
+    console.log('Dados do contato preparados:', contactData);
+
+    // Salvar no banco de dados (opcional)
+    try {
+      await prisma.contactMessage.create({
+        data: contactData
+      });
+      console.log('Mensagem salva no banco de dados');
+    } catch (dbError) {
+      console.log('Erro ao salvar no banco (não crítico):', dbError.message);
+      console.log('Continuando sem salvar no banco...');
+      // Continuar mesmo se não conseguir salvar no banco
+    }
+
+    // Enviar emails
+    console.log('Enviando emails...');
+    const emailResult = await sendContactEmail(contactData);
+    console.log('Resultado do email principal:', emailResult);
+    
+    const confirmationResult = await sendConfirmationEmail(contactData);
+    console.log('Resultado do email de confirmação:', confirmationResult);
+
+    if (emailResult.success) {
+      console.log('Emails enviados com sucesso');
+      res.json({ 
+        success: true, 
+        message: 'Mensagem enviada com sucesso!',
+        confirmationSent: confirmationResult.success
+      });
+    } else {
+      console.log('Erro ao enviar emails:', emailResult.error);
+      res.status(500).json({ 
+        error: 'Erro ao enviar mensagem. Tente novamente mais tarde.',
+        details: emailResult.error
+      });
+    }
+  } catch (err) {
+    console.error('Erro no endpoint de contato:', err);
+    res.status(500).json({ 
+      error: 'Erro interno do servidor',
+      details: err.message 
+    });
+  }
+});
+
+// Test endpoint
+app.get('/test', (req, res) => {
+  res.json({ 
+    message: 'Servidor funcionando!',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Simple contact test endpoint
+app.post('/contact-test', (req, res) => {
+  console.log('Recebida requisição de teste:', req.body);
+  res.json({ 
+    success: true, 
+    message: 'Endpoint de teste funcionando!',
+    receivedData: req.body
+  });
+});
+
+// Test email endpoint
+app.post('/test-email', async (req, res) => {
+  try {
+    const { sendContactEmail } = require('./email');
+    const testData = {
+      nome: 'Teste',
+      email: 'teste@exemplo.com',
+      assunto: 'Teste de Email',
+      mensagem: 'Esta é uma mensagem de teste'
+    };
+    
+    const result = await sendContactEmail(testData);
+    res.json({ result });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
