@@ -5,15 +5,15 @@ const prisma = new PrismaClient();
 
 async function createAdmin() {
   try {
-    const email = 'admin@nexus.com';
-    const password = 'admin123'; // troque por uma senha forte em produção
+    const email = 'bruno.liraa@icloud.com';
+    const password = 'Lira@Lira1990'; // Senha segura para produção
     const hashedPassword = await hashPassword(password);
 
     const admin = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
-        name: 'Admin',
+        name: 'Bruno Lira',
         role: 'ADMIN' // String em vez de enum
       }
     });
