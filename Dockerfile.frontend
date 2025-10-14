@@ -1,29 +1,28 @@
 # Dockerfile para Frontend React + Vite + PWA
 # Otimizado para produção com multi-stage build
+# Resolve problema do Husky instalando todas as dependências durante o build
 
-# Estágio 1: Dependências
-FROM node:18-alpine AS deps
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production --silent
-
-# Estágio 2: Build do frontend
+# Estágio 1: Build do frontend (com todas as dependências)
 FROM node:18-alpine AS builder
 
 # Definir diretório de trabalho
 WORKDIR /app
 
-# Copiar dependências do estágio anterior
-COPY --from=deps /app/node_modules ./node_modules
+# Copiar arquivos de dependências
 COPY package*.json ./
+
+# Instalar TODAS as dependências (dev + prod) para que Husky funcione
+# O Husky precisa das dependências de desenvolvimento para executar o script prepare
+RUN npm ci --silent
 
 # Copiar código fonte
 COPY . .
 
 # Build da aplicação para produção
+# O Vite vai gerar apenas os arquivos necessários para produção
 RUN npm run build:prod
 
-# Estágio 3: Desenvolvimento
+# Estágio 2: Desenvolvimento
 FROM node:18-alpine AS development
 WORKDIR /app
 COPY package*.json ./
@@ -32,13 +31,14 @@ COPY . .
 EXPOSE 3000
 CMD ["npm", "run", "dev"]
 
-# Estágio 4: Servidor Nginx para servir arquivos estáticos
+# Estágio 3: Servidor Nginx para servir arquivos estáticos (PRODUÇÃO)
 FROM nginx:alpine AS production
 
-# Instalar dependências necessárias
+# Instalar dependências necessárias para health check
 RUN apk add --no-cache curl
 
-# Copiar arquivos buildados do estágio anterior
+# Copiar apenas os arquivos buildados do estágio anterior
+# A imagem final não contém node_modules, código fonte, etc.
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Copiar configuração customizada do Nginx para frontend
