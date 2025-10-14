@@ -1,0 +1,106 @@
+# Docker Compose para Desenvolvimento - Nexus Válvulas
+# Configuração otimizada para desenvolvimento local
+
+version: '3.8'
+
+services:
+  # Banco de dados PostgreSQL
+  database:
+    image: postgres:15-alpine
+    container_name: nexus-database-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-nexus_valvulas_dev}
+      POSTGRES_USER: ${POSTGRES_USER:-nexus_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nexus_password}
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./backend/prisma:/app/prisma:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - nexus-dev-network
+
+  # Backend Node.js + Express + Prisma (modo desenvolvimento)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: nexus-backend-dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-nexus_user}:${POSTGRES_PASSWORD:-nexus_password}@database:5432/${POSTGRES_DB:-nexus_valvulas_dev}?schema=public
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost}
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret}
+      EMAIL_HOST: ${EMAIL_HOST:-smtp.gmail.com}
+      EMAIL_PORT: ${EMAIL_PORT:-587}
+      EMAIL_USER: ${EMAIL_USER}
+      EMAIL_PASS: ${EMAIL_PASS}
+      EMAIL_FROM: ${EMAIL_FROM:-Nexus Válvulas <dev@nexus.com>}
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - backend_dev_uploads:/app/uploads
+      - backend_dev_logs:/app/logs
+    ports:
+      - "4000:4000"
+    networks:
+      - nexus-dev-network
+    depends_on:
+      - database
+    command: npm run dev
+
+  # Frontend React + Vite (modo desenvolvimento)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      target: development
+    container_name: nexus-frontend-dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      VITE_API_URL: http://localhost/api
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/dist
+    ports:
+      - "3000:3000"
+    networks:
+      - nexus-dev-network
+    depends_on:
+      - backend
+    command: npm run dev
+
+  # Redis para cache (desenvolvimento)
+  redis:
+    image: redis:7-alpine
+    container_name: nexus-redis-dev
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_dev_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - nexus-dev-network
+
+# Volumes para desenvolvimento
+volumes:
+  postgres_dev_data:
+    driver: local
+  backend_dev_uploads:
+    driver: local
+  backend_dev_logs:
+    driver: local
+  redis_dev_data:
+    driver: local
+
+# Rede para desenvolvimento
+networks:
+  nexus-dev-network:
+    driver: bridge
