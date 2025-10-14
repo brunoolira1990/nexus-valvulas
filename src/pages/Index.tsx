@@ -15,37 +15,37 @@ const Index = () => {
         title: "Química",
         description:
           "Para o setor químico, a Nexus fornece válvulas, tubos e acessórios industriais que atendem às necessidades específicas de segurança e eficiência.",
-        image: "segmentos/quimicas.jpg",
+        image: "/segmentos/quimicas.jpg",
       },
       {
         title: "Refinarias",
         description:
           "A Nexus garante a operação segura e eficiente das refinarias com suas válvulas, flanges e acessórios.",
-        image: "segmentos/refinarias.jpg",
+        image: "/segmentos/refinarias.jpg",
       },
       {
         title: "Siderúrgicas",
         description:
           "As siderúrgicas contam com a Nexus para fornecer válvulas, chapas e acessórios industriais que suportam altas temperaturas.",
-        image: "segmentos/siderurgicas.jpg",
+        image: "/segmentos/siderurgicas.jpg",
       },
       {
         title: "Usinas",
         description:
           "A Nexus oferece válvulas, tubos e acessórios industriais que atendem às exigências específicas de usinas de energia.",
-        image: "segmentos/usinas.jpg",
+        image: "/segmentos/usinas.jpg",
       },
       {
         title: "Metalúrgicas",
         description:
           "A Nexus é uma das principais fornecedoras de válvulas, conexões e acessórios industriais para o setor metalúrgico.",
-        image: "segmentos/metalurgica.jpg",
+        image: "/segmentos/metalurgicas.jpg",
       },
       {
         title: "Petroquímicas",
         description:
           "Soluções especializadas para o setor petroquímico com produtos de alta resistência e durabilidade.",
-        image: "segmentos/petroquimica.jpg",
+        image: "/segmentos/petroquimica.jpg",
       },
     ],
     []
@@ -66,7 +66,7 @@ const Index = () => {
         title="Nexus Válvulas E Conexões Industriais - Soluções para Indústria"
         description="Mais de 20 anos fornecendo válvulas industriais de alta qualidade para química, refinarias, siderúrgicas, usinas, metalúrgicas e petroquímicas. Qualidade, atendimento e entrega garantidos."
         keywords="válvulas industriais, conexões industriais, válvulas química, válvulas refinaria, válvulas siderúrgica, válvulas usina, válvulas metalúrgica, válvulas petroquímica, nexus, brasil, fornecedor industrial"
-        image="/src/assets/hero-industrial.jpg"
+        image="/imagens/hero-industrial.jpg"
         canonical="/"
       />
 
@@ -75,7 +75,7 @@ const Index = () => {
         <div
           className="absolute inset-0 bg-cover bg-center opacity-20"
           style={{
-            backgroundImage: "url('/src/assets/hero-industrial.jpg')",
+            backgroundImage: "url('/imagens/hero-industrial.jpg')",
           }}
         />
         <div className="relative z-10 container mx-auto px-4 text-center">

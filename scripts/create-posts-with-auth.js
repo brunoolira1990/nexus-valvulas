@@ -100,7 +100,8 @@ const posts = [
 
 // Função para fazer login e obter token
 async function login() {
-  const API_BASE = 'http://localhost:4000';
+  // Use the production API URL if available, otherwise fallback to localhost
+  const API_BASE = process.env.VITE_API_BASE || 'http://localhost:4000';
   
   try {
     const response = await fetch(`${API_BASE}/auth/login`, {
@@ -109,8 +110,8 @@ async function login() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        email: 'admin@nexus.com', // Email padrão do admin
-        password: 'admin123' // Senha padrão do admin
+        email: 'bruno.liraa@icloud.com', // Email do admin atualizado
+        password: 'Lira@Lira1990' // Senha do admin atualizada
       })
     });
     
