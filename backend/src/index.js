@@ -12,7 +12,17 @@ const { hashPassword, comparePasswords, generateToken, authMiddleware } = requir
 const { sendContactEmail, sendConfirmationEmail } = require('./email');
 
 const app = express();
-app.use(cors());
+
+// Configuração específica de CORS para permitir apenas o domínio do frontend
+const corsOptions = {
+  origin: 'https://nexusvalvulas.com.br',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Auth endpoints
