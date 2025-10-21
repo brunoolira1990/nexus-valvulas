@@ -1,0 +1,132 @@
+# Docker Compose para Produção - Servidor Nexus Válvulas
+# Servidor: Ubuntu
+# Diretório: /home/nexusvalvulas.com.br/public_html
+
+version: '3.8'
+
+services:
+  # Banco de dados PostgreSQL
+  nexus-database:
+    image: postgres:15-alpine
+    container_name: nexus-database
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-nexus_valvulas}
+      POSTGRES_USER: ${POSTGRES_USER:-nexus_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nexus_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backup:/backup
+    networks:
+      - nexus-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nexus_user} -d ${POSTGRES_DB:-nexus_valvulas}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend Node.js + Express + Prisma
+  nexus-backend:
+    image: public_html_backend
+    container_name: nexus-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-nexus_user}:${POSTGRES_PASSWORD:-nexus_password}@nexus-database:5432/${POSTGRES_DB:-nexus_valvulas}?schema=public
+      PUBLIC_URL: https://nexusvalvulas.com.br
+      JWT_SECRET: ${JWT_SECRET:-your-jwt-secret-key}
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_PORT: ${EMAIL_PORT:-587}
+      EMAIL_USER: ${EMAIL_USER}
+      EMAIL_PASS: ${EMAIL_PASS}
+      EMAIL_FROM: ${EMAIL_FROM}
+    volumes:
+      - backend_uploads:/app/uploads
+      - backend_logs:/app/logs
+    networks:
+      - nexus-network
+    depends_on:
+      nexus-database:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/test"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend React + Vite + PWA (buildado)
+  nexus-frontend:
+    image: public_html_frontend
+    container_name: nexus-frontend
+    restart: unless-stopped
+    networks:
+      - nexus-network
+    depends_on:
+      - nexus-backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx como proxy reverso unificado
+  nexus-nginx:
+    image: nginx:alpine
+    container_name: nexus-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx-production.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    networks:
+      - nexus-network
+    depends_on:
+      - nexus-frontend
+      - nexus-backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis para cache
+  nexus-redis:
+    image: redis:7-alpine
+    container_name: nexus-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - nexus-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# Volumes para persistência de dados
+volumes:
+  postgres_data:
+    driver: local
+  backend_uploads:
+    driver: local
+  backend_logs:
+    driver: local
+  nginx_logs:
+    driver: local
+  redis_data:
+    driver: local
+
+# Rede interna para comunicação entre containers
+networks:
+  nexus-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
