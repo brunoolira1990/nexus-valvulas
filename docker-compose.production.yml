@@ -1,0 +1,137 @@
+# Docker Compose para Produção - Nexus Válvulas
+# Domínio: nexusvalvulas.com.br
+# Ambiente: Produção
+
+version: '3.8'
+
+services:
+  # Banco de dados PostgreSQL
+  nexus-database:
+    image: postgres:15-alpine
+    container_name: nexus-database
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-nexus_valvulas}
+      POSTGRES_USER: ${POSTGRES_USER:-nexus_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backup:/backup
+    networks:
+      - nexus-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nexus_user} -d ${POSTGRES_DB:-nexus_valvulas}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis para cache
+  nexus-redis:
+    image: redis:7-alpine
+    container_name: nexus-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - nexus-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend Node.js
+  nexus-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: nexus-backend
+    restart: unless-stopped
+    env_file:
+      - ./env.prod.backend
+    volumes:
+      - backend_uploads:/app/uploads
+      - backend_logs:/app/logs
+    networks:
+      - nexus-network
+    depends_on:
+      nexus-database:
+        condition: service_healthy
+      nexus-redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend React
+  nexus-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      target: production
+    container_name: nexus-frontend
+    restart: unless-stopped
+    env_file:
+      - ./env.prod.frontend
+    networks:
+      - nexus-network
+    depends_on:
+      - nexus-backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx Proxy Reverso
+  nexus-nginx:
+    image: nginx:alpine
+    container_name: nexus-nginx
+    restart: unless-stopped
+    env_file:
+      - ./env.prod.nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx-prod.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+      - nginx_cache:/var/cache/nginx
+    networks:
+      - nexus-network
+    depends_on:
+      - nexus-frontend
+      - nexus-backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  backend_uploads:
+    driver: local
+  backend_logs:
+    driver: local
+  nginx_logs:
+    driver: local
+  nginx_cache:
+    driver: local
+
+networks:
+  nexus-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
