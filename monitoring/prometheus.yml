@@ -1,0 +1,98 @@
+# Configuração Prometheus para Nexus Válvulas - Windows 11 Pro
+# Arquivo: monitoring/prometheus.yml
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'nexus-valvulas-windows'
+    replica: 'prometheus-01'
+
+rule_files:
+  - "rules/*.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093
+
+scrape_configs:
+  # Prometheus próprio
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 5s
+    metrics_path: /metrics
+
+  # Backend Node.js
+  - job_name: 'nexus-backend'
+    static_configs:
+      - targets: ['backend:4000']
+    scrape_interval: 10s
+    metrics_path: /metrics
+    scrape_timeout: 5s
+
+  # Frontend (se tiver métricas)
+  - job_name: 'nexus-frontend'
+    static_configs:
+      - targets: ['frontend:80']
+    scrape_interval: 30s
+    metrics_path: /metrics
+    scrape_timeout: 5s
+
+  # PostgreSQL (via postgres_exporter)
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['database:5432']
+    scrape_interval: 30s
+    metrics_path: /metrics
+    scrape_timeout: 10s
+
+  # Redis (via redis_exporter)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 30s
+    metrics_path: /metrics
+    scrape_timeout: 5s
+
+  # Nginx (via nginx-prometheus-exporter)
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+    scrape_interval: 30s
+    metrics_path: /metrics
+    scrape_timeout: 5s
+
+  # Docker containers
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['host.docker.internal:9323']
+    scrape_interval: 30s
+    metrics_path: /metrics
+    scrape_timeout: 10s
+
+  # Node exporter (métricas do sistema)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['host.docker.internal:9100']
+    scrape_interval: 30s
+    metrics_path: /metrics
+    scrape_timeout: 10s
+
+# Configurações de retenção
+storage:
+  tsdb:
+    retention.time: 30d
+    retention.size: 10GB
+    wal-compression: true
+
+# Configurações de alertas
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+      scheme: http
+      timeout: 10s
+      api_version: v1

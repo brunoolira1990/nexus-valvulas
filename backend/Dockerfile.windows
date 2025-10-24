@@ -1,0 +1,84 @@
+# Dockerfile para Backend Node.js + Express + Prisma - Windows 11 Pro
+# Otimizado para produção no Windows com melhorias de performance
+
+FROM node:18-alpine AS base
+
+# Instalar dependências do sistema necessárias para Windows
+RUN apk add --no-cache \
+    openssl \
+    postgresql-client \
+    curl \
+    git \
+    python3 \
+    make \
+    g++ \
+    tzdata
+
+# Configurar timezone para Brasil
+ENV TZ=America/Sao_Paulo
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# Definir diretório de trabalho
+WORKDIR /app
+
+# Configurações de Node.js otimizadas para Windows
+ENV NODE_ENV=production
+ENV NODE_OPTIONS="--max-old-space-size=1024"
+ENV UV_THREADPOOL_SIZE=16
+
+# Copiar arquivos de dependências
+COPY package*.json ./
+
+# Instalar dependências com otimizações para Windows
+RUN npm ci --only=production --silent --no-audit --no-fund \
+    && npm cache clean --force
+
+# Copiar código fonte
+COPY . .
+
+# Gerar cliente Prisma
+RUN npx prisma generate
+
+# Criar diretórios necessários
+RUN mkdir -p \
+    uploads/categories \
+    uploads/products \
+    uploads/variants \
+    uploads/blog \
+    logs \
+    shared
+
+# Estágio de desenvolvimento (opcional)
+FROM base AS development
+RUN npm ci --silent
+CMD ["npm", "run", "dev"]
+
+# Estágio de produção
+FROM base AS production
+
+# Criar usuário não-root para segurança
+RUN addgroup -g 1001 -S nodejs \
+    && adduser -S nodejs -u 1001
+
+# Alterar propriedade dos arquivos
+RUN chown -R nodejs:nodejs /app
+
+# Configurar permissões otimizadas para Windows
+RUN chmod 755 /app \
+    && chmod 644 /app/package*.json \
+    && chmod 755 /app/uploads \
+    && chmod 755 /app/logs \
+    && chmod 755 /app/shared
+
+# Mudar para usuário não-root
+USER nodejs
+
+# Expor porta
+EXPOSE 4000
+
+# Health check otimizado para Windows
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD curl -f http://localhost:4000/test || exit 1
+
+# Comando para iniciar a aplicação
+CMD ["npm", "start"]
