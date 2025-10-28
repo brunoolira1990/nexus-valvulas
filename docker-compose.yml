@@ -1,7 +1,5 @@
-# Docker Compose para Nexus Válvulas - Produção
-# Estrutura completa com frontend, backend, banco e nginx
-
-version: '3.8'
+# Docker Compose para Nexus Válvulas - Produção (Atualizado)
+version: '3.9'
 
 services:
   # Banco de dados PostgreSQL
@@ -16,8 +14,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backup:/backup
-    ports:
-      - "5432:5432"
     networks:
       - nexus-network
     healthcheck:
@@ -38,7 +34,7 @@ services:
       NODE_ENV: production
       PORT: 4000
       DATABASE_URL: postgresql://${POSTGRES_USER:-nexus_user}:${POSTGRES_PASSWORD:-nexus_password}@database:5432/${POSTGRES_DB:-nexus_valvulas}?schema=public
-      PUBLIC_URL: ${PUBLIC_URL:-http://localhost}
+      PUBLIC_URL: ${PUBLIC_URL:-https://nexusvalvulas.com.br}
       JWT_SECRET: ${JWT_SECRET:-your-jwt-secret-key}
       EMAIL_HOST: ${EMAIL_HOST}
       EMAIL_PORT: ${EMAIL_PORT:-587}
@@ -48,26 +44,24 @@ services:
     volumes:
       - backend_uploads:/app/uploads
       - backend_logs:/app/logs
-    ports:
-      - "4000:4000"
     networks:
       - nexus-network
     depends_on:
       database:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4000/test"]
+      test: ["CMD", "curl", "-f", "http://localhost:4000/test || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
       start_period: 40s
 
-  # Frontend React + Vite + PWA
+  # Frontend React + Vite
   frontend:
     build:
-      context: .
+      context: ./frontend
       dockerfile: Dockerfile.frontend
-      target: development
+      target: production
     container_name: nexus-frontend
     restart: unless-stopped
     ports:
@@ -77,10 +71,10 @@ services:
     depends_on:
       - backend
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/ || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
 
   # Nginx como proxy reverso unificado
   nginx:
@@ -101,12 +95,12 @@ services:
       - frontend
       - backend
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
+      test: ["CMD", "curl", "-f", "http://localhost/ || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
 
-  # Redis para cache (opcional, mas recomendado)
+  # Redis para cache
   redis:
     image: redis:7-alpine
     container_name: nexus-redis
@@ -114,8 +108,6 @@ services:
     command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
-    ports:
-      - "6379:6379"
     networks:
       - nexus-network
     healthcheck:
@@ -127,17 +119,12 @@ services:
 # Volumes para persistência de dados
 volumes:
   postgres_data:
-    driver: local
   backend_uploads:
-    driver: local
   backend_logs:
-    driver: local
   nginx_logs:
-    driver: local
   redis_data:
-    driver: local
 
-# Rede interna para comunicação entre containers
+# Rede interna isolada
 networks:
   nexus-network:
     driver: bridge
