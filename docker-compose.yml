@@ -1,4 +1,4 @@
-# Docker Compose Produção - Nexus Válvulas
+# Docker Compose para Produção - Nexus Válvulas
 version: '3.9'
 
 services:
@@ -33,7 +33,7 @@ services:
     networks:
       - nexus-network
     healthcheck:
-      test: ["CMD", "redis-cli ping"]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -79,7 +79,7 @@ services:
   # Frontend React
   frontend:
     build:
-      context: ./frontend
+      context: .
       dockerfile: Dockerfile.frontend
       target: production
     container_name: nexus-frontend
