@@ -1,9 +1,9 @@
-// Configuração de CORS para Docker
+// Configuração de CORS
 // Resolve problemas de CORS entre frontend e backend
 
 const cors = require('cors');
 
-// Configuração de CORS para ambiente Docker
+// Configuração de CORS para ambiente de produção
 const corsOptions = {
   origin: function (origin, callback) {
     // Permitir requisições sem origin (mobile apps, Postman, etc.)
