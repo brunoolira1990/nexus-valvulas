@@ -54,11 +54,11 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-nexus_user}:${POSTGRES_PASSWORD:-nexus_password}@database:5432/${POSTGRES_DB:-nexus_valvulas}?schema=public
       PUBLIC_URL: ${PUBLIC_URL:-https://nexusvalvulas.com.br}
       JWT_SECRET: ${JWT_SECRET:-your-jwt-secret-key}
-      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_HOST: ${EMAIL_HOST:-smtp.example.com}
       EMAIL_PORT: ${EMAIL_PORT:-587}
-      EMAIL_USER: ${EMAIL_USER}
-      EMAIL_PASS: ${EMAIL_PASS}
-      EMAIL_FROM: ${EMAIL_FROM}
+      EMAIL_USER: ${EMAIL_USER:-user@example.com}
+      EMAIL_PASS: ${EMAIL_PASS:-changeme}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@example.com}
     volumes:
       - backend_uploads:/app/uploads
       - backend_logs:/app/logs
@@ -70,7 +70,7 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl -f http://localhost:4000/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:4000/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -91,12 +91,12 @@ services:
     depends_on:
       - backend
     healthcheck:
-      test: ["CMD", "curl -f http://localhost:3000/ || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
 
-  # Nginx como proxy reverso unificado
+  # Nginx Proxy Reverso
   nginx:
     image: nginx:alpine
     container_name: nexus-nginx
@@ -116,7 +116,7 @@ services:
       - frontend
       - backend
     healthcheck:
-      test: ["CMD", "curl -f http://localhost/ || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
