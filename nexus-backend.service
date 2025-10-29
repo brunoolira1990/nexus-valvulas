@@ -1,0 +1,15 @@
+[Unit]
+Description=Nexus Válvulas Backend (servindo também o Frontend)
+After=network.target
+
+[Service]
+Type=exec
+WorkingDirectory=/caminho/para/nexus-valvulas
+ExecStart=/usr/bin/node backend/src/index.js
+Restart=always
+RestartSec=10
+Environment=NODE_ENV=production
+Environment=PORT=4000
+
+[Install]
+WantedBy=multi-user.target

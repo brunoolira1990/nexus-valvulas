@@ -16,8 +16,8 @@ const app = express();
 // Configuração específica de CORS para permitir apenas o domínio do frontend
 const corsOptions = {
   origin: process.env.NODE_ENV === 'development' 
-    ? ['http://localhost:3000', 'http://localhost:5173', 'https://nexusvalvulas.com.br']
-    : 'https://nexusvalvulas.com.br',
+    ? ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:4000']
+    : process.env.PUBLIC_URL,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -25,7 +25,54 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+
+// Servir arquivos estáticos do frontend em produção
+if (process.env.NODE_ENV === 'production') {
+  const frontendDistPath = path.join(__dirname, '..', '..', 'dist');
+  
+  // Verificar se o diretório dist existe
+  if (fs.existsSync(frontendDistPath)) {
+    console.log('Servindo frontend a partir de:', frontendDistPath);
+    
+    // Servir arquivos estáticos com cache
+    app.use(express.static(frontendDistPath, {
+      maxAge: '1y',
+      etag: false,
+      setHeaders: function (res, path) {
+        // Adicionar cabeçalhos de segurança
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('X-Frame-Options', 'DENY');
+        res.setHeader('X-XSS-Protection', '1; mode=block');
+        
+        // Configurar corretamente o tipo MIME para JavaScript
+        if (path.endsWith('.js')) {
+          res.setHeader('Content-Type', 'application/javascript');
+        }
+        
+        // Configurar corretamente o tipo MIME para JSON
+        if (path.endsWith('.json')) {
+          res.setHeader('Content-Type', 'application/json');
+        }
+      }
+    }));
+    
+    // Rota catch-all para SPA (React Router)
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(frontendDistPath, 'index.html'));
+    });
+  } else {
+    console.warn('Diretório dist não encontrado. O frontend não será servido.');
+    // Endpoint de health check mesmo sem frontend
+    app.get('/', (req, res) => {
+      res.json({ 
+        message: 'Backend API Nexus Válvulas está funcionando!', 
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV
+      });
+    });
+  }
+}
 
 // Auth endpoints
 app.post('/auth/register', async (req, res) => {
@@ -746,4 +793,10 @@ app.post('/quotes', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Backend rodando em http://localhost:${PORT}`);
+  
+  // Informar se está servindo o frontend também
+  if (process.env.NODE_ENV === 'production' && fs.existsSync(path.join(__dirname, '..', '..', 'dist'))) {
+    console.log(`✅ Frontend também está sendo servido a partir desta instância`);
+    console.log(`🌍 Acesse: http://localhost:${PORT}`);
+  }
 });

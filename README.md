@@ -13,7 +13,7 @@ npm install
 
 2. Configurar variáveis de ambiente:
 - Criar arquivo `.env` com:
-```
+```bash
 VITE_API_BASE=http://localhost:4000  # URL do backend
 VITE_DISABLE_AUTH=1                  # Bypass auth em dev
 ```
@@ -69,17 +69,15 @@ O backend roda em http://localhost:4000
 - Prisma ORM
 - PostgreSQL
 - Express.js
-- Nginx (produção)
 - PM2 (gerenciamento de processos)
 
-## Deployment em Produção
+## Deployment em Produção (SEM NGINX)
 
-### Arquitetura
+### Arquitetura Simplificada
 
-O projeto utiliza uma arquitetura de frontend e backend separados:
+O projeto agora utiliza uma arquitetura simplificada onde o backend serve tanto a API quanto os arquivos do frontend:
 
-- **Frontend**: nexusvalvulas.com.br
-- **Backend/API**: api.nexusvalvulas.com.br
+- **Aplicação Unificada**: nexusvalvulas.com.br (porta 4000)
 
 ### Configuração de Ambiente
 
@@ -87,33 +85,30 @@ O projeto utiliza uma arquitetura de frontend e backend separados:
 ```bash
 DATABASE_URL=postgresql://usuario:senha@host:porta/nome_do_banco?schema=public
 JWT_SECRET=sua_chave_secreta_forte_aqui
-PUBLIC_URL=https://api.nexusvalvulas.com.br
+PUBLIC_URL=https://seudominio.com
 PORT=4000
+NODE_ENV=production
 ```
 
-#### Frontend (.env.production)
-```bash
-VITE_API_BASE=https://api.nexusvalvulas.com.br
-```
+#### Frontend
+O frontend é compilado e servido diretamente pelo backend, não sendo necessário configurar variáveis de ambiente separadas.
 
 ### Servidor
 
 O deployment em produção utiliza:
 
-1. **Nginx** como servidor web e proxy reverso
+1. **Backend servindo o Frontend** - O backend Express serve os arquivos estáticos do frontend
 2. **PM2** para gerenciamento de processos do backend
 3. **PostgreSQL** como banco de dados
-4. **SSL/TLS** com Let's Encrypt
 
-### Processo de Deployment
+### Processo de Deployment Simplificado
 
 1. Configurar ambiente de produção (variáveis de ambiente)
 2. Build do frontend: `npm run build:prod`
-3. Deploy do backend: `pm2 start backend/src/index.js`
-4. Configurar Nginx com os arquivos de configuração fornecidos
-5. Configurar SSL/TLS
-6. Testar a aplicação
-7. Monitorar logs e performance
+3. Deploy do backend: `pm2 start backend/src/index.js --name nexus-backend`
+4. Configurar serviço systemd (opcional, para reinicialização automática)
+5. Testar a aplicação
+6. Monitorar logs e performance
 
 ## SEO e Performance
 
@@ -126,15 +121,12 @@ O site foi otimizado para:
 
 ## Segurança
 
-- HTTPS obrigatório
-- Headers de segurança (CSP, X-Frame-Options, etc.)
 - Validação de entrada em formulários
 - Proteção CSRF
 - Rate limiting
 
 ## Monitoramento
 
-- Analytics com Google Analytics 4
 - Web Vitals para monitoramento de performance
 - Logs estruturados para debugging
 

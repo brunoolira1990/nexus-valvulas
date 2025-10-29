@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon --watch src --exec node src/index.js",
     "start": "node src/index.js",
-    "prisma": "prisma"
+    "prisma": "prisma",
+    "serve-frontend": "NODE_ENV=production node src/index.js"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

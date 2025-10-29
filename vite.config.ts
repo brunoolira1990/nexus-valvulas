@@ -98,9 +98,11 @@ export default defineConfig(({ mode }) => {
       strictPort: false,
       host: true
     },
-    // Configurações para resolver problemas de MIME type
-    define: {
-      'import.meta.env.VITE_API_BASE': JSON.stringify(process.env.VITE_API_BASE || 'http://localhost:4000')
+    // Configurações para preview em produção
+    preview: {
+      port: 3000,
+      host: true,
+      strictPort: false
     }
   };
 });
