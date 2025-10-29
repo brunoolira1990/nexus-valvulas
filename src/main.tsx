@@ -19,4 +19,9 @@ AOS.init({
 // Reportar Web Vitals
 reportWebVitals(console.log);
 
+// Verificar se o módulo é carregado corretamente
+if (import.meta.env.DEV) {
+  console.log("Running in development mode");
+}
+
 createRoot(document.getElementById("root")!).render(<App />);
