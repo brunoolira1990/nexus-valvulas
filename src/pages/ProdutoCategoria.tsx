@@ -1,78 +1,32 @@
-import { useState, useEffect } from "react";
 import { useParams, Link, Navigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Image as ImageIcon } from "lucide-react";
-import { PageLoader } from "@/components/PageLoader";
 import { BreadcrumbStandard } from "@/components/Breadcrumb";
 import { ScrollAnimation } from "@/components/ScrollAnimation";
-
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+import { getCategoryBySlug, getProductDisplayImage, getProductVariationsCount, type ProductCategory, type ProductType } from "@/mocks/products";
 
 export default function ProdutoCategoria() {
-  const { slug } = useParams<{ slug: string }>();
-  const [category, setCategory] = useState<any>(null);
-  const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchCategoryAndProducts = async () => {
-      try {
-        // Fetch category
-        const categoryRes = await fetch(`${API_BASE}/categories?slug=${slug}`);
-        if (!categoryRes.ok) throw new Error('Categoria não encontrada');
-        const categoryData = await categoryRes.json();
-        const category = categoryData?.[0];
-        if (!category) throw new Error('Categoria não encontrada');
-        setCategory(category);
-
-        // Fetch products
-        const productsRes = await fetch(`${API_BASE}/products?category=${slug}`);
-        if (!productsRes.ok) throw new Error('Erro ao buscar produtos');
-        const productsData = await productsRes.json();
-        setProducts(productsData || []);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Erro ao carregar dados');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (slug) {
-      fetchCategoryAndProducts();
-    }
-  }, [slug]);
-
-  if (loading) {
-    return <PageLoader />;
-  }
-
-  if (!category) {
+  const { categoria } = useParams<{ categoria: string }>();
+  
+  if (!categoria) {
     return <Navigate to="/produtos" replace />;
   }
 
-  if (error) {
-    return (
-      <Layout>
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-destructive mb-4">Erro ao carregar produtos</h1>
-            <p className="text-muted-foreground">{error}</p>
-          </div>
-        </div>
-      </Layout>
-    );
+  const category = getCategoryBySlug(categoria);
+
+  if (!category) {
+    return <Navigate to="/produtos" replace />;
   }
 
   return (
     <Layout>
       <SEO
         title={`${category.name} - Nexus Válvulas | Produtos Industriais`}
-        description={`Explore nossa linha de ${category.name.toLowerCase()}. ${category.description || 'Produtos de alta qualidade para aplicações industriais.'}`}
+        description={category.description || `Explore nossa linha de ${category.name.toLowerCase()}.`}
         keywords={`${category.name.toLowerCase()}, válvulas industriais, produtos industriais`}
       />
       
@@ -83,6 +37,11 @@ export default function ProdutoCategoria() {
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               {category.name}
             </h1>
+            {category.description && (
+              <p className="text-xl text-primary-foreground/80 max-w-3xl mx-auto">
+                {category.description}
+              </p>
+            )}
           </div>
         </div>
       </section>
@@ -115,7 +74,7 @@ export default function ProdutoCategoria() {
             </Button>
           </div>
           
-          {products.length === 0 ? (
+          {category.types.length === 0 ? (
             <ScrollAnimation animation="fade-up">
               <div className="text-center py-12">
                 <ImageIcon className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
@@ -127,53 +86,79 @@ export default function ProdutoCategoria() {
             </ScrollAnimation>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {products.map((produto, index) => (
-                <ScrollAnimation 
-                  key={produto.id} 
-                  animation="fade-up" 
-                  delay={(index % 3) * 100}
-                >
-                  <Card className="group hover:shadow-lg transition-all duration-300">
-                    <div className="aspect-video rounded-t-lg overflow-hidden bg-white">
-                      {produto.images && produto.images.length > 0 ? (
-                        <div className="w-full h-full p-4 flex items-center justify-center">
-                        <img
-                          src={produto.images[0].url}
-                          alt={produto.title}
-                            className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300"
-                        />
+              {category.types.map((productType, index) => {
+                // Usa função auxiliar para obter imagem de exibição
+                const displayImage = getProductDisplayImage(productType);
+
+                return (
+                  <ScrollAnimation 
+                    key={productType.id} 
+                    animation="fade-up" 
+                    delay={(index % 3) * 100}
+                  >
+                    <Link 
+                      to={`/produtos/${category.slug}/${productType.slug}`}
+                      className="block no-underline text-inherit"
+                    >
+                      <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer h-full">
+                        <div className="aspect-video rounded-t-lg overflow-hidden bg-white relative">
+                          {displayImage ? (
+                            <img
+                              src={displayImage}
+                              alt={productType.name}
+                              className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+                              loading="lazy"
+                              onError={(e) => {
+                                // Mostra placeholder quando imagem falha
+                                const target = e.currentTarget;
+                                target.style.display = 'none';
+                                const placeholder = target.nextElementSibling as HTMLElement;
+                                if (placeholder) {
+                                  placeholder.style.display = 'flex';
+                                }
+                              }}
+                            />
+                          ) : null}
+                          <div 
+                            className={`w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center ${displayImage ? 'absolute inset-0' : ''}`}
+                            style={{ display: displayImage ? 'none' : 'flex' }}
+                          >
+                            <ImageIcon className="h-16 w-16 text-primary" />
+                          </div>
                         </div>
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                          <ImageIcon className="h-16 w-16 text-primary" />
-                        </div>
-                      )}
-                    </div>
-                    <CardHeader>
-                      <CardTitle className="group-hover:text-accent transition-colors">
-                        {produto.title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center justify-between">
-                        <Badge variant="secondary">
-                          Industrial
-                        </Badge>
-                        <Link 
-                          to={`/produtos/${slug}/${produto.slug}`}
-                          className="text-accent hover:text-accent/80 font-medium"
-                        >
-                          Ver detalhes →
-                        </Link>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </ScrollAnimation>
-              ))}
+                        <CardHeader>
+                          <CardTitle className="group-hover:text-accent transition-colors">
+                            {productType.name}
+                          </CardTitle>
+                          {productType.description && (
+                            <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                              {productType.description}
+                            </p>
+                          )}
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex items-center justify-between">
+                            <Badge variant="secondary">
+                              {productType.variants 
+                                ? `${productType.variants.length} ${productType.variants.length === 1 ? 'tipo' : 'tipos'}` 
+                                : productType.sizes 
+                                ? `${productType.sizes.length} ${productType.sizes.length === 1 ? 'tamanho' : 'tamanhos'}` 
+                                : 'Disponível'}
+                            </Badge>
+                            <span className="text-accent hover:text-accent/80 font-medium text-sm">
+                              Ver detalhes →
+                            </span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  </ScrollAnimation>
+                );
+              })}
             </div>
           )}
         </div>
       </section>
     </Layout>
   );
-};
+}

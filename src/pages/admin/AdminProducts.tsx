@@ -12,7 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { DraggableVariantList } from '@/components/admin/DraggableVariantList';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+// API_BASE deve incluir /api se não estiver incluído
+const BASE_URL = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+const API_BASE = BASE_URL.endsWith('/api') ? BASE_URL : `${BASE_URL}/api`;
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<any[]>([]);
@@ -48,12 +50,14 @@ export default function AdminProducts() {
         // Fetch products
         const productsRes = await fetch(`${API_BASE}/products`);
         const productsData = await productsRes.json();
-        setProducts(productsData || []);
+        const productsArray = Array.isArray(productsData) ? productsData : (productsData.results || []);
+        setProducts(productsArray);
         
         // Fetch categories
         const categoriesRes = await fetch(`${API_BASE}/categories`);
         const categoriesData = await categoriesRes.json();
-        setCategories(categoriesData || []);
+        const categoriesArray = Array.isArray(categoriesData) ? categoriesData : (categoriesData.results || []);
+        setCategories(categoriesArray);
       } catch (error) {
         console.error('Erro ao buscar dados:', error);
       } finally {
@@ -70,12 +74,14 @@ export default function AdminProducts() {
       // Fetch products
       const productsRes = await fetch(`${API_BASE}/products`);
       const productsData = await productsRes.json();
-      setProducts(productsData || []);
+      const productsArray = Array.isArray(productsData) ? productsData : (productsData.results || []);
+      setProducts(productsArray);
       
       // Fetch categories
       const categoriesRes = await fetch(`${API_BASE}/categories`);
       const categoriesData = await categoriesRes.json();
-      setCategories(categoriesData || []);
+      const categoriesArray = Array.isArray(categoriesData) ? categoriesData : (categoriesData.results || []);
+      setCategories(categoriesArray);
     } catch (error) {
       console.error('Erro ao atualizar dados:', error);
     } finally {
@@ -88,13 +94,24 @@ export default function AdminProducts() {
     
     try {
       setSubmitting(true);
-      const existingImageUrls = (formData.images ? formData.images.split(',').map(url => url.trim()).filter(Boolean) : []);
-      const existingPdfUrls = (formData.pdfs ? formData.pdfs.split(',').map(url => url.trim()).filter(Boolean) : []);
+      
+      // Validação: imagens obrigatórias ao criar
+      if (!editingProduct && (!imageFiles || imageFiles.length === 0)) {
+        toast({ 
+          title: 'Erro', 
+          description: 'É obrigatório enviar pelo menos uma imagem ao criar produto.', 
+          variant: 'destructive' 
+        });
+        setSubmitting(false);
+        return;
+      }
 
       const authHeader = localStorage.getItem('authToken') ? { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` } : {};
 
       if (editingProduct) {
-        const res = await fetch(`${API_BASE}/products/${editingProduct.id}`, {
+        // Django usa slug como lookup_field, então usamos o slug para atualizar
+        const productSlug = formData.slug || editingProduct.slug;
+        const res = await fetch(`${API_BASE}/products/${productSlug}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', ...authHeader },
           body: JSON.stringify({
@@ -102,25 +119,30 @@ export default function AdminProducts() {
             slug: formData.slug,
             description: formData.description,
             category_id: formData.category_id,
-            images: existingImageUrls,
-            pdfs: existingPdfUrls,
           })
         });
         if (!res.ok) throw new Error('Erro ao atualizar produto');
+        
+        // Upload de novas imagens (opcional ao editar)
         if (imageFiles && imageFiles.length > 0) {
           const form = new FormData();
           Array.from(imageFiles).forEach(file => form.append('images', file));
-          const up = await fetch(`${API_BASE}/products/${editingProduct.id}/images`, { method: 'POST', headers: { ...authHeader }, body: form });
+          const productSlug = formData.slug || editingProduct.slug;
+          const up = await fetch(`${API_BASE}/products/${productSlug}/upload_images`, { method: 'POST', headers: { ...authHeader }, body: form });
           if (!up.ok) throw new Error('Erro ao enviar imagens');
         }
+        
+        // Upload de novos PDFs (opcional ao editar)
         if (pdfFiles && pdfFiles.length > 0) {
           const form = new FormData();
           Array.from(pdfFiles).forEach(file => form.append('pdfs', file));
-          const up = await fetch(`${API_BASE}/products/${editingProduct.id}/pdfs`, { method: 'POST', headers: { ...authHeader }, body: form });
+          const productSlug = formData.slug || editingProduct.slug;
+          const up = await fetch(`${API_BASE}/products/${productSlug}/upload_pdfs`, { method: 'POST', headers: { ...authHeader }, body: form });
           if (!up.ok) throw new Error('Erro ao enviar PDFs');
         }
         toast({ title: 'Produto atualizado com sucesso!' });
       } else {
+        // Criar produto
         const res = await fetch(`${API_BASE}/products`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', ...authHeader },
@@ -129,22 +151,26 @@ export default function AdminProducts() {
             slug: formData.slug,
             description: formData.description,
             category_id: formData.category_id,
-            images: existingImageUrls,
-            pdfs: existingPdfUrls,
           })
         });
         if (!res.ok) throw new Error('Erro ao criar produto');
         const created = await res.json();
+        
+        // Upload de imagens (obrigatório ao criar)
         if (imageFiles && imageFiles.length > 0) {
           const form = new FormData();
           Array.from(imageFiles).forEach(file => form.append('images', file));
-          const up = await fetch(`${API_BASE}/products/${created.id}/images`, { method: 'POST', headers: { ...authHeader }, body: form });
+          const productSlug = created.slug || formData.slug;
+          const up = await fetch(`${API_BASE}/products/${productSlug}/upload_images`, { method: 'POST', headers: { ...authHeader }, body: form });
           if (!up.ok) throw new Error('Erro ao enviar imagens');
         }
+        
+        // Upload de PDFs (opcional)
         if (pdfFiles && pdfFiles.length > 0) {
           const form = new FormData();
           Array.from(pdfFiles).forEach(file => form.append('pdfs', file));
-          const up = await fetch(`${API_BASE}/products/${created.id}/pdfs`, { method: 'POST', headers: { ...authHeader }, body: form });
+          const productSlug = created.slug || formData.slug;
+          const up = await fetch(`${API_BASE}/products/${productSlug}/upload_pdfs`, { method: 'POST', headers: { ...authHeader }, body: form });
           if (!up.ok) throw new Error('Erro ao enviar PDFs');
         }
         toast({ title: 'Produto criado com sucesso!' });
@@ -248,9 +274,8 @@ export default function AdminProducts() {
       slug: product.slug,
       description: product.description || '',
       category_id: product.category_id,
-      // Converte arrays de objetos em strings separadas por vírgula
-      images: product.images ? product.images.map((img: any) => img.url).join(', ') : '',
-      pdfs: product.pdfs ? product.pdfs.map((pdf: any) => pdf.url).join(', ') : ''
+      images: '', // Não usamos mais URLs
+      pdfs: '' // Não usamos mais URLs
     });
     setImageFiles(null);
     setPdfFiles(null);
@@ -259,11 +284,13 @@ export default function AdminProducts() {
     setDialogOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (product: any) => {
     if (!confirm('Tem certeza que deseja excluir este produto?')) return;
     
     try {
-      const res = await fetch(`${API_BASE}/products/${id}`, {
+      // Django usa slug como lookup_field
+      const productSlug = product.slug || product.id;
+      const res = await fetch(`${API_BASE}/products/${productSlug}`, {
         method: 'DELETE',
         headers: { ...(localStorage.getItem('authToken') ? { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` } : {}) }
       });
@@ -395,30 +422,61 @@ export default function AdminProducts() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="images">Imagens (URLs separadas por vírgula)</Label>
-                    <Textarea
-                      id="images"
-                      value={formData.images}
-                      onChange={(e) => setFormData(prev => ({ ...prev, images: e.target.value }))}
-                      placeholder="https://exemplo.com/imagem1.jpg, https://exemplo.com/imagem2.jpg"
+                    <Label htmlFor="imageFiles">
+                      Imagens {!editingProduct && <span className="text-destructive">*</span>}
+                      {editingProduct && <span className="text-muted-foreground text-sm">(opcional - deixe em branco para manter as atuais)</span>}
+                    </Label>
+                    <Input 
+                      id="imageFiles" 
+                      type="file" 
+                      accept="image/*" 
+                      multiple 
+                      onChange={(e) => setImageFiles(e.target.files)} 
+                      required={!editingProduct}
+                      className="mt-2"
                     />
-                    <div className="mt-2">
-                      <Label htmlFor="imageFiles">ou envie imagens (múltiplas)</Label>
-                      <Input id="imageFiles" type="file" accept="image/*" multiple onChange={(e) => setImageFiles(e.target.files)} />
-                    </div>
+                    {!editingProduct && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        É obrigatório enviar pelo menos uma imagem ao criar um novo produto.
+                      </p>
+                    )}
+                    {editingProduct && editingProduct.images && editingProduct.images.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm text-muted-foreground mb-2">Imagens atuais:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {editingProduct.images.map((img: any, idx: number) => (
+                            <img key={idx} src={img.url} alt={`Imagem ${idx + 1}`} className="h-16 object-contain border rounded" />
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div>
-                    <Label htmlFor="pdfs">PDFs (URLs separadas por vírgula)</Label>
-                    <Textarea
-                      id="pdfs"
-                      value={formData.pdfs}
-                      onChange={(e) => setFormData(prev => ({ ...prev, pdfs: e.target.value }))}
-                      placeholder="https://exemplo.com/manual1.pdf, https://exemplo.com/manual2.pdf"
+                    <Label htmlFor="pdfFiles">
+                      PDFs <span className="text-muted-foreground text-sm">(opcional)</span>
+                    </Label>
+                    <Input 
+                      id="pdfFiles" 
+                      type="file" 
+                      accept="application/pdf" 
+                      multiple 
+                      onChange={(e) => setPdfFiles(e.target.files)} 
+                      className="mt-2"
                     />
-                    <div className="mt-2">
-                      <Label htmlFor="pdfFiles">ou envie PDFs (múltiplos)</Label>
-                      <Input id="pdfFiles" type="file" accept="application/pdf" multiple onChange={(e) => setPdfFiles(e.target.files)} />
-                    </div>
+                    {editingProduct && editingProduct.pdfs && editingProduct.pdfs.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm text-muted-foreground mb-2">PDFs atuais:</p>
+                        <ul className="list-disc list-inside text-sm">
+                          {editingProduct.pdfs.map((pdf: any, idx: number) => (
+                            <li key={idx}>
+                              <a href={pdf.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                                PDF {idx + 1}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                   <div className="flex justify-end space-x-2">
                     <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
@@ -524,7 +582,7 @@ export default function AdminProducts() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleDelete(product.id)}
+                            onClick={() => handleDelete(product)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

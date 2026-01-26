@@ -2,7 +2,43 @@
 
 Site institucional da Nexus Válvulas com catálogo de produtos e área administrativa.
 
-## Desenvolvimento Local
+## 🚀 Início Rápido com Docker
+
+O projeto está totalmente containerizado e pode ser executado com Docker Compose.
+
+### Pré-requisitos
+
+- Docker (versão 20.10+)
+- Docker Compose (versão 2.0+)
+- Node.js 20+ (apenas para build do frontend)
+
+### Passos para Iniciar
+
+1. **Build do Frontend**:
+```bash
+npm install
+npm run build:prod
+```
+
+2. **Configurar Variáveis de Ambiente**:
+```bash
+cp .env.docker.example .env.docker
+# Edite .env.docker com suas configurações
+```
+
+3. **Iniciar Containers**:
+```bash
+docker-compose up --build -d
+```
+
+4. **Acessar a Aplicação**:
+- Frontend: http://localhost:8000
+- API: http://localhost:8000/api
+- Teste: http://localhost:8000/api/test
+
+Para mais detalhes, consulte [DOCKER.md](./DOCKER.md).
+
+## Desenvolvimento Local (sem Docker)
 
 ### Frontend
 
@@ -14,7 +50,7 @@ npm install
 2. Configurar variáveis de ambiente:
 - Criar arquivo `.env` com:
 ```bash
-VITE_API_BASE=http://localhost:4000  # URL do backend
+VITE_API_BASE=http://localhost:8000  # URL do backend Django
 VITE_DISABLE_AUTH=1                  # Bypass auth em dev
 ```
 
@@ -25,90 +61,63 @@ npm run dev
 
 O frontend irá rodar em http://localhost:5173
 
-### Backend
+### Backend Django
 
 O backend está na pasta `backend/`. 
+
+Consulte o [README do backend](./backend/README.md) para instruções detalhadas de instalação e configuração.
+
+**Resumo rápido:**
 
 1. Instalar dependências:
 ```bash
 cd backend
-npm install
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# ou
+venv\Scripts\activate  # Windows
+pip install -r requirements.txt
 ```
 
-2. Criar banco de dados:
+2. Configurar ambiente:
 ```bash
-npx prisma generate
-npx prisma migrate dev --name init
+cp env.example .env
+# Edite o .env com suas configurações
 ```
 
-3. Criar usuário admin:
+3. Configurar banco de dados PostgreSQL e executar migrações:
 ```bash
-node scripts/create-admin.js
+python manage.py migrate
 ```
-Credenciais padrão:
-- Email: admin@nexus.com
-- Senha: admin123
 
-4. Iniciar servidor:
+4. Criar usuário admin:
 ```bash
-npm run dev
+python manage.py shell
+```
+```python
+from api.models import User
+user = User.objects.create_user(
+    email='admin@nexus.com',
+    password='admin123',
+    name='Admin',
+    role='ADMIN'
+)
 ```
 
-O backend roda em http://localhost:4000
+5. Iniciar servidor:
+```bash
+python manage.py runserver
+```
+
+O backend roda em http://localhost:8000
 
 ## Tecnologias Utilizadas
 
-- React + Vite
-- TypeScript
-- Tailwind CSS
-- React Router
-- Axios
-- React Hook Form
-- Zod (validação)
-- React Query
-- Prisma ORM
-- PostgreSQL
-- Express.js
-- PM2 (gerenciamento de processos)
-
-## Deployment em Produção (SEM NGINX)
-
-### Arquitetura Simplificada
-
-O projeto agora utiliza uma arquitetura simplificada onde o backend serve tanto a API quanto os arquivos do frontend:
-
-- **Aplicação Unificada**: nexusvalvulas.com.br (porta 4000)
-
-### Configuração de Ambiente
-
-#### Backend (.env.production)
-```bash
-DATABASE_URL=postgresql://usuario:senha@host:porta/nome_do_banco?schema=public
-JWT_SECRET=sua_chave_secreta_forte_aqui
-PUBLIC_URL=https://seudominio.com
-PORT=4000
-NODE_ENV=production
-```
-
-#### Frontend
-O frontend é compilado e servido diretamente pelo backend, não sendo necessário configurar variáveis de ambiente separadas.
-
-### Servidor
-
-O deployment em produção utiliza:
-
-1. **Backend servindo o Frontend** - O backend Express serve os arquivos estáticos do frontend
-2. **PM2** para gerenciamento de processos do backend
-3. **PostgreSQL** como banco de dados
-
-### Processo de Deployment Simplificado
-
-1. Configurar ambiente de produção (variáveis de ambiente)
-2. Build do frontend: `npm run build:prod`
-3. Deploy do backend: `pm2 start backend/src/index.js --name nexus-backend`
-4. Configurar serviço systemd (opcional, para reinicialização automática)
-5. Testar a aplicação
-6. Monitorar logs e performance
+- **Frontend**: React + Vite + TypeScript + Tailwind CSS
+- **Backend**: Django 5.0 + Django Rest Framework + Python 3.10+
+- **Banco de Dados**: PostgreSQL
+- **Containerização**: Docker + Docker Compose
+- **Autenticação**: JWT (djangorestframework-simplejwt)
 
 ## SEO e Performance
 

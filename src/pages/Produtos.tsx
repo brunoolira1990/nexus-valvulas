@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { SEO } from "@/components/SEO";
@@ -6,59 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Image as ImageIcon, ArrowRight, Package } from "lucide-react";
-import { PageLoader } from "@/components/PageLoader";
 import { BreadcrumbStandard } from "@/components/Breadcrumb";
 import { ScrollAnimation } from "@/components/ScrollAnimation";
-
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
+import { getCategories, type ProductCategory } from "@/mocks/products";
 
 export default function Produtos() {
-  const [categories, setCategories] = useState<
-    Array<{ id: string; name: string; description?: string; image?: string }>
-  >([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/categories`);
-        if (!res.ok) throw new Error("Erro ao buscar categorias");
-        const data = await res.json();
-        setCategories(data || []);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Erro ao carregar categorias");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCategories();
-  }, []);
-
-  if (loading) {
-    return <PageLoader />;
-  }
-
-  if (error) {
-    return (
-      <Layout>
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-destructive mb-4">
-              Erro ao carregar categorias
-            </h1>
-            <p className="text-muted-foreground">{error}</p>
-            <div className="mt-6">
-              <Link to="/contato" className="text-primary hover:underline font-medium">
-                Entre em contato conosco para obter assistência →
-              </Link>
-            </div>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
+  const categories = getCategories();
 
   return (
     <Layout>
@@ -94,44 +47,56 @@ export default function Produtos() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {categories.map((categoria, index) => (
               <ScrollAnimation key={categoria.id} animation="fade-up" delay={index * 100}>
-                <Card className="group hover:shadow-lg transition-all duration-300">
-                  <div className="aspect-video rounded-t-lg overflow-hidden bg-white">
-                    {categoria.image ? (
-                      <div className="w-full h-full p-4 flex items-center justify-center">
+                <Link 
+                  to={`/produtos/${categoria.slug}`} 
+                  className="block no-underline text-inherit"
+                  style={{ textDecoration: 'none', color: 'inherit' }}
+                >
+                  <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer h-full">
+                    <div className="aspect-video rounded-t-lg overflow-hidden bg-white relative">
+                      {categoria.image ? (
                         <img
                           src={categoria.image}
                           alt={`Imagem da categoria ${categoria.name}`}
-                          className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
                           loading="lazy"
+                          onError={(e) => {
+                            // Mostra placeholder quando imagem falha
+                            const target = e.currentTarget;
+                            target.style.display = 'none';
+                            const placeholder = target.nextElementSibling as HTMLElement;
+                            if (placeholder) {
+                              placeholder.style.display = 'flex';
+                            }
+                          }}
                         />
-                      </div>
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-r from-blue-100 to-orange-100 flex items-center justify-center">
+                      ) : null}
+                      <div 
+                        className={`w-full h-full bg-gradient-to-r from-blue-100 to-orange-100 flex items-center justify-center ${categoria.image ? 'absolute inset-0' : ''}`}
+                        style={{ display: categoria.image ? 'none' : 'flex' }}
+                      >
                         <Package className="h-16 w-16 text-blue-600" />
                       </div>
-                    )}
-                  </div>
-                  <CardHeader>
-                    <CardTitle className="group-hover:text-accent transition-colors text-orange-600 font-bold">
-                      {categoria.name}
-                    </CardTitle>
-                    {categoria.description && (
-                      <p className="text-sm text-gray-600 mt-2 line-clamp-2">
-                        {categoria.description}
-                      </p>
-                    )}
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <Link
-                        to={`/produtos/${categoria.slug}`}
-                        className="text-orange-600 hover:text-orange-700 font-medium"
-                      >
-                        Ver produtos →
-                      </Link>
                     </div>
-                  </CardContent>
-                </Card>
+                    <CardHeader>
+                      <CardTitle className="group-hover:text-accent transition-colors text-orange-600 font-bold">
+                        {categoria.name}
+                      </CardTitle>
+                      {categoria.description && (
+                        <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+                          {categoria.description}
+                        </p>
+                      )}
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between">
+                        <span className="text-orange-600 hover:text-orange-700 font-medium">
+                          Ver produtos →
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
               </ScrollAnimation>
             ))}
           </div>

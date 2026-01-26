@@ -12,8 +12,10 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: 'autoUpdate',
+        // Desabilitar PWA completamente em desenvolvimento
         devOptions: {
-          enabled: mode !== 'production'
+          enabled: false,
+          type: 'module',
         },
         manifest: {
           name: 'Nexus Válvulas e Conexões Industriais',
@@ -22,14 +24,14 @@ export default defineConfig(({ mode }) => {
           theme_color: '#0066cc',
           icons: [
             {
-              src: 'src/assets/logo.svg',
+              src: '/imagens/logo-nexus.png',
               sizes: '192x192',
-              type: 'image/svg+xml'
+              type: 'image/png'
             },
             {
-              src: 'src/assets/logo.svg',
+              src: '/imagens/logo-nexus.png',
               sizes: '512x512',
-              type: 'image/svg+xml'
+              type: 'image/png'
             }
           ]
         },

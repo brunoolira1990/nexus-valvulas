@@ -16,9 +16,10 @@ interface BlogPost {
   id: string;
   title: string;
   slug: string;
-  summary: string;
-  cover_image: string;
-  published_date: string;
+  excerpt?: string;
+  cover_image?: string;
+  published: boolean;
+  created_at: string;
 }
 
 export default function Blog() {
@@ -152,7 +153,7 @@ export default function Blog() {
                         <div className={post.cover_image ? 'md:w-2/3' : 'w-full'}>
                           <CardHeader>
                             <div className="text-sm text-muted-foreground mb-2">
-                              {new Date(post.published_date).toLocaleDateString('pt-BR', {
+                              {new Date(post.created_at).toLocaleDateString('pt-BR', {
                                 day: '2-digit',
                                 month: 'long',
                                 year: 'numeric'
@@ -169,7 +170,7 @@ export default function Blog() {
                           </CardHeader>
                           <CardContent>
                             <p className="text-muted-foreground mb-4">
-                              {post.summary}
+                              {post.excerpt || 'Sem resumo disponível.'}
                             </p>
                             <Link 
                               to={`/blog/${post.slug}`}

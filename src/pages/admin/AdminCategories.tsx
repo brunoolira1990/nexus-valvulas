@@ -11,7 +11,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { useEffect } from 'react';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+// API_BASE deve incluir /api se não estiver incluído
+const BASE_URL = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+const API_BASE = BASE_URL.endsWith('/api') ? BASE_URL : `${BASE_URL}/api`;
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -21,7 +23,9 @@ export default function AdminCategories() {
     try {
       const res = await fetch(`${API_BASE}/categories`);
       const data = await res.json();
-      setCategories(data);
+      // DRF pode retornar paginado {results: [...]} ou array direto
+      const categoriesArray = Array.isArray(data) ? data : (data.results || []);
+      setCategories(categoriesArray);
     } catch (err) {
       console.error(err);
     } finally {
@@ -48,11 +52,22 @@ export default function AdminCategories() {
     e.preventDefault();
     
     try {
+      // Validação: imagem obrigatória ao criar
+      if (!editingCategory && !imageFile) {
+        toast({ 
+          title: 'Erro', 
+          description: 'É obrigatório enviar uma imagem ao criar categoria.', 
+          variant: 'destructive' 
+        });
+        return;
+      }
+
       // Validate slug uniqueness by querying backend
       try {
         const res = await fetch(`${API_BASE}/categories`);
         const all = await res.json();
-        const exists = all.find((c: any) => c.slug === formData.slug && c.id !== editingCategory?.id);
+        const categoriesArray = Array.isArray(all) ? all : (all.results || []);
+        const exists = categoriesArray.find((c: any) => c.slug === formData.slug && c.id !== editingCategory?.id);
         if (exists) {
           toast({ title: 'Erro', description: 'Slug já existe. Use outro slug.', variant: 'destructive' });
           return;
@@ -65,6 +80,7 @@ export default function AdminCategories() {
       // First create or update category (without image reference)
       let categoryId = editingCategory?.id;
       if (editingCategory) {
+        // Django usa ID como lookup_field para categorias
         const res = await fetch(`${API_BASE}/categories/${editingCategory.id}`, {
           method: 'PUT',
           headers: {
@@ -90,7 +106,7 @@ export default function AdminCategories() {
         toast({ title: 'Categoria criada com sucesso!' });
       }
 
-      // If there's a new image selected, upload and insert into category_images
+      // Upload da imagem (obrigatória ao criar, opcional ao editar)
       if (imageFile && categoryId) {
         const form = new FormData();
         form.append('image', imageFile);
@@ -104,12 +120,12 @@ export default function AdminCategories() {
         if (!res.ok) throw new Error('Erro ao enviar imagem');
       }
       
-  setDialogOpen(false);
-  setEditingCategory(null);
-  setFormData({ name: '', slug: '', description: '', image: '' });
-  setImageFile(null);
-  setImagePreview(null);
-  refetch();
+      setDialogOpen(false);
+      setEditingCategory(null);
+      setFormData({ name: '', slug: '', description: '', image: '' });
+      setImageFile(null);
+      setImagePreview(null);
+      refetch();
     } catch (error: any) {
       toast({ 
         title: 'Erro', 
@@ -223,19 +239,29 @@ export default function AdminCategories() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="image">Imagem (opcional)</Label>
+                  <Label htmlFor="image">
+                    Imagem {!editingCategory && <span className="text-destructive">*</span>}
+                    {editingCategory && <span className="text-muted-foreground text-sm">(opcional - deixe em branco para manter a atual)</span>}
+                  </Label>
                   <input
                     id="image"
                     type="file"
                     accept="image/*"
                     onChange={(e) => handleImageChange(e.target.files?.[0] || null)}
                     className="mt-2"
+                    required={!editingCategory}
                   />
-                  {imagePreview ? (
+                  {imagePreview && (
                     <img src={imagePreview} alt="preview" className="mt-2 h-24 object-contain" />
-                  ) : formData.image ? (
-                    <img src={formData.image} alt="preview" className="mt-2 h-24 object-contain" />
-                  ) : null}
+                  )}
+                  {!imagePreview && editingCategory && editingCategory.image && (
+                    <img src={editingCategory.image} alt="atual" className="mt-2 h-24 object-contain" />
+                  )}
+                  {!editingCategory && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      A imagem é obrigatória ao criar uma nova categoria.
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="slug">Slug</Label>

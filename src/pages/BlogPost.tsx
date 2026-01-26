@@ -15,11 +15,13 @@ import { ScrollAnimation } from '@/components/ScrollAnimation';
 interface BlogPost {
   id: string;
   title: string;
+  slug: string;
   content: string;
-  cover_image: string;
-  published_date: string;
-  meta_description: string;
-  keywords: string[];
+  excerpt?: string;
+  cover_image?: string;
+  published: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export default function BlogPost() {

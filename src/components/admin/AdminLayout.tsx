@@ -1,14 +1,12 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, Home, Package, FolderOpen, FileText } from "lucide-react";
+import { LogOut, Home, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Dashboard } from "./Dashboard";
 
 const navigation = [
   { name: "Dashboard", href: "/admin", icon: Home },
-  { name: "Categorias", href: "/admin/categories", icon: FolderOpen },
-  { name: "Produtos", href: "/admin/products", icon: Package },
   { name: "Blog", href: "/admin/blog", icon: FileText },
 ];
 

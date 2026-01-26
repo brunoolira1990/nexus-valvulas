@@ -101,7 +101,9 @@ export default function Contato() {
       contactFormSchema.parse(formData);
 
       // Enviar dados para o backend
-      const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
+      // API_BASE deve incluir /api se não estiver incluído
+      const BASE_URL = import.meta.env.VITE_API_BASE || "http://localhost:8000";
+      const API_BASE = BASE_URL.endsWith('/api') ? BASE_URL : `${BASE_URL}/api`;
       console.log("Enviando dados para:", `${API_BASE}/contact`);
       console.log("Dados:", formData);
 

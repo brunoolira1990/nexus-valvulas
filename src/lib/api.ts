@@ -1,4 +1,19 @@
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+// API_BASE deve incluir /api se não estiver incluído
+const BASE_URL = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+const API_BASE = BASE_URL.endsWith('/api') ? BASE_URL : `${BASE_URL}/api`;
+
+/**
+ * Normaliza resposta do DRF que pode vir paginada {results: [...]} ou como array direto
+ */
+function normalizeResponse(data: any): any[] {
+  if (Array.isArray(data)) {
+    return data;
+  }
+  if (data && Array.isArray(data.results)) {
+    return data.results;
+  }
+  return [];
+}
 
 interface ApiOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
@@ -48,49 +63,14 @@ async function apiCall(path: string, options: ApiOptions = {}) {
   return data;
 }
 
-// Categories
-export async function getCategories() {
-  return apiCall('/categories');
+// Blog API
+export async function getBlogPosts() {
+  const data = await apiCall('/blog/posts');
+  return normalizeResponse(data);
 }
 
-export async function createCategory(data: any) {
-  return apiCall('/categories', {
-    method: 'POST',
-    body: data
-  });
-}
-
-export async function updateCategory(id: string, data: any) {
-  return apiCall(`/categories/${id}`, {
-    method: 'PUT',
-    body: data
-  });
-}
-
-export async function deleteCategory(id: string) {
-  return apiCall(`/categories/${id}`, {
-    method: 'DELETE'
-  });
-}
-
-export async function uploadCategoryImage(categoryId: string, file: File) {
-  const formData = new FormData();
-  formData.append('image', file);
-  return apiCall(`/categories/${categoryId}/image`, {
-    method: 'POST',
-    body: formData,
-    isFormData: true
-  });
-}
-
-// Products
-export async function getProducts(filters?: any) {
-  const params = new URLSearchParams(filters).toString();
-  return apiCall(`/products${params ? `?${params}` : ''}`);
-}
-
-export async function getProduct(id: string) {
-  return apiCall(`/products/${id}`);
+export async function getBlogPostBySlug(slug: string) {
+  return apiCall(`/blog/posts/${slug}`);
 }
 
 // Auth
@@ -106,13 +86,4 @@ export async function register(data: any) {
     method: 'POST',
     body: data
   });
-}
-
-// Blog
-export async function getBlogPosts() {
-  return apiCall('/blog/posts');
-}
-
-export async function getBlogPostBySlug(slug: string) {
-  return apiCall(`/blog/posts/slug/${slug}`);
 }
