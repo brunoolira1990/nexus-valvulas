@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nexus Válvulas - Produtos</title>
+
+  <!-- Bootstrap 5 CDN -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous"
+  />
+</head>
+<body class="bg-light">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="/">Nexus Válvulas</a>
+      <div class="d-flex">
+        <a href="/admin/" class="btn btn-outline-light btn-sm">
+          Admin
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="py-5">
+    <div class="container">
+      <header class="mb-4 text-center">
+        <h1 class="fw-bold">Catálogo de Produtos</h1>
+        <p class="text-muted">
+          Lista simples de produtos vinda do banco de dados Django.
+        </p>
+      </header>
+
+      {% if products %}
+        <div class="row g-4">
+          {% for product in products %}
+            <div class="col-12 col-sm-6 col-lg-4">
+              <div class="card h-100 shadow-sm">
+                {% if product.image %}
+                  <img
+                    src="{{ product.image.url }}"
+                    class="card-img-top"
+                    alt="{{ product.title }}"
+                    style="object-fit: cover; height: 200px;"
+                  />
+                {% endif %}
+                <div class="card-body d-flex flex-column">
+                  <h5 class="card-title">{{ product.title }}</h5>
+                  <p class="card-text text-muted small mb-2">
+                    Categoria: {{ product.category.name }}
+                  </p>
+                  {% if product.description %}
+                    <p class="card-text">
+                      {{ product.description|truncatechars:120 }}
+                    </p>
+                  {% endif %}
+                  <div class="mt-auto">
+                    <span class="badge bg-success">Ativo</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="alert alert-info text-center">
+          Nenhum produto cadastrado ainda. Acesse o <a href="/admin/">admin</a> e crie alguns.
+        </div>
+      {% endif %}
+    </div>
+  </main>
+
+  <footer class="py-4 bg-dark text-light mt-5">
+    <div class="container text-center small">
+      &copy; {{ year|default:2026 }} Nexus Válvulas. Todos os direitos reservados.
+    </div>
+  </footer>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+    crossorigin="anonymous"
+  ></script>
+</body>
+</html>
+

@@ -20,7 +20,8 @@ export default function Login() {
   const navigate = useNavigate();
 
   if (user) {
-    return <Navigate to="/admin" replace />;
+    // Painel admin agora é o Django Admin (/admin do backend)
+    return <Navigate to="/" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,9 +35,10 @@ export default function Login() {
       }
       toast({
         title: "Login realizado com sucesso",
-        description: "Bem-vindo ao painel administrativo!",
+        description: "Bem-vindo de volta!",
       });
-      navigate("/admin");
+      // Admin é gerido pelo Django; no frontend mantemos navegação pública
+      navigate("/");
     } catch (error: unknown) {
       console.error("Login error:", error);
       toast({

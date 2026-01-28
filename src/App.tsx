@@ -8,8 +8,6 @@ import { PageLoader } from "@/components/PageLoader";
 import { HelmetProvider } from "react-helmet-async";
 import { Suspense, lazy, useEffect } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Analytics } from "@/components/Analytics";
 import AOS from "aos";
 
@@ -27,13 +25,7 @@ const Login = lazy(() => import("@/pages/Login"));
 const Debug = lazy(() => import("@/pages/Debug"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
-// Páginas administrativas
-const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
-const AdminBlog = lazy(() => import("@/pages/admin/AdminBlog"));
-const AdminProductEdit = lazy(() => import("@/pages/admin/AdminProductEdit"));
-const AdminCategories = lazy(() => import("@/pages/admin/AdminCategories"));
-const AdminProducts = lazy(() => import("@/pages/admin/AdminProducts"));
-const AdminProductsNew = lazy(() => import("@/pages/admin/AdminProductsNew"));
+// Páginas administrativas removidas - painel agora é Django Admin
 
 const queryClient = new QueryClient();
 
@@ -70,23 +62,6 @@ const App = () => (
                   <Route path="/blog/:slug" element={<BlogPost />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/debug" element={<Debug />} />
-
-                  {/* Admin Routes */}
-                  <Route
-                    path="/admin"
-                    element={
-                      <ProtectedRoute requireAdmin>
-                        <AdminLayout />
-                      </ProtectedRoute>
-                    }
-                  >
-                    <Route index element={<AdminDashboard />} />
-                    <Route path="categories" element={<AdminCategories />} />
-                    <Route path="products" element={<AdminProducts />} />
-                    <Route path="products/new" element={<AdminProductsNew />} />
-                    <Route path="products/:slug/edit" element={<AdminProductEdit />} />
-                    <Route path="blog" element={<AdminBlog />} />
-                  </Route>
 
                   <Route path="*" element={<NotFound />} />
                 </Routes>
