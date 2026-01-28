@@ -18,6 +18,7 @@ const Index = lazy(() => import("@/pages/Index"));
 const Produtos = lazy(() => import("@/pages/Produtos"));
 const ProdutoCategoria = lazy(() => import("@/pages/ProdutoCategoria"));
 const ProdutoDetalhes = lazy(() => import("@/pages/ProdutoDetalhes"));
+const ValvulasEsfera = lazy(() => import("@/pages/ValvulasEsfera"));
 const Sobre = lazy(() => import("@/pages/Sobre"));
 const Contato = lazy(() => import("@/pages/Contato"));
 const Blog = lazy(() => import("@/pages/Blog"));
@@ -29,6 +30,10 @@ const NotFound = lazy(() => import("@/pages/NotFound"));
 // Páginas administrativas
 const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
 const AdminBlog = lazy(() => import("@/pages/admin/AdminBlog"));
+const AdminProductEdit = lazy(() => import("@/pages/admin/AdminProductEdit"));
+const AdminCategories = lazy(() => import("@/pages/admin/AdminCategories"));
+const AdminProducts = lazy(() => import("@/pages/admin/AdminProducts"));
+const AdminProductsNew = lazy(() => import("@/pages/admin/AdminProductsNew"));
 
 const queryClient = new QueryClient();
 
@@ -76,6 +81,10 @@ const App = () => (
                     }
                   >
                     <Route index element={<AdminDashboard />} />
+                    <Route path="categories" element={<AdminCategories />} />
+                    <Route path="products" element={<AdminProducts />} />
+                    <Route path="products/new" element={<AdminProductsNew />} />
+                    <Route path="products/:slug/edit" element={<AdminProductEdit />} />
                     <Route path="blog" element={<AdminBlog />} />
                   </Route>
 

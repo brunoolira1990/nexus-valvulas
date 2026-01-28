@@ -1,26 +1,116 @@
 import { useParams, Link, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Image as ImageIcon, Loader2 } from "lucide-react";
 import { BreadcrumbStandard } from "@/components/Breadcrumb";
 import { ScrollAnimation } from "@/components/ScrollAnimation";
-import { getCategoryBySlug, getProductDisplayImage, getProductVariationsCount, type ProductCategory, type ProductType } from "@/mocks/products";
+import { getCategoryBySlug, getProducts } from "@/lib/api";
+
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  image_url?: string;
+}
+
+interface Product {
+  id: number;
+  title: string;
+  slug: string;
+  description: string;
+  image_url?: string;
+  product_type: 'simple' | 'intermediate' | 'complex';
+  variants?: Array<{
+    id: number;
+    name: string;
+    sizes?: Record<string, string>;
+  }>;
+  sizes?: Record<string, string>;
+}
 
 export default function ProdutoCategoria() {
   const { categoria } = useParams<{ categoria: string }>();
+  const [category, setCategory] = useState<Category | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
+  useEffect(() => {
+    if (!categoria) return;
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [categoryData, productsData] = await Promise.all([
+          getCategoryBySlug(categoria),
+          getProducts(categoria)
+        ]);
+        setCategory(categoryData);
+        setProducts(productsData);
+      } catch (err) {
+        console.error('Erro ao buscar dados:', err);
+        setError('Erro ao carregar dados. Tente novamente mais tarde.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [categoria]);
+
   if (!categoria) {
     return <Navigate to="/produtos" replace />;
   }
 
-  const category = getCategoryBySlug(categoria);
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2 text-muted-foreground">Carregando...</span>
+        </div>
+      </Layout>
+    );
+  }
 
-  if (!category) {
+  if (error || !category) {
     return <Navigate to="/produtos" replace />;
   }
+
+  // Função auxiliar para obter imagem de exibição do produto
+  const getProductDisplayImage = (product: Product): string | undefined => {
+    if (product.image_url) return product.image_url;
+    if (product.variants && product.variants.length > 0) {
+      const firstVariant = product.variants[0];
+      if (firstVariant.sizes) {
+        const sizes = Object.values(firstVariant.sizes);
+        return sizes[0];
+      }
+    }
+    if (product.sizes) {
+      const sizes = Object.values(product.sizes);
+      return sizes[0];
+    }
+    return undefined;
+  };
+
+  // Função auxiliar para contar variações
+  const getProductVariationsCount = (product: Product): number => {
+    if (product.product_type === 'complex' && product.variants) {
+      return product.variants.reduce((total, variant) => {
+        return total + (variant.sizes ? Object.keys(variant.sizes).length : 0);
+      }, 0);
+    }
+    if (product.product_type === 'intermediate' && product.sizes) {
+      return Object.keys(product.sizes).length;
+    }
+    return 0;
+  };
 
   return (
     <Layout>
@@ -74,7 +164,7 @@ export default function ProdutoCategoria() {
             </Button>
           </div>
           
-          {category.types.length === 0 ? (
+          {products.length === 0 ? (
             <ScrollAnimation animation="fade-up">
               <div className="text-center py-12">
                 <ImageIcon className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
@@ -86,18 +176,19 @@ export default function ProdutoCategoria() {
             </ScrollAnimation>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {category.types.map((productType, index) => {
+              {products.map((product, index) => {
                 // Usa função auxiliar para obter imagem de exibição
-                const displayImage = getProductDisplayImage(productType);
+                const displayImage = getProductDisplayImage(product);
+                const variationsCount = getProductVariationsCount(product);
 
                 return (
                   <ScrollAnimation 
-                    key={productType.id} 
+                    key={product.id} 
                     animation="fade-up" 
                     delay={(index % 3) * 100}
                   >
                     <Link 
-                      to={`/produtos/${category.slug}/${productType.slug}`}
+                      to={`/produtos/${category.slug}/${product.slug}`}
                       className="block no-underline text-inherit"
                     >
                       <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer h-full">
@@ -105,7 +196,7 @@ export default function ProdutoCategoria() {
                           {displayImage ? (
                             <img
                               src={displayImage}
-                              alt={productType.name}
+                              alt={product.title}
                               className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
                               loading="lazy"
                               onError={(e) => {
@@ -128,21 +219,19 @@ export default function ProdutoCategoria() {
                         </div>
                         <CardHeader>
                           <CardTitle className="group-hover:text-accent transition-colors">
-                            {productType.name}
+                            {product.title}
                           </CardTitle>
-                          {productType.description && (
+                          {product.description && (
                             <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                              {productType.description}
+                              {product.description}
                             </p>
                           )}
                         </CardHeader>
                         <CardContent>
                           <div className="flex items-center justify-between">
                             <Badge variant="secondary">
-                              {productType.variants 
-                                ? `${productType.variants.length} ${productType.variants.length === 1 ? 'tipo' : 'tipos'}` 
-                                : productType.sizes 
-                                ? `${productType.sizes.length} ${productType.sizes.length === 1 ? 'tamanho' : 'tamanhos'}` 
+                              {variationsCount > 0 
+                                ? `${variationsCount} ${variationsCount === 1 ? 'variação' : 'variações'}` 
                                 : 'Disponível'}
                             </Badge>
                             <span className="text-accent hover:text-accent/80 font-medium text-sm">

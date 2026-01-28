@@ -22,13 +22,36 @@ export function ProductSpecs({
   selectedVariant,
   className,
 }: ProductSpecsProps) {
-  const hasContent =
-    (specifications && Object.keys(specifications).length > 0) ||
+  const hasOtherContent =
     (applications && applications.length > 0) ||
     (standards && standards.length > 0) ||
     selectedVariant;
 
-  if (!hasContent) return null;
+  // Sempre mostrar a seção de especificações, mesmo se vazia
+  const hasAnyContent = 
+    (specifications && Object.keys(specifications).length > 0) ||
+    hasOtherContent;
+
+  if (!hasAnyContent) {
+    // Se não houver nenhum conteúdo, ainda mostra a seção de especificações com mensagem
+    return (
+      <div className={cn("space-y-6", className)}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Especificações Técnicas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Consulte nosso suporte técnico para mais informações sobre as especificações deste produto.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className={cn("space-y-6", className)}>
@@ -59,15 +82,15 @@ export function ProductSpecs({
       )}
 
       {/* Especificações Técnicas */}
-      {specifications && Object.keys(specifications).length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Especificações Técnicas
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Especificações Técnicas
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {specifications && Object.keys(specifications).length > 0 ? (
             <dl className="space-y-3">
               {Object.entries(specifications).map(([key, value]) => (
                 <div key={key} className="flex justify-between items-start py-2 border-b last:border-0">
@@ -80,9 +103,13 @@ export function ProductSpecs({
                 </div>
               ))}
             </dl>
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Consulte nosso suporte técnico para mais informações sobre as especificações deste produto.
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Aplicações */}
       {applications && applications.length > 0 && (
@@ -129,5 +156,3 @@ export function ProductSpecs({
     </div>
   );
 }
-
-

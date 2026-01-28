@@ -52,6 +52,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: JSON.stringify({ email, password }),
       });
 
+      // Verificar se a resposta é JSON
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await res.text();
+        console.error("Resposta não é JSON:", text.substring(0, 200));
+        throw new Error("Erro no servidor: resposta inválida. Verifique se o servidor está rodando.");
+      }
+
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Login falhou");
@@ -66,7 +74,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem("authUser", JSON.stringify(data.user));
     } catch (err: unknown) {
       console.error("Login error:", err);
-      return { error: err };
+      if (err instanceof Error) {
+        return { error: err };
+      }
+      return { error: new Error("Erro desconhecido ao fazer login") };
     }
   };
 

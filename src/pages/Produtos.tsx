@@ -1,17 +1,45 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Image as ImageIcon, ArrowRight, Package } from "lucide-react";
+import { Package, Loader2 } from "lucide-react";
 import { BreadcrumbStandard } from "@/components/Breadcrumb";
 import { ScrollAnimation } from "@/components/ScrollAnimation";
-import { getCategories, type ProductCategory } from "@/mocks/products";
+import { getCategories } from "@/lib/api";
+
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  image_url?: string;
+  products_count?: number;
+}
 
 export default function Produtos() {
-  const categories = getCategories();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoading(true);
+        const data = await getCategories();
+        setCategories(data);
+      } catch (err) {
+        console.error('Erro ao buscar categorias:', err);
+        setError('Erro ao carregar categorias. Tente novamente mais tarde.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   return (
     <Layout>
@@ -44,8 +72,27 @@ export default function Produtos() {
       {/* Categories Grid */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {categories.map((categoria, index) => (
+          {loading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-2 text-muted-foreground">Carregando categorias...</span>
+            </div>
+          ) : error ? (
+            <div className="text-center py-16">
+              <p className="text-destructive mb-4">{error}</p>
+              <Button onClick={() => window.location.reload()}>Tentar novamente</Button>
+            </div>
+          ) : categories.length === 0 ? (
+            <div className="text-center py-16">
+              <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <h2 className="text-2xl font-bold mb-2">Nenhuma categoria encontrada</h2>
+              <p className="text-muted-foreground">
+                Ainda não há categorias cadastradas.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {categories.map((categoria, index) => (
               <ScrollAnimation key={categoria.id} animation="fade-up" delay={index * 100}>
                 <Link 
                   to={`/produtos/${categoria.slug}`} 
@@ -54,9 +101,9 @@ export default function Produtos() {
                 >
                   <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer h-full">
                     <div className="aspect-video rounded-t-lg overflow-hidden bg-white relative">
-                      {categoria.image ? (
+                      {categoria.image_url ? (
                         <img
-                          src={categoria.image}
+                          src={categoria.image_url}
                           alt={`Imagem da categoria ${categoria.name}`}
                           className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
                           loading="lazy"
@@ -72,8 +119,8 @@ export default function Produtos() {
                         />
                       ) : null}
                       <div 
-                        className={`w-full h-full bg-gradient-to-r from-blue-100 to-orange-100 flex items-center justify-center ${categoria.image ? 'absolute inset-0' : ''}`}
-                        style={{ display: categoria.image ? 'none' : 'flex' }}
+                        className={`w-full h-full bg-gradient-to-r from-blue-100 to-orange-100 flex items-center justify-center ${categoria.image_url ? 'absolute inset-0' : ''}`}
+                        style={{ display: categoria.image_url ? 'none' : 'flex' }}
                       >
                         <Package className="h-16 w-16 text-blue-600" />
                       </div>
@@ -93,13 +140,19 @@ export default function Produtos() {
                         <span className="text-orange-600 hover:text-orange-700 font-medium">
                           Ver produtos →
                         </span>
+                        {categoria.products_count !== undefined && (
+                          <Badge variant="secondary">
+                            {categoria.products_count} {categoria.products_count === 1 ? 'produto' : 'produtos'}
+                          </Badge>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
                 </Link>
               </ScrollAnimation>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* CTA Section */}
           <ScrollAnimation animation="fade-up" className="mt-16 text-center">

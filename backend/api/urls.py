@@ -1,7 +1,16 @@
-"""
-URLs removidas - apenas blog possui URLs agora.
-Este arquivo é mantido vazio para evitar erros de importação.
-"""
 from django.urls import path
+from . import views
 
-urlpatterns = []
+urlpatterns = [
+    path('auth/login', views.login_view, name='login'),
+]
+
+
+urlpatterns = [
+    path('auth/login', views.login_view, name='login'),
+]
+
+
+urlpatterns = [
+    path('auth/login', views.login_view, name='login'),
+]

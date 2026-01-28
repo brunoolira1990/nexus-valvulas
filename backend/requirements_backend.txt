@@ -1,0 +1,13 @@
+# Django e dependências principais
+Django>=4.2.0,<5.0.0
+djangorestframework>=3.14.0
+django-filter>=23.0
+Pillow>=10.0.0
+
+# Para desenvolvimento
+django-cors-headers>=4.0.0
+
+# Para produção (opcional)
+# gunicorn>=21.0.0
+# whitenoise>=6.5.0
+

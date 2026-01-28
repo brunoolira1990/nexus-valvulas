@@ -1,7 +1,13 @@
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { ImageIcon, ZoomIn } from "lucide-react";
+import { ImageIcon, ZoomIn, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface ProductGalleryProps {
   images: string[];
@@ -9,102 +15,136 @@ interface ProductGalleryProps {
   className?: string;
 }
 
-export function ProductGallery({ images, productName, className }: ProductGalleryProps) {
+export function ProductGallery({
+  images,
+  productName,
+  className,
+}: ProductGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [isZoomed, setIsZoomed] = useState(false);
+  const [isZoomOpen, setIsZoomOpen] = useState(false);
+  const [imageError, setImageError] = useState<Record<number, boolean>>({});
 
-  if (!images || images.length === 0) {
+  const validImages = images.filter(Boolean);
+  const hasImages = validImages.length > 0;
+  const currentImage = validImages[selectedIndex] || null;
+
+  const handleImageError = (index: number) => {
+    setImageError((prev) => ({ ...prev, [index]: true }));
+  };
+
+  const handleThumbnailClick = (index: number) => {
+    setSelectedIndex(index);
+    setImageError((prev) => ({ ...prev, [index]: false }));
+  };
+
+  if (!hasImages) {
     return (
-      <Card className={cn("overflow-hidden", className)}>
-        <CardContent className="p-0">
-          <div className="aspect-square bg-gradient-to-br from-muted/50 to-muted flex items-center justify-center">
-            <ImageIcon className="h-24 w-24 text-muted-foreground" />
-          </div>
-        </CardContent>
-      </Card>
+      <div
+        className={cn(
+          "aspect-square rounded-lg border-2 border-dashed border-muted flex items-center justify-center bg-muted/20",
+          className
+        )}
+      >
+        <div className="text-center p-8">
+          <ImageIcon className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+          <p className="text-muted-foreground font-medium">
+            Imagem não disponível
+          </p>
+        </div>
+      </div>
     );
   }
 
-  const currentImage = images[selectedIndex];
-
   return (
-    <Card className={cn("overflow-hidden", className)}>
-      <CardContent className="p-0">
-        {/* Imagem Principal */}
-        <div className="relative aspect-square bg-white group">
-          <img
-            src={currentImage}
-            alt={`${productName} - Imagem ${selectedIndex + 1}`}
-            className={cn(
-              "w-full h-full object-contain p-8 transition-all duration-300",
-              isZoomed && "scale-150 cursor-zoom-out"
-            )}
-            loading={selectedIndex === 0 ? "eager" : "lazy"}
-            onError={(e) => {
-              const target = e.currentTarget;
-              target.style.display = "none";
-              const placeholder = target.nextElementSibling as HTMLElement;
-              if (placeholder) {
-                placeholder.style.display = "flex";
-              }
-            }}
-            onClick={() => setIsZoomed(!isZoomed)}
-          />
-          
-          {/* Placeholder quando imagem falha */}
-          <div
-            className="w-full h-full bg-gradient-to-br from-muted/50 to-muted flex items-center justify-center absolute inset-0"
-            style={{ display: "none" }}
-          >
-            <ImageIcon className="h-24 w-24 text-muted-foreground" />
-          </div>
-
-          {/* Botão Zoom */}
-          {images.length > 0 && (
-            <button
-              onClick={() => setIsZoomed(!isZoomed)}
-              className="absolute top-4 right-4 p-2 bg-background/80 backdrop-blur-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background"
-              aria-label={isZoomed ? "Reduzir zoom" : "Ampliar imagem"}
-            >
-              <ZoomIn className="h-5 w-5" />
-            </button>
-          )}
-        </div>
-
-        {/* Miniaturas */}
-        {images.length > 1 && (
-          <div className="grid grid-cols-4 gap-2 p-4 bg-muted/30 border-t">
-            {images.map((img, idx) => (
-              <button
-                key={idx}
-                onClick={() => {
-                  setSelectedIndex(idx);
-                  setIsZoomed(false);
-                }}
-                className={cn(
-                  "aspect-square rounded-md overflow-hidden border-2 transition-all",
-                  selectedIndex === idx
-                    ? "border-primary ring-2 ring-primary/20"
-                    : "border-transparent hover:border-primary/50"
-                )}
-                aria-label={`Ver imagem ${idx + 1} de ${images.length}`}
-              >
-                <img
-                  src={img}
-                  alt={`${productName} - Miniatura ${idx + 1}`}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
-                />
-              </button>
-            ))}
+    <div className={cn("space-y-4", className)}>
+      {/* Imagem Principal */}
+      <div className="relative aspect-square rounded-lg overflow-hidden border border-border bg-muted/20 group">
+        {currentImage && !imageError[selectedIndex] ? (
+          <>
+            <img
+              src={currentImage}
+              alt={productName}
+              className="w-full h-full object-contain cursor-zoom-in transition-transform group-hover:scale-105"
+              onClick={() => setIsZoomOpen(true)}
+              onError={() => handleImageError(selectedIndex)}
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors flex items-center justify-center">
+              <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
+            </div>
+          </>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="text-center p-8">
+              <ImageIcon className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground font-medium">
+                Erro ao carregar imagem
+              </p>
+            </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Miniaturas */}
+      {validImages.length > 1 && (
+        <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+          {validImages.map((image, index) => (
+            <button
+              key={index}
+              type="button"
+              onClick={() => handleThumbnailClick(index)}
+              className={cn(
+                "aspect-square rounded-md overflow-hidden border-2 transition-all",
+                selectedIndex === index
+                  ? "border-primary ring-2 ring-primary/20"
+                  : "border-muted hover:border-primary/50",
+                imageError[index] && "opacity-50"
+              )}
+            >
+              {!imageError[index] ? (
+                <img
+                  src={image}
+                  alt={`${productName} - Imagem ${index + 1}`}
+                  className="w-full h-full object-cover"
+                  onError={() => handleImageError(index)}
+                  loading="lazy"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-muted/20">
+                  <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Dialog de Zoom */}
+      <Dialog open={isZoomOpen} onOpenChange={setIsZoomOpen}>
+        <DialogContent className="max-w-7xl w-full p-0 bg-transparent border-none [&>button]:hidden">
+          <DialogTitle className="sr-only">Zoom da imagem: {productName}</DialogTitle>
+          <DialogDescription className="sr-only">
+            Visualização ampliada da imagem do produto
+          </DialogDescription>
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-4 right-4 z-10 bg-background/80 hover:bg-background rounded-full"
+              onClick={() => setIsZoomOpen(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            {currentImage && !imageError[selectedIndex] && (
+              <img
+                src={currentImage}
+                alt={productName}
+                className="w-full h-auto max-h-[90vh] object-contain rounded-lg"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
-
-

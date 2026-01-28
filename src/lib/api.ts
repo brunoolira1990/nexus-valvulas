@@ -87,3 +87,25 @@ export async function register(data: any) {
     body: data
   });
 }
+
+// Products API
+export async function getCategories() {
+  const data = await apiCall('/products/categories/');
+  return normalizeResponse(data);
+}
+
+export async function getCategoryBySlug(slug: string) {
+  return apiCall(`/products/categories/${slug}/`);
+}
+
+export async function getProducts(categorySlug?: string) {
+  const path = categorySlug 
+    ? `/products/products/?category=${categorySlug}`
+    : '/products/products/';
+  const data = await apiCall(path);
+  return normalizeResponse(data);
+}
+
+export async function getProductBySlug(slug: string) {
+  return apiCall(`/products/products/${slug}/`);
+}

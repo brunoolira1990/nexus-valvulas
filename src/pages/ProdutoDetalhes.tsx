@@ -1,60 +1,129 @@
 import { useParams, Navigate, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, FileText, Download, Mail } from "lucide-react";
+import { ArrowLeft, FileText, Download, Mail, Loader2 } from "lucide-react";
 import { BreadcrumbStandard } from "@/components/Breadcrumb";
 import { ProductGallery } from "@/components/products/ProductGallery";
 import { VariantSelector } from "@/components/products/VariantSelector";
 import { ProductSpecs } from "@/components/products/ProductSpecs";
-import { useProductVariants } from "@/hooks/useProductVariants";
-import { getProductTypeBySlug, getCategoryBySlug } from "@/mocks/products";
+import { useProductSelection } from "@/hooks/useProductSelection";
+import { getProductBySlug, getCategoryBySlug } from "@/lib/api";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
-export default function ProdutoDetalhes() {
-  const { categoria, produto } = useParams<{ categoria: string; produto: string }>();
-  
-  if (!categoria || !produto) {
-    return <Navigate to="/produtos" replace />;
-  }
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+}
 
-  const category = getCategoryBySlug(categoria);
-  const product = getProductTypeBySlug(categoria, produto);
+interface ProductVariant {
+  id: number;
+  name: string;
+  description?: string;
+  image_url?: string;
+  sizes?: Record<string, string>;
+}
 
-  if (!category || !product) {
-    return <Navigate to="/produtos" replace />;
-  }
+interface Product {
+  id: number;
+  title: string;
+  slug: string;
+  description: string;
+  image_url?: string;
+  product_type: "simple" | "intermediate" | "complex";
+  variants?: ProductVariant[];
+  sizes?: Record<string, string>;
+  specifications?: Record<string, string>;
+  applications?: string[];
+  standards?: string[];
+  category_name?: string;
+  category_slug?: string;
+}
+
+function ProdutoDetalhesContent({
+  categoria,
+  produtoSlug,
+  category,
+  product,
+}: {
+  categoria: string;
+  produtoSlug: string;
+  category: Category;
+  product: Product;
+}) {
+  // Converter produto da API para o formato esperado pelo hook
+  const productForHook: any = {
+    id: product.id.toString(),
+    title: product.title,
+    slug: product.slug,
+    description: product.description,
+    image: product.image_url,
+    variants: product.variants?.map((v) => ({
+      id: v.id.toString(),
+      name: v.name,
+      description: v.description,
+      singleImage: v.image_url,
+      sizes: v.sizes,
+    })),
+    sizes: product.sizes,
+    specifications: product.specifications,
+    applications: product.applications,
+    standards: product.standards,
+  };
 
   const {
-    selectedType,
+    selectedVariantId,
     selectedSize,
-    availableImages,
-    typeOptions,
-    sizeOptions,
-    selectedVariant,
-    selectedSizeData,
-    setSelectedType,
+    currentImage,
+    productType,
+    availableVariants,
+    availableSizes,
+    setSelectedVariant,
     setSelectedSize,
+    selectedVariant,
     hasVariants,
-    hasSizesOnly,
-  } = useProductVariants(product);
+    hasSizes,
+    isSimple,
+  } = useProductSelection(productForHook);
+
+  // Preparar opções para os seletores
+  const typeOptions = availableVariants.map(v => ({
+    value: v.id,
+    label: v.name,
+    description: v.description
+  }));
+
+  const sizeOptions = availableSizes.map(size => ({
+    value: size,
+    label: size
+  }));
+
+  const images = currentImage ? [currentImage] : [];
 
   // Metadados para SEO
-  const seoTitle = `${product.name}${selectedSize ? ` ${selectedSize}` : ""} - ${category.name} | Nexus Válvulas`;
-  const seoDescription = product.description || `Conheça ${product.name}, parte da linha ${category.name} da Nexus Válvulas.`;
-  const seoImage = availableImages[0] || product.image;
+  const seoTitle = `${product.title}${
+    selectedSize ? ` ${selectedSize}` : ""
+  } - ${category.name} | Nexus Válvulas`;
+  const seoDescription =
+    product.description ||
+    `Conheça ${product.title}, parte da linha ${category.name} da Nexus Válvulas.`;
+  const seoImage = currentImage || product.image_url;
 
   return (
     <Layout>
       <SEO
         title={seoTitle}
         description={seoDescription}
-        keywords={`${product.name}, ${category.name}, válvulas industriais, ${selectedType || ""}`}
+        keywords={`${product.title}, ${category.name}, válvulas industriais, ${selectedVariant?.name || ""}`}
         image={seoImage}
-        canonical={`/produtos/${categoria}/${produto}`}
+        canonical={`/produtos/${categoria}/${produtoSlug}`}
       />
 
       {/* Header Section */}
@@ -62,13 +131,8 @@ export default function ProdutoDetalhes() {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-              {product.name}
+              {product.title}
             </h1>
-            {product.description && (
-              <p className="text-lg md:text-xl text-primary-foreground/90 max-w-3xl mx-auto">
-                {product.description}
-              </p>
-            )}
           </div>
         </div>
       </section>
@@ -81,7 +145,7 @@ export default function ProdutoDetalhes() {
               { label: "Home", href: "/" },
               { label: "Produtos", href: "/produtos" },
               { label: category.name, href: `/produtos/${category.slug}` },
-              { label: product.name },
+              { label: product.title },
             ]}
           />
         </div>
@@ -103,7 +167,7 @@ export default function ProdutoDetalhes() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
             {/* Galeria de Imagens */}
             <div>
-              <ProductGallery images={availableImages} productName={product.name} />
+              <ProductGallery images={images} productName={product.title} />
             </div>
 
             {/* Informações do Produto */}
@@ -114,9 +178,9 @@ export default function ProdutoDetalhes() {
                   <Badge variant="secondary" className="text-sm">
                   {category.name}
                 </Badge>
-                  {selectedType && (
+                  {selectedVariant && (
                     <Badge variant="outline" className="text-sm">
-                      {selectedType}
+                      {selectedVariant.name}
                     </Badge>
                   )}
                   {selectedSize && (
@@ -125,8 +189,8 @@ export default function ProdutoDetalhes() {
                     </Badge>
                   )}
                 </div>
-                <h2 className="text-2xl md:text-3xl font-bold mb-2">{product.name}</h2>
-                {product.description && (
+                <h2 className="text-2xl md:text-3xl font-bold mb-2">{product.title}</h2>
+              {product.description && (
                   <p className="text-muted-foreground leading-relaxed">
                     {product.description}
                   </p>
@@ -137,31 +201,45 @@ export default function ProdutoDetalhes() {
 
               {/* Seletores de Variação */}
               {hasVariants && (
-                <VariantSelector
-                  label="Material"
-                  value={selectedType}
-                  options={typeOptions}
-                  onChange={setSelectedType}
-                  variant="radio"
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="variant-select">Tipo</Label>
+                  <Select
+                    value={selectedVariantId || ""}
+                    onValueChange={(value) => setSelectedVariant(value)}
+                  >
+                    <SelectTrigger id="variant-select">
+                      <SelectValue placeholder="Selecione o tipo..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {typeOptions.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               )}
 
-              {(hasVariants || hasSizesOnly) && (
+              {/* Só mostra tamanhos se:
+                  - produto intermediário (sem variantes), OU
+                  - produto complexo com uma variante selecionada */}
+              {hasSizes && (!hasVariants || (hasVariants && selectedVariantId)) && (
                 <VariantSelector
                   label="Tamanho"
-                  value={selectedSize}
+                  value={selectedSize || ""}
                   options={sizeOptions}
                   onChange={setSelectedSize}
                   variant="radio"
                 />
               )}
 
-              {/* Descrição da Variante/Size Selecionada */}
-              {(selectedVariant?.description || selectedSizeData?.description) && (
+              {/* Descrição da Variante Selecionada */}
+              {selectedVariant?.description && (
                 <Card>
                   <CardContent className="pt-6">
                     <p className="text-sm text-muted-foreground">
-                      {selectedVariant?.description || selectedSizeData?.description}
+                      {selectedVariant.description}
                     </p>
                   </CardContent>
                 </Card>
@@ -185,43 +263,18 @@ export default function ProdutoDetalhes() {
                 </Button>
               </div>
 
-              {/* Tabs de Informações */}
-              <Tabs defaultValue="specs" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="specs">Especificações</TabsTrigger>
-                  <TabsTrigger value="description">Descrição</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="specs" className="mt-4">
-                  <ProductSpecs
-                    specifications={product.specifications}
-                    applications={product.applications}
-                    standards={product.standards}
-                    selectedVariant={{
-                      type: selectedType || undefined,
-                      size: selectedSize || undefined,
-                    }}
-                  />
-                </TabsContent>
-
-                <TabsContent value="description" className="mt-4">
-                  <Card>
-                    <CardContent className="pt-6">
-                      {product.description ? (
-                        <div className="prose prose-sm max-w-none">
-                          <p className="text-muted-foreground whitespace-pre-line leading-relaxed">
-                            {product.description}
-                          </p>
-                        </div>
-                      ) : (
-                        <p className="text-muted-foreground">
-                          Descrição detalhada em breve.
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
+              {/* Especificações */}
+              <div className="w-full">
+                <ProductSpecs
+                  specifications={product.specifications}
+                  applications={product.applications}
+                  standards={product.standards}
+                  selectedVariant={{
+                    type: selectedVariant?.name || undefined,
+                    size: selectedSize || undefined,
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -250,5 +303,64 @@ export default function ProdutoDetalhes() {
         </div>
       </section>
     </Layout>
+  );
+}
+
+export default function ProdutoDetalhes() {
+  const { categoria, produto } = useParams<{ categoria: string; produto: string }>();
+  const [category, setCategory] = useState<Category | null>(null);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!categoria || !produto) return;
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [categoryData, productData] = await Promise.all([
+          getCategoryBySlug(categoria),
+          getProductBySlug(produto),
+        ]);
+        setCategory(categoryData);
+        setProduct(productData);
+      } catch (err) {
+        console.error("Erro ao buscar dados:", err);
+        setError("Produto não encontrado.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [categoria, produto]);
+
+  if (!categoria || !produto) {
+    return <Navigate to="/produtos" replace />;
+  }
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2 text-muted-foreground">Carregando produto...</span>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error || !category || !product) {
+    return <Navigate to="/produtos" replace />;
+  }
+
+  return (
+    <ProdutoDetalhesContent
+      categoria={categoria}
+      produtoSlug={produto}
+      category={category}
+      product={product}
+    />
   );
 }

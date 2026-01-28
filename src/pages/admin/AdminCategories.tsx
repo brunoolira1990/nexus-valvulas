@@ -21,13 +21,17 @@ export default function AdminCategories() {
   const refetch = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/categories`);
-      const data = await res.json();
-      // DRF pode retornar paginado {results: [...]} ou array direto
-      const categoriesArray = Array.isArray(data) ? data : (data.results || []);
-      setCategories(categoriesArray);
+      const res = await fetch(`${API_BASE}/products/categories/`);
+      if (res.ok) {
+        const data = await res.json();
+        // DRF pode retornar paginado {results: [...]} ou array direto
+        const categoriesArray = Array.isArray(data) ? data : (data.results || []);
+        setCategories(categoriesArray);
+      } else {
+        console.error('Erro ao buscar categorias:', res.statusText);
+      }
     } catch (err) {
-      console.error(err);
+      console.error('Erro ao buscar categorias:', err);
     } finally {
       setLoading(false);
     }
@@ -62,62 +66,100 @@ export default function AdminCategories() {
         return;
       }
 
-      // Validate slug uniqueness by querying backend
-      try {
-        const res = await fetch(`${API_BASE}/categories`);
-        const all = await res.json();
-        const categoriesArray = Array.isArray(all) ? all : (all.results || []);
-        const exists = categoriesArray.find((c: any) => c.slug === formData.slug && c.id !== editingCategory?.id);
-        if (exists) {
-          toast({ title: 'Erro', description: 'Slug já existe. Use outro slug.', variant: 'destructive' });
-          return;
-        }
-      } catch (err: any) {
-        toast({ title: 'Erro', description: 'Erro ao validar slug', variant: 'destructive' });
+      // Validação básica do slug
+      if (!formData.slug || formData.slug.trim() === '') {
+        toast({ 
+          title: 'Erro', 
+          description: 'O slug é obrigatório.', 
+          variant: 'destructive' 
+        });
         return;
       }
 
       // First create or update category (without image reference)
-      let categoryId = editingCategory?.id;
+      const token = localStorage.getItem('authToken');
+      const authHeader = token ? { 'Authorization': `Bearer ${token}` } : {};
+      let categorySlug = formData.slug;
+
       if (editingCategory) {
-        // Django usa ID como lookup_field para categorias
-        const res = await fetch(`${API_BASE}/categories/${editingCategory.id}`, {
+        // Django usa slug como lookup_field para categorias
+        const res = await fetch(`${API_BASE}/products/categories/${editingCategory.slug}/`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            ...(localStorage.getItem('authToken') ? { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` } : {})
+            ...authHeader
           },
           body: JSON.stringify({ name: formData.name, slug: formData.slug, description: formData.description })
         });
-        if (!res.ok) throw new Error('Erro ao atualizar categoria');
+        
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          const errorMsg = errorData.detail || 
+                          (errorData.slug && Array.isArray(errorData.slug) ? errorData.slug[0] : errorData.slug) ||
+                          (errorData.name && Array.isArray(errorData.name) ? errorData.name[0] : errorData.name) ||
+                          `Erro ${res.status}: ${res.statusText}`;
+          throw new Error(errorMsg);
+        }
+        const updatedData = await res.json();
+        categorySlug = updatedData.slug || formData.slug;
         toast({ title: 'Categoria atualizada com sucesso!' });
       } else {
-        const res = await fetch(`${API_BASE}/categories`, {
+        const payload = { 
+          name: formData.name, 
+          slug: formData.slug || undefined, // Se vazio, deixa o backend gerar
+          description: formData.description || '' 
+        };
+        
+        console.log('Criando categoria:', payload);
+        
+        const res = await fetch(`${API_BASE}/products/categories/`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...(localStorage.getItem('authToken') ? { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` } : {})
+            ...authHeader
           },
-          body: JSON.stringify({ name: formData.name, slug: formData.slug, description: formData.description })
+          body: JSON.stringify(payload)
         });
-        if (!res.ok) throw new Error('Erro ao criar categoria');
+        
+        if (!res.ok) {
+          let errorData;
+          try {
+            errorData = await res.json();
+          } catch {
+            errorData = { detail: `Erro HTTP ${res.status}: ${res.statusText}` };
+          }
+          
+          console.error('Erro ao criar categoria:', errorData);
+          
+          const errorMsg = errorData.detail || 
+                          (errorData.slug && Array.isArray(errorData.slug) ? errorData.slug[0] : errorData.slug) ||
+                          (errorData.name && Array.isArray(errorData.name) ? errorData.name[0] : errorData.name) ||
+                          JSON.stringify(errorData) ||
+                          `Erro ${res.status}: ${res.statusText}`;
+          throw new Error(errorMsg);
+        }
+        
         const insertData = await res.json();
-        categoryId = insertData.id;
+        console.log('Categoria criada:', insertData);
+        categorySlug = insertData.slug || formData.slug;
         toast({ title: 'Categoria criada com sucesso!' });
       }
 
       // Upload da imagem (obrigatória ao criar, opcional ao editar)
-      if (imageFile && categoryId) {
+      if (imageFile && categorySlug) {
         const form = new FormData();
         form.append('image', imageFile);
-        const res = await fetch(`${API_BASE}/categories/${categoryId}/image`, {
+        const res = await fetch(`${API_BASE}/products/categories/${categorySlug}/image/`, {
           method: 'POST',
           headers: {
-            ...(localStorage.getItem('authToken') ? { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` } : {})
+            ...authHeader
           },
           body: form
         });
-        if (!res.ok) throw new Error('Erro ao enviar imagem');
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          throw new Error(errorData.detail || errorData.error || 'Erro ao enviar imagem');
+        }
       }
       
       setDialogOpen(false);
@@ -127,9 +169,11 @@ export default function AdminCategories() {
       setImagePreview(null);
       refetch();
     } catch (error: any) {
+      console.error('Erro ao processar categoria:', error);
+      const errorMessage = error.message || 'Erro desconhecido ao processar categoria';
       toast({ 
         title: 'Erro', 
-        description: error.message,
+        description: errorMessage,
         variant: 'destructive' 
       });
     }
@@ -161,23 +205,31 @@ export default function AdminCategories() {
     reader.readAsDataURL(file);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (category: any) => {
     if (!confirm('Tem certeza que deseja excluir esta categoria?')) return;
     
     try {
-  const res = await fetch(`${API_BASE}/categories/${id}`, {
-    method: 'DELETE',
-    headers: {
-      ...(localStorage.getItem('authToken') ? { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` } : {})
-    }
-  });
-  if (!res.ok) throw new Error('Erro ao deletar categoria');
+      const token = localStorage.getItem('authToken');
+      const authHeader = token ? { 'Authorization': `Bearer ${token}` } : {};
+      const categorySlug = category.slug || category.id;
+      
+      const res = await fetch(`${API_BASE}/products/categories/${categorySlug}/`, {
+        method: 'DELETE',
+        headers: authHeader
+      });
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Erro ao deletar categoria');
+      }
+      
       toast({ title: 'Categoria excluída com sucesso!' });
       refetch();
     } catch (error: any) {
+      console.error('Erro ao deletar categoria:', error);
       toast({ 
         title: 'Erro', 
-        description: error.message,
+        description: error.message || 'Erro ao deletar categoria',
         variant: 'destructive' 
       });
     }
@@ -336,7 +388,111 @@ export default function AdminCategories() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleDelete(category.id)}
+                            onClick={() => handleDelete(category)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </>
+  );
+}
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Imagem</TableHead>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Slug</TableHead>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {categories?.map((category) => (
+                    <TableRow key={category.id}>
+                      <TableCell>
+                        {((category as any).image) ? (
+                          <img src={(category as any).image} alt={category.name} className="h-12 object-contain" />
+                        ) : (
+                          <div className="h-12 w-20 bg-muted" />
+                        )}
+                      </TableCell>
+                      <TableCell className="font-medium">{category.name}</TableCell>
+                      <TableCell>{category.slug}</TableCell>
+                      <TableCell>{category.description}</TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(category)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(category)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </>
+  );
+}
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Imagem</TableHead>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Slug</TableHead>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {categories?.map((category) => (
+                    <TableRow key={category.id}>
+                      <TableCell>
+                        {((category as any).image) ? (
+                          <img src={(category as any).image} alt={category.name} className="h-12 object-contain" />
+                        ) : (
+                          <div className="h-12 w-20 bg-muted" />
+                        )}
+                      </TableCell>
+                      <TableCell className="font-medium">{category.name}</TableCell>
+                      <TableCell>{category.slug}</TableCell>
+                      <TableCell>{category.description}</TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(category)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(category)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

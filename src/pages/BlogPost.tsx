@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams, Navigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { getBlogPostBySlug } from '@/lib/api';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -19,9 +20,18 @@ interface BlogPost {
   content: string;
   excerpt?: string;
   cover_image?: string;
-  published: boolean;
+  cover_image_url?: string;
+  category?: string;
+  meta_title?: string;
+  meta_description?: string;
+  focus_keyword?: string;
+  is_published: boolean;
+  published?: boolean;
+  published_at?: string;
+  published_date?: string;
   created_at: string;
   updated_at: string;
+  keywords?: string[];
 }
 
 export default function BlogPost() {
@@ -64,36 +74,49 @@ export default function BlogPost() {
     return <Navigate to="/404" replace />;
   }
 
-  // Create keywords string
-  const keywordsString = post.keywords && post.keywords.length > 0 
-    ? post.keywords.join(', ') 
-    : "válvulas industriais, artigos técnicos, indústria, manutenção";
+  // SEO Meta Tags
+  const metaTitle = post.meta_title || `${post.title} - Nexus Válvulas`;
+  const metaDescription = post.meta_description || 
+    (post.excerpt || (post.content ? post.content.replace(/<[^>]*>/g, '').substring(0, 160) : 
+    "Leia este artigo técnico sobre válvulas industriais da Nexus Válvulas"));
+  
+  // Keywords from focus_keyword or default
+  const keywordsString = post.focus_keyword || 
+    (post.keywords && post.keywords.length > 0 
+      ? post.keywords.join(', ') 
+      : "válvulas industriais, artigos técnicos, indústria, manutenção");
 
-  // Create description
-  const description = post.meta_description || 
-    (post.content ? post.content.replace(/<[^>]*>/g, '').substring(0, 160) : 
-    "Leia este artigo técnico sobre válvulas industriais da Nexus Válvulas");
+  // Cover image URL
+  const coverImageUrl = post.cover_image_url || post.cover_image;
+  const fullCoverImageUrl = coverImageUrl 
+    ? (coverImageUrl.startsWith('http') ? coverImageUrl : `${window.location.origin}${coverImageUrl}`)
+    : undefined;
+
+  // Published date
+  const publishedDate = post.published_at || post.published_date || post.created_at;
 
   return (
     <>
       <Helmet>
-        <title>{post.title} - Nexus Válvulas</title>
-        <meta name="description" content={description} />
-        <meta name="keywords" content={keywordsString} />
+        <title>{metaTitle}</title>
+        <meta name="description" content={metaDescription} />
+        {post.focus_keyword && <meta name="keywords" content={keywordsString} />}
         <link rel="canonical" href={`${window.location.origin}/blog/${slug}`} />
         
         {/* Open Graph tags */}
-        <meta property="og:title" content={`${post.title} - Nexus Válvulas`} />
-        <meta property="og:description" content={description} />
+        <meta property="og:title" content={metaTitle} />
+        <meta property="og:description" content={metaDescription} />
         <meta property="og:type" content="article" />
         <meta property="og:url" content={`${window.location.origin}/blog/${slug}`} />
-        {post.cover_image && <meta property="og:image" content={post.cover_image} />}
+        {fullCoverImageUrl && <meta property="og:image" content={fullCoverImageUrl} />}
+        {fullCoverImageUrl && <meta property="og:image:width" content="1200" />}
+        {fullCoverImageUrl && <meta property="og:image:height" content="630" />}
         
         {/* Twitter Card */}
-        <meta property="twitter:card" content="summary_large_image" />
-        <meta property="twitter:title" content={`${post.title} - Nexus Válvulas`} />
-        <meta property="twitter:description" content={description} />
-        {post.cover_image && <meta property="twitter:image" content={post.cover_image} />}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={metaTitle} />
+        <meta name="twitter:description" content={metaDescription} />
+        {fullCoverImageUrl && <meta name="twitter:image" content={fullCoverImageUrl} />}
         
         {/* Article structured data */}
         <script type="application/ld+json">
@@ -101,10 +124,10 @@ export default function BlogPost() {
             "@context": "https://schema.org",
             "@type": "Article",
             "headline": post.title,
-            "description": description,
-            "image": post.cover_image,
-            "datePublished": post.published_date,
-            "dateModified": post.published_date,
+            "description": metaDescription,
+            "image": fullCoverImageUrl,
+            "datePublished": publishedDate,
+            "dateModified": post.updated_at || publishedDate,
             "author": {
               "@type": "Organization",
               "name": "Nexus Válvulas"
@@ -148,11 +171,11 @@ export default function BlogPost() {
               />
             </div>
             
-            {post.cover_image && (
+            {coverImageUrl && (
               <ScrollAnimation animation="fade-up">
                 <div className="mb-8">
                   <img
-                    src={post.cover_image}
+                    src={coverImageUrl}
                     alt={`Imagem de capa para ${post.title}`}
                     className="w-full h-64 md:h-96 object-cover rounded-lg"
                     loading="lazy"
@@ -163,12 +186,19 @@ export default function BlogPost() {
             
             <ScrollAnimation animation="fade-up">
               <header className="mb-8">
-                <div className="text-sm text-muted-foreground mb-4">
-                  {new Date(post.published_date).toLocaleDateString('pt-BR', {
-                    day: '2-digit',
-                    month: 'long',
-                    year: 'numeric'
-                  })}
+                <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                  <time dateTime={publishedDate}>
+                    {new Date(publishedDate).toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: 'long',
+                      year: 'numeric'
+                    })}
+                  </time>
+                  {post.category && (
+                    <Badge variant="outline" className="text-xs">
+                      {post.category}
+                    </Badge>
+                  )}
                 </div>
               </header>
             </ScrollAnimation>
