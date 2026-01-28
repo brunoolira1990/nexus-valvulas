@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
-import { useEffect } from 'react';
 
 // API_BASE deve incluir /api se não estiver incluído
 const BASE_URL = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
@@ -18,6 +17,7 @@ const API_BASE = BASE_URL.endsWith('/api') ? BASE_URL : `${BASE_URL}/api`;
 export default function AdminCategories() {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
   const refetch = async () => {
     setLoading(true);
     try {
@@ -353,110 +353,6 @@ export default function AdminCategories() {
             {loading ? (
               <div className="text-center py-4">Carregando...</div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Imagem</TableHead>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Slug</TableHead>
-                    <TableHead>Descrição</TableHead>
-                    <TableHead>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {categories?.map((category) => (
-                    <TableRow key={category.id}>
-                      <TableCell>
-                        {((category as any).image) ? (
-                          <img src={(category as any).image} alt={category.name} className="h-12 object-contain" />
-                        ) : (
-                          <div className="h-12 w-20 bg-muted" />
-                        )}
-                      </TableCell>
-                      <TableCell className="font-medium">{category.name}</TableCell>
-                      <TableCell>{category.slug}</TableCell>
-                      <TableCell>{category.description}</TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(category)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDelete(category)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </>
-  );
-}
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Imagem</TableHead>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Slug</TableHead>
-                    <TableHead>Descrição</TableHead>
-                    <TableHead>Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {categories?.map((category) => (
-                    <TableRow key={category.id}>
-                      <TableCell>
-                        {((category as any).image) ? (
-                          <img src={(category as any).image} alt={category.name} className="h-12 object-contain" />
-                        ) : (
-                          <div className="h-12 w-20 bg-muted" />
-                        )}
-                      </TableCell>
-                      <TableCell className="font-medium">{category.name}</TableCell>
-                      <TableCell>{category.slug}</TableCell>
-                      <TableCell>{category.description}</TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(category)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDelete(category)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </>
-  );
-}
               <Table>
                 <TableHeader>
                   <TableRow>
