@@ -1,46 +1,46 @@
 // API_BASE deve incluir /api se não estiver incluído
-const BASE_URL = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
-const API_BASE = BASE_URL.endsWith('/api') ? BASE_URL : `${BASE_URL}/api`;
+const BASE_URL = import.meta.env.VITE_API_BASE || "http://localhost:8000";
+const API_BASE = BASE_URL.endsWith("/api") ? BASE_URL : `${BASE_URL}/api`;
 
 /**
  * Normaliza resposta do DRF que pode vir paginada {results: [...]} ou como array direto
  */
-function normalizeResponse(data: any): any[] {
+function normalizeResponse(data: unknown): unknown[] {
   if (Array.isArray(data)) {
     return data;
   }
-  if (data && Array.isArray(data.results)) {
-    return data.results;
+  if (
+    data &&
+    typeof data === "object" &&
+    "results" in data &&
+    Array.isArray((data as { results: unknown[] }).results)
+  ) {
+    return (data as { results: unknown[] }).results;
   }
   return [];
 }
 
 interface ApiOptions {
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
-  body?: any;
+  method?: "GET" | "POST" | "PUT" | "DELETE";
+  body?: Record<string, unknown> | FormData;
   token?: string | null;
   isFormData?: boolean;
 }
 
 async function apiCall(path: string, options: ApiOptions = {}) {
-  const {
-    method = 'GET',
-    body,
-    token = null,
-    isFormData = false
-  } = options;
+  const { method = "GET", body, token = null, isFormData = false } = options;
 
   const headers: Record<string, string> = {};
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    headers["Authorization"] = `Bearer ${token}`;
   }
   if (!isFormData) {
-    headers['Content-Type'] = 'application/json';
+    headers["Content-Type"] = "application/json";
   }
 
   const config: RequestInit = {
     method,
-    headers
+    headers,
   };
 
   if (body) {
@@ -48,16 +48,16 @@ async function apiCall(path: string, options: ApiOptions = {}) {
   }
 
   const response = await fetch(`${API_BASE}${path}`, config);
-  
+
   // For file downloads, return the response directly
-  if (response.headers.get('content-type')?.includes('application/octet-stream')) {
+  if (response.headers.get("content-type")?.includes("application/octet-stream")) {
     return response;
   }
 
   const data = await response.json();
-  
+
   if (!response.ok) {
-    throw new Error(data.error || 'Something went wrong');
+    throw new Error(data.error || "Something went wrong");
   }
 
   return data;
@@ -65,32 +65,33 @@ async function apiCall(path: string, options: ApiOptions = {}) {
 
 // Blog API
 export async function getBlogPosts() {
-  const data = await apiCall('/blog/posts');
+  const data = await apiCall("/blog/posts");
   return normalizeResponse(data);
 }
 
 export async function getBlogPostBySlug(slug: string) {
-  return apiCall(`/blog/posts/${slug}`);
+  if (!slug || typeof slug !== "string") return null;
+  return apiCall(`/blog/posts/${encodeURIComponent(slug)}/`);
 }
 
 // Auth
 export async function login(email: string, password: string) {
-  return apiCall('/auth/login', {
-    method: 'POST',
-    body: { email, password }
+  return apiCall("/auth/login", {
+    method: "POST",
+    body: { email, password },
   });
 }
 
-export async function register(data: any) {
-  return apiCall('/auth/register', {
-    method: 'POST',
-    body: data
+export async function register(data: Record<string, unknown>) {
+  return apiCall("/auth/register", {
+    method: "POST",
+    body: data,
   });
 }
 
 // Products API
 export async function getCategories() {
-  const data = await apiCall('/products/categories/');
+  const data = await apiCall("/products/categories/");
   return normalizeResponse(data);
 }
 
@@ -99,9 +100,9 @@ export async function getCategoryBySlug(slug: string) {
 }
 
 export async function getProducts(categorySlug?: string) {
-  const path = categorySlug 
+  const path = categorySlug
     ? `/products/products/?category=${categorySlug}`
-    : '/products/products/';
+    : "/products/products/";
   const data = await apiCall(path);
   return normalizeResponse(data);
 }
