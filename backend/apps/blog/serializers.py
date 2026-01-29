@@ -12,6 +12,7 @@ class PostSerializer(serializers.ModelSerializer):
     cover_image_url = serializers.SerializerMethodField()
     category_name = serializers.SerializerMethodField()
     category_slug = serializers.SerializerMethodField()
+    author_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
@@ -20,6 +21,7 @@ class PostSerializer(serializers.ModelSerializer):
             "title",
             "slug",
             "author",
+            "author_name",
             "category",
             "category_name",
             "category_slug",
@@ -37,6 +39,12 @@ class PostSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["published_at", "created_at", "updated_at"]
+
+    def get_author_name(self, obj):
+        if not obj.author:
+            return None
+        name = f"{obj.author.first_name or ''} {obj.author.last_name or ''}".strip()
+        return name or "Equipe Nexus"
 
     def get_category_name(self, obj):
         return obj.category.name if obj.category else None
