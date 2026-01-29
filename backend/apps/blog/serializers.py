@@ -19,6 +19,7 @@ class PostSerializer(serializers.ModelSerializer):
             'category',
             'meta_title',
             'meta_description',
+            'keywords',
             'focus_keyword',
             'is_published',
             'published_at',

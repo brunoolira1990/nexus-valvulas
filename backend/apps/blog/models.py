@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.text import slugify
+from ckeditor.fields import RichTextField
 
 
 class Post(models.Model):
@@ -14,7 +15,7 @@ class Post(models.Model):
     
     title = models.CharField(max_length=200, verbose_name="Título")
     slug = models.SlugField(max_length=200, unique=True, blank=True, verbose_name="Slug")
-    content = models.TextField(verbose_name="Conteúdo")
+    content = RichTextField(verbose_name="Conteúdo")
     cover_image = models.ImageField(
         upload_to='blog/',
         blank=True,
@@ -40,13 +41,19 @@ class Post(models.Model):
         max_length=70,
         blank=True,
         verbose_name="Meta Title",
-        help_text="Título para SEO (máximo 60 caracteres recomendado)"
+        help_text="Título para o Google. Se vazio, usa o título original."
     )
-    meta_description = models.TextField(
+    meta_description = models.CharField(
         max_length=160,
         blank=True,
         verbose_name="Meta Description",
-        help_text="Descrição para SEO (máximo 160 caracteres recomendado)"
+        help_text="Resumo que aparece nos resultados de busca (até 160 caracteres)."
+    )
+    keywords = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name="Palavras-chave",
+        help_text="Palavras-chave separadas por vírgula."
     )
     focus_keyword = models.CharField(
         max_length=100,

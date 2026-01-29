@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Third party
+    'ckeditor',
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
@@ -226,6 +227,24 @@ CONTACT_EMAIL = os.environ.get('CONTACT_EMAIL', 'nexus@nexusvalvulas.com.br')
 
 # Public URL for file serving
 PUBLIC_URL = os.environ.get('PUBLIC_URL', 'http://localhost:8000')
+
+# -----------------------------------------------------------------------------
+# CKEditor — Editor rico para o blog (H2, negrito, links)
+# -----------------------------------------------------------------------------
+CKEDITOR_CONFIGS = {
+    "default": {
+        "toolbar": "Custom",
+        "toolbar_Custom": [
+            ["Bold", "Italic", "Underline", "Strike"],
+            ["NumberedList", "BulletedList", "-", "Outdent", "Indent"],
+            ["Link", "Unlink"],
+            ["Format", "Styles"],
+            ["RemoveFormat", "Source"],
+        ],
+        "height": 300,
+        "width": "100%",
+    },
+}
 
 # -----------------------------------------------------------------------------
 # Jazzmin — Admin Nexus (visual azul/cinza, industrial/corporativo)
