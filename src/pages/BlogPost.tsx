@@ -52,15 +52,19 @@ export default function BlogPost() {
         return;
       }
 
+      console.log("[BlogPost] Slug da URL:", slug);
+
       try {
         const data = await getBlogPostBySlug(slug);
         if (!data) {
+          console.log("[BlogPost] API retornou vazio (null/undefined)");
           setNotFound(true);
         } else {
+          console.log("[BlogPost] API retornou 200, exibindo post:", data?.title);
           setPost(data);
         }
       } catch (error) {
-        console.error("Erro ao carregar post:", error);
+        console.error("[BlogPost] Erro ao carregar post (API 404 ou rede):", error);
         setNotFound(true);
       } finally {
         setLoading(false);

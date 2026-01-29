@@ -59,6 +59,7 @@ const App = () => (
                   <Route path="/sobre" element={<Sobre />} />
                   <Route path="/contato" element={<Contato />} />
                   <Route path="/blog" element={<Blog />} />
+                  {/* Detalhe do post: link da listagem é /blog/{post.slug} */}
                   <Route path="/blog/:slug" element={<BlogPost />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/debug" element={<Debug />} />

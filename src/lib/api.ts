@@ -71,7 +71,21 @@ export async function getBlogPosts() {
 
 export async function getBlogPostBySlug(slug: string) {
   if (!slug || typeof slug !== "string") return null;
-  return apiCall(`/blog/posts/${encodeURIComponent(slug)}/`);
+  const path = `/blog/posts/${encodeURIComponent(slug)}/`;
+  const fullUrl = `${API_BASE}${path}`;
+  console.log("[API] getBlogPostBySlug →", fullUrl);
+  try {
+    const data = await apiCall(path);
+    console.log(
+      "[API] getBlogPostBySlug resposta:",
+      data ? "OK (objeto com título/slug)" : "vazio",
+      data?.slug ?? data?.title ?? data
+    );
+    return data;
+  } catch (err) {
+    console.log("[API] getBlogPostBySlug erro:", err);
+    throw err;
+  }
 }
 
 // Auth
