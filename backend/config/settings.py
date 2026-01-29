@@ -45,8 +45,7 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 # Application definition
 
 INSTALLED_APPS = [
-    'unfold',  # Tema moderno para o admin
-    'unfold.contrib.filters',
+    'jazzmin',  # Tema admin Nexus (azul/cinza)
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -227,3 +226,32 @@ CONTACT_EMAIL = os.environ.get('CONTACT_EMAIL', 'nexus@nexusvalvulas.com.br')
 
 # Public URL for file serving
 PUBLIC_URL = os.environ.get('PUBLIC_URL', 'http://localhost:8000')
+
+# -----------------------------------------------------------------------------
+# Jazzmin — Admin Nexus (visual azul/cinza, industrial/corporativo)
+# -----------------------------------------------------------------------------
+JAZZMIN_SETTINGS = {
+    "site_title": "Nexus Admin",
+    "site_header": "Nexus Válvulas",
+    "site_brand": "Nexus Forge",
+    "welcome_sign": "Bem-vindo à Nexus",
+    "copyright": "Nexus Válvulas e Conexões",
+    "show_ui_builder": False,
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "theme": "flatly",
+    "dark_mode_theme": "darkly",
+    "navbar": "navbar-dark",
+    "sidebar": "sidebar-dark-primary",
+    "brand_colour": "navbar-primary",
+    "accent": "accent-primary",
+    "button_classes": {
+        "primary": "btn-primary",
+        "secondary": "btn-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success",
+    },
+}
