@@ -1,7 +1,14 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.utils import timezone
-from .models import Post
+from .models import Category, Post
+
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ["name", "slug"]
+    prepopulated_fields = {"slug": ("name",)}
+    search_fields = ["name", "slug"]
 
 
 @admin.register(Post)
@@ -9,8 +16,9 @@ class PostAdmin(admin.ModelAdmin):
     list_display = [
         "title",
         "slug",
-        "cover_image_preview",
+        "author",
         "category",
+        "cover_image_preview",
         "is_published",
         "published_at",
         "created_at",
@@ -19,6 +27,7 @@ class PostAdmin(admin.ModelAdmin):
     search_fields = ["title", "slug", "content", "excerpt", "meta_title", "keywords"]
     prepopulated_fields = {"slug": ("title",)}
     readonly_fields = ["created_at", "updated_at", "cover_image_preview", "published_at"]
+    autocomplete_fields = ["author", "category"]
 
     fieldsets = (
         ("Conteúdo", {
@@ -33,7 +42,7 @@ class PostAdmin(admin.ModelAdmin):
             "fields": ("cover_image", "cover_image_preview"),
         }),
         ("Publicação", {
-            "fields": ("category", "is_published", "published_at", "created_at", "updated_at"),
+            "fields": ("author", "category", "is_published", "published_at", "created_at", "updated_at"),
             "classes": ("collapse",),
         }),
     )
@@ -51,4 +60,6 @@ class PostAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         if obj.is_published and not obj.published_at:
             obj.published_at = timezone.now()
+        if not change and not obj.author_id:
+            obj.author = request.user
         super().save_model(request, obj, form, change)

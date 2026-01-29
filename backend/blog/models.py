@@ -1,28 +1,66 @@
 from django.db import models
+from django.conf import settings
 from django.utils.text import slugify
-from django.utils import timezone
+from ckeditor.fields import RichTextField
+
+
+class Category(models.Model):
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
 
 
 class Post(models.Model):
-    """Post do blog institucional."""
-    title = models.CharField(max_length=255, verbose_name='Título')
-    slug = models.SlugField(unique=True, verbose_name='Slug')
-    content = models.TextField(verbose_name='Conteúdo')
-    excerpt = models.TextField(max_length=500, null=True, blank=True, verbose_name='Resumo')
-    cover_image = models.URLField(null=True, blank=True, verbose_name='Imagem de Capa')
-    published = models.BooleanField(default=False, verbose_name='Publicado')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Criado em')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Atualizado em')
+    title = models.CharField(max_length=200)
+    slug = models.SlugField(unique=True, blank=True)
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
 
-    class Meta:
-        verbose_name = 'Post do Blog'
-        verbose_name_plural = 'Posts do Blog'
-        ordering = ['-created_at']
+    # Conteúdo com Editor Rico
+    content = RichTextField()
 
-    def __str__(self):
-        return self.title
+    excerpt = models.TextField(blank=True, help_text="Breve resumo do post")
+    cover_image = models.ImageField(upload_to='blog_covers/', blank=True, null=True)
+
+    # --- CAMPOS DE SEO ---
+    meta_title = models.CharField(
+        max_length=70,
+        blank=True,
+        help_text="Título Otimizado para Google (máx 70 chars)",
+    )
+    meta_description = models.CharField(
+        max_length=160,
+        blank=True,
+        help_text="Descrição para Google (máx 160 chars)",
+    )
+    keywords = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Palavras-chave separadas por vírgula",
+    )
+    focus_keyword = models.CharField(max_length=100, blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    published_at = models.DateTimeField(blank=True, null=True)
+    is_published = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.title

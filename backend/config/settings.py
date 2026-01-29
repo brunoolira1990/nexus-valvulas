@@ -229,20 +229,13 @@ CONTACT_EMAIL = os.environ.get('CONTACT_EMAIL', 'nexus@nexusvalvulas.com.br')
 PUBLIC_URL = os.environ.get('PUBLIC_URL', 'http://localhost:8000')
 
 # -----------------------------------------------------------------------------
-# CKEditor — Editor rico para o blog (H2, negrito, links)
+# CKEditor — Editor rico para o blog
 # -----------------------------------------------------------------------------
 CKEDITOR_CONFIGS = {
-    "default": {
-        "toolbar": "Custom",
-        "toolbar_Custom": [
-            ["Bold", "Italic", "Underline", "Strike"],
-            ["NumberedList", "BulletedList", "-", "Outdent", "Indent"],
-            ["Link", "Unlink"],
-            ["Format", "Styles"],
-            ["RemoveFormat", "Source"],
-        ],
-        "height": 300,
-        "width": "100%",
+    'default': {
+        'toolbar': 'full',
+        'height': 300,
+        'width': '100%',
     },
 }
 
