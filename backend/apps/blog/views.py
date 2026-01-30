@@ -2,8 +2,51 @@ from rest_framework import viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.utils import timezone
+from django.http import HttpResponse
 from .models import Post
 from .serializers import PostSerializer, PostListSerializer
+
+# Base URL do site para o sitemap (pode vir de settings.PUBLIC_URL em produção)
+SITEMAP_BASE = "https://nexusvalvulas.com.br"
+
+# URLs estáticas do React (Home e páginas institucionais)
+STATIC_URLS = [
+    f"{SITEMAP_BASE}/",
+    f"{SITEMAP_BASE}/sobre",
+    f"{SITEMAP_BASE}/produtos",
+    f"{SITEMAP_BASE}/contato",
+    f"{SITEMAP_BASE}/blog",
+]
+
+
+def sitemap_view(request):
+    """
+    Gera sitemap.xml combinando URLs estáticas e posts do blog publicados.
+    Garante que o Google indexe Home, institucionais e blog.
+    """
+    lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ]
+
+    # URLs estáticas (changefreq weekly para páginas que mudam pouco)
+    for loc in STATIC_URLS:
+        lines.append("  <url>")
+        lines.append(f"    <loc>{loc}</loc>")
+        lines.append("    <changefreq>weekly</changefreq>")
+        lines.append("  </url>")
+
+    # URLs dinâmicas: posts publicados
+    for post in Post.objects.filter(is_published=True).only("slug"):
+        loc = f"{SITEMAP_BASE}/blog/{post.slug}"
+        lines.append("  <url>")
+        lines.append(f"    <loc>{loc}</loc>")
+        lines.append("    <changefreq>daily</changefreq>")
+        lines.append("  </url>")
+
+    lines.append("</urlset>")
+    xml = "\n".join(lines)
+    return HttpResponse(xml, content_type="application/xml")
 
 
 class PostViewSet(viewsets.ModelViewSet):
