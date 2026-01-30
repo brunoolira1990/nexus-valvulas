@@ -70,8 +70,8 @@ export const Header = memo(() => {
             <img
               src="/imagens/logo-nexus.png"
               alt="Nexus Logo"
-              width={180}
-              height={80}
+              width={182}
+              height={100}
               className="h-20 md:h-24 lg:h-28 w-auto object-contain"
             />
           </NavLink>
@@ -99,6 +99,7 @@ export const Header = memo(() => {
             size="icon"
             className="md:hidden"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label={isMenuOpen ? "Fechar menu" : "Abrir menu"}
           >
             {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </Button>

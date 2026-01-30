@@ -60,7 +60,7 @@ export default function Blog() {
           name="keywords"
           content="blog, válvulas industriais, artigos técnicos, notícias, manutenção, indústria"
         />
-        <link rel="canonical" href={`${window.location.origin}/blog`} />
+        <link rel="canonical" href="https://nexusvalvulas.com.br/blog" />
 
         {/* Open Graph tags */}
         <meta
@@ -72,8 +72,8 @@ export default function Blog() {
           content="Acompanhe as últimas notícias, artigos técnicos e atualizações sobre válvulas industriais no blog da Nexus Válvulas. Expertise em soluções industriais."
         />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={`${window.location.origin}/blog`} />
-        <meta property="og:image" content={`${window.location.origin}/og-blog.jpg`} />
+        <meta property="og:url" content="https://nexusvalvulas.com.br/blog" />
+        <meta property="og:image" content="https://nexusvalvulas.com.br/og-blog.jpg" />
 
         {/* Twitter Card */}
         <meta property="twitter:card" content="summary_large_image" />
@@ -85,7 +85,7 @@ export default function Blog() {
           property="twitter:description"
           content="Acompanhe as últimas notícias, artigos técnicos e atualizações sobre válvulas industriais no blog da Nexus Válvulas. Expertise em soluções industriais."
         />
-        <meta property="twitter:image" content={`${window.location.origin}/og-blog.jpg`} />
+        <meta property="twitter:image" content="https://nexusvalvulas.com.br/og-blog.jpg" />
 
         {/* Structured Data */}
         <script type="application/ld+json">
@@ -94,13 +94,13 @@ export default function Blog() {
             "@type": "Blog",
             name: "Blog - Nexus Válvulas",
             description: "Notícias e artigos técnicos sobre válvulas industriais",
-            url: `${window.location.origin}/blog`,
+            url: "https://nexusvalvulas.com.br/blog",
             publisher: {
               "@type": "Organization",
               name: "Nexus Válvulas",
               logo: {
                 "@type": "ImageObject",
-                url: `${window.location.origin}/logo-nexus.png`,
+                url: "https://nexusvalvulas.com.br/logo-nexus.png",
               },
             },
           })}

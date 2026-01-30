@@ -13,7 +13,7 @@ export const Footer = () => {
             <img
               src="/imagens/logo-nexus-letreiro-branco.png"
               alt="Nexus Logo"
-              width={160}
+              width={73}
               height={40}
               className="h-10 w-auto object-contain"
             />

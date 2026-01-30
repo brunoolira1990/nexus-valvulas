@@ -53,9 +53,9 @@ const Index = () => {
 
   const partners = useMemo(
     () => [
-      { name: "CRC", logo: "/partners/crc.png" },
-      { name: "Comlink", logo: "/partners/comlink.png" },
-      { name: "Mercado Eletrônico", logo: "/partners/me.png" },
+      { name: "CRC", logo: "/partners/crc.png", width: 96, height: 48 },
+      { name: "Comlink", logo: "/partners/comlink.png", width: 211, height: 50 },
+      { name: "Mercado Eletrônico", logo: "/partners/me.png", width: 183, height: 50 },
     ],
     []
   );
@@ -158,6 +158,7 @@ const Index = () => {
                         alt={`Válvulas industriais para ${segment.title}`}
                         className="w-full h-full object-cover"
                         loading="lazy"
+                        decoding="async"
                       />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">

@@ -24,7 +24,7 @@ interface Product {
   slug: string;
   description: string;
   image_url?: string;
-  product_type: 'simple' | 'intermediate' | 'complex';
+  product_type: "simple" | "intermediate" | "complex";
   variants?: Array<{
     id: number;
     name: string;
@@ -39,7 +39,7 @@ export default function ProdutoCategoria() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   useEffect(() => {
     if (!categoria) return;
 
@@ -48,13 +48,13 @@ export default function ProdutoCategoria() {
         setLoading(true);
         const [categoryData, productsData] = await Promise.all([
           getCategoryBySlug(categoria),
-          getProducts(categoria)
+          getProducts(categoria),
         ]);
         setCategory(categoryData);
         setProducts(productsData);
       } catch (err) {
-        console.error('Erro ao buscar dados:', err);
-        setError('Erro ao carregar dados. Tente novamente mais tarde.');
+        console.error("Erro ao buscar dados:", err);
+        setError("Erro ao carregar dados. Tente novamente mais tarde.");
       } finally {
         setLoading(false);
       }
@@ -101,12 +101,12 @@ export default function ProdutoCategoria() {
 
   // Função auxiliar para contar variações
   const getProductVariationsCount = (product: Product): number => {
-    if (product.product_type === 'complex' && product.variants) {
+    if (product.product_type === "complex" && product.variants) {
       return product.variants.reduce((total, variant) => {
         return total + (variant.sizes ? Object.keys(variant.sizes).length : 0);
       }, 0);
     }
-    if (product.product_type === 'intermediate' && product.sizes) {
+    if (product.product_type === "intermediate" && product.sizes) {
       return Object.keys(product.sizes).length;
     }
     return 0;
@@ -116,17 +116,18 @@ export default function ProdutoCategoria() {
     <Layout>
       <SEO
         title={`${category.name} - Nexus Válvulas | Produtos Industriais`}
-        description={category.description || `Explore nossa linha de ${category.name.toLowerCase()}.`}
+        description={
+          category.description || `Explore nossa linha de ${category.name.toLowerCase()}.`
+        }
         keywords={`${category.name.toLowerCase()}, válvulas industriais, produtos industriais`}
+        canonical={`/produtos/${categoria}`}
       />
-      
+
       {/* Header Section */}
       <section className="bg-primary text-primary-foreground py-16">
         <div className="container mx-auto px-4">
           <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              {category.name}
-            </h1>
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">{category.name}</h1>
             {category.description && (
               <p className="text-xl text-primary-foreground/80 max-w-3xl mx-auto">
                 {category.description}
@@ -135,14 +136,11 @@ export default function ProdutoCategoria() {
           </div>
         </div>
       </section>
-      
+
       <section className="bg-muted/30 py-4">
         <div className="container mx-auto px-4">
-          <BreadcrumbStandard 
-            items={[
-              { label: "Produtos", href: "/produtos" },
-              { label: category.name }
-            ]}
+          <BreadcrumbStandard
+            items={[{ label: "Produtos", href: "/produtos" }, { label: category.name }]}
           />
         </div>
       </section>
@@ -151,9 +149,9 @@ export default function ProdutoCategoria() {
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="flex items-center mb-6">
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               asChild
               className="text-primary-foreground hover:bg-primary-foreground/20"
             >
@@ -163,7 +161,7 @@ export default function ProdutoCategoria() {
               </Link>
             </Button>
           </div>
-          
+
           {products.length === 0 ? (
             <ScrollAnimation animation="fade-up">
               <div className="text-center py-12">
@@ -182,12 +180,8 @@ export default function ProdutoCategoria() {
                 const variationsCount = getProductVariationsCount(product);
 
                 return (
-                  <ScrollAnimation 
-                    key={product.id} 
-                    animation="fade-up" 
-                    delay={(index % 3) * 100}
-                  >
-                    <Link 
+                  <ScrollAnimation key={product.id} animation="fade-up" delay={(index % 3) * 100}>
+                    <Link
                       to={`/produtos/${category.slug}/${product.slug}`}
                       className="block no-underline text-inherit"
                     >
@@ -199,20 +193,20 @@ export default function ProdutoCategoria() {
                               alt={product.title}
                               className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
                               loading="lazy"
-                              onError={(e) => {
+                              onError={e => {
                                 // Mostra placeholder quando imagem falha
                                 const target = e.currentTarget;
-                                target.style.display = 'none';
+                                target.style.display = "none";
                                 const placeholder = target.nextElementSibling as HTMLElement;
                                 if (placeholder) {
-                                  placeholder.style.display = 'flex';
+                                  placeholder.style.display = "flex";
                                 }
                               }}
                             />
                           ) : null}
-                          <div 
-                            className={`w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center ${displayImage ? 'absolute inset-0' : ''}`}
-                            style={{ display: displayImage ? 'none' : 'flex' }}
+                          <div
+                            className={`w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center ${displayImage ? "absolute inset-0" : ""}`}
+                            style={{ display: displayImage ? "none" : "flex" }}
                           >
                             <ImageIcon className="h-16 w-16 text-primary" />
                           </div>
@@ -230,9 +224,9 @@ export default function ProdutoCategoria() {
                         <CardContent>
                           <div className="flex items-center justify-between">
                             <Badge variant="secondary">
-                              {variationsCount > 0 
-                                ? `${variationsCount} ${variationsCount === 1 ? 'variação' : 'variações'}` 
-                                : 'Disponível'}
+                              {variationsCount > 0
+                                ? `${variationsCount} ${variationsCount === 1 ? "variação" : "variações"}`
+                                : "Disponível"}
                             </Badge>
                             <span className="text-accent hover:text-accent/80 font-medium text-sm">
                               Ver detalhes →

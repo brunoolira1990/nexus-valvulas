@@ -1,7 +1,7 @@
-import { useRef, useState, useCallback } from 'react';
-import { Upload, X, ImageIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { useRef, useState, useCallback } from "react";
+import { Upload, X, ImageIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface ImageUploadProps {
   value: File | null;
@@ -10,19 +10,14 @@ interface ImageUploadProps {
   className?: string;
 }
 
-export function ImageUpload({
-  value,
-  previewUrl,
-  onChange,
-  className,
-}: ImageUploadProps) {
+export function ImageUpload({ value, previewUrl, onChange, className }: ImageUploadProps) {
   const [dragActive, setDragActive] = useState(false);
   const [preview, setPreview] = useState<string | null>(previewUrl || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = useCallback(
     (file: File) => {
-      if (file && file.type.startsWith('image/')) {
+      if (file && file.type.startsWith("image/")) {
         onChange(file);
         const reader = new FileReader();
         reader.onloadend = () => {
@@ -37,9 +32,9 @@ export function ImageUpload({
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
+    if (e.type === "dragenter" || e.type === "dragover") {
       setDragActive(true);
-    } else if (e.type === 'dragleave') {
+    } else if (e.type === "dragleave") {
       setDragActive(false);
     }
   }, []);
@@ -71,21 +66,19 @@ export function ImageUpload({
     onChange(null);
     setPreview(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   }, [onChange]);
 
   const displayPreview = preview || previewUrl;
 
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn("space-y-2", className)}>
       <div
         className={cn(
-          'relative border-2 border-dashed rounded-lg transition-colors',
-          dragActive
-            ? 'border-primary bg-primary/5'
-            : 'border-muted hover:border-primary/50',
-          displayPreview && 'border-solid'
+          "relative border-2 border-dashed rounded-lg transition-colors",
+          dragActive ? "border-primary bg-primary/5" : "border-muted hover:border-primary/50",
+          displayPreview && "border-solid"
         )}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -94,17 +87,14 @@ export function ImageUpload({
       >
         {displayPreview ? (
           <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
-            <img
-              src={displayPreview}
-              alt="Preview"
-              className="w-full h-full object-cover"
-            />
+            <img src={displayPreview} alt="Preview" className="w-full h-full object-cover" />
             <Button
               type="button"
               variant="destructive"
               size="icon"
               className="absolute top-2 right-2"
               onClick={handleRemove}
+              aria-label="Remover imagem"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -115,14 +105,8 @@ export function ImageUpload({
             <p className="text-sm font-medium mb-2">
               Arraste uma imagem aqui ou clique para selecionar
             </p>
-            <p className="text-xs text-muted-foreground mb-4">
-              PNG, JPG, GIF até 10MB
-            </p>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-            >
+            <p className="text-xs text-muted-foreground mb-4">PNG, JPG, GIF até 10MB</p>
+            <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
               <Upload className="h-4 w-4 mr-2" />
               Selecionar Imagem
             </Button>
@@ -136,11 +120,7 @@ export function ImageUpload({
           className="hidden"
         />
       </div>
-      {value && (
-        <p className="text-xs text-muted-foreground">
-          Arquivo selecionado: {value.name}
-        </p>
-      )}
+      {value && <p className="text-xs text-muted-foreground">Arquivo selecionado: {value.name}</p>}
     </div>
   );
 }

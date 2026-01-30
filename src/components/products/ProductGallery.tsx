@@ -2,12 +2,7 @@ import { useState } from "react";
 import { ImageIcon, ZoomIn, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 
 interface ProductGalleryProps {
   images: string[];
@@ -15,11 +10,7 @@ interface ProductGalleryProps {
   className?: string;
 }
 
-export function ProductGallery({
-  images,
-  productName,
-  className,
-}: ProductGalleryProps) {
+export function ProductGallery({ images, productName, className }: ProductGalleryProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
   const [imageError, setImageError] = useState<Record<number, boolean>>({});
@@ -29,12 +20,12 @@ export function ProductGallery({
   const currentImage = validImages[selectedIndex] || null;
 
   const handleImageError = (index: number) => {
-    setImageError((prev) => ({ ...prev, [index]: true }));
+    setImageError(prev => ({ ...prev, [index]: true }));
   };
 
   const handleThumbnailClick = (index: number) => {
     setSelectedIndex(index);
-    setImageError((prev) => ({ ...prev, [index]: false }));
+    setImageError(prev => ({ ...prev, [index]: false }));
   };
 
   if (!hasImages) {
@@ -47,9 +38,7 @@ export function ProductGallery({
       >
         <div className="text-center p-8">
           <ImageIcon className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground font-medium">
-            Imagem não disponível
-          </p>
+          <p className="text-muted-foreground font-medium">Imagem não disponível</p>
         </div>
       </div>
     );
@@ -77,9 +66,7 @@ export function ProductGallery({
           <div className="w-full h-full flex items-center justify-center">
             <div className="text-center p-8">
               <ImageIcon className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground font-medium">
-                Erro ao carregar imagem
-              </p>
+              <p className="text-muted-foreground font-medium">Erro ao carregar imagem</p>
             </div>
           </div>
         )}
@@ -132,6 +119,7 @@ export function ProductGallery({
               size="icon"
               className="absolute top-4 right-4 z-10 bg-background/80 hover:bg-background rounded-full"
               onClick={() => setIsZoomOpen(false)}
+              aria-label="Fechar zoom"
             >
               <X className="h-4 w-4" />
             </Button>

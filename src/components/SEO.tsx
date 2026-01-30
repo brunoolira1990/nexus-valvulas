@@ -28,13 +28,13 @@ export const SEO = ({
   noIndex = false,
 }: SEOProps) => {
   const fullTitle = title.includes("Nexus") ? title : `${title} | Nexus Válvulas`;
-  const siteUrl =
-    typeof window !== "undefined" ? window.location.origin : "https://nexusvalvulas.com.br";
+  const SITE_URL = "https://nexusvalvulas.com.br";
+  const siteUrl = typeof window !== "undefined" ? window.location.origin : SITE_URL;
   const canonicalHref =
     canonical != null && canonical !== ""
       ? canonical.startsWith("http")
         ? canonical
-        : `${siteUrl}${canonical === "/" ? "" : canonical}`
+        : `${SITE_URL}${canonical === "/" ? "" : canonical}`
       : null;
   const fullUrl = url.startsWith("http") ? url : `${siteUrl}${url}`;
 
