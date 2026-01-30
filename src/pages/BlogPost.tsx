@@ -82,16 +82,11 @@ export default function BlogPost() {
     return <Navigate to="/404" replace />;
   }
 
-  // SEO Meta Tags
-  const metaTitle = post.meta_title || `${post.title} - Nexus Válvulas`;
-  const metaDescription =
-    post.meta_description ||
-    post.excerpt ||
-    (post.content
-      ? post.content.replace(/<[^>]*>/g, "").substring(0, 160)
-      : "Leia este artigo técnico sobre válvulas industriais da Nexus Válvulas");
+  // SEO: só renderiza Helmet quando post já está carregado (após loading)
+  const canonicalUrl = `https://nexusvalvulas.com.br/blog/${post.slug}`;
+  const ogImage = post.cover_image_url || post.cover_image;
 
-  // Keywords: API pode retornar string (vírgulas) ou array
+  // Keywords (para meta keywords opcional)
   const keywordsArray = Array.isArray(post.keywords)
     ? post.keywords
     : typeof post.keywords === "string"
@@ -106,7 +101,6 @@ export default function BlogPost() {
       ? keywordsArray.join(", ")
       : "válvulas industriais, artigos técnicos, indústria, manutenção");
 
-  // Cover image URL
   const coverImageUrl = post.cover_image_url || post.cover_image;
   const fullCoverImageUrl = coverImageUrl
     ? coverImageUrl.startsWith("http")
@@ -114,30 +108,29 @@ export default function BlogPost() {
       : `${window.location.origin}${coverImageUrl}`
     : undefined;
 
-  // Published date
   const publishedDate = post.published_at || post.published_date || post.created_at;
 
   return (
     <>
       <Helmet>
-        <title>{metaTitle}</title>
-        <meta name="description" content={metaDescription} />
-        {post.focus_keyword && <meta name="keywords" content={keywordsString} />}
-        <link rel="canonical" href={`${window.location.origin}/blog/${slug}`} />
+        <title>{post.meta_title || post.title} | Nexus Válvulas</title>
+        <meta name="description" content={post.meta_description || post.excerpt || ""} />
+        <link rel="canonical" href={canonicalUrl} />
 
-        {/* Open Graph tags */}
-        <meta property="og:title" content={metaTitle} />
-        <meta property="og:description" content={metaDescription} />
+        {/* Open Graph para WhatsApp/LinkedIn */}
+        <meta property="og:title" content={post.title} />
+        <meta property="og:description" content={post.excerpt || ""} />
+        <meta property="og:image" content={ogImage || ""} />
+        <meta property="og:url" content={canonicalUrl} />
         <meta property="og:type" content="article" />
-        <meta property="og:url" content={`${window.location.origin}/blog/${slug}`} />
         {fullCoverImageUrl && <meta property="og:image" content={fullCoverImageUrl} />}
         {fullCoverImageUrl && <meta property="og:image:width" content="1200" />}
         {fullCoverImageUrl && <meta property="og:image:height" content="630" />}
 
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={metaTitle} />
-        <meta name="twitter:description" content={metaDescription} />
+        <meta name="twitter:title" content={post.meta_title || post.title} />
+        <meta name="twitter:description" content={post.meta_description || post.excerpt || ""} />
         {fullCoverImageUrl && <meta name="twitter:image" content={fullCoverImageUrl} />}
 
         {/* Article structured data */}
@@ -146,7 +139,7 @@ export default function BlogPost() {
             "@context": "https://schema.org",
             "@type": "Article",
             headline: post.title,
-            description: metaDescription,
+            description: post.meta_description || post.excerpt || "",
             image: fullCoverImageUrl,
             datePublished: publishedDate,
             dateModified: post.updated_at || publishedDate,

@@ -40,39 +40,37 @@ const AOSInitializer = () => {
 };
 
 const App = () => (
-  <HelmetProvider>
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Analytics />
-              <AOSInitializer />
-              <Suspense fallback={<PageLoader />}>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/produtos" element={<Produtos />} />
-                  <Route path="/produtos/:categoria" element={<ProdutoCategoria />} />
-                  <Route path="/produtos/:categoria/:produto" element={<ProdutoDetalhes />} />
-                  <Route path="/sobre" element={<Sobre />} />
-                  <Route path="/contato" element={<Contato />} />
-                  <Route path="/blog" element={<Blog />} />
-                  {/* Detalhe do post: link da listagem é /blog/{post.slug} */}
-                  <Route path="/blog/:slug" element={<BlogPost />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/debug" element={<Debug />} />
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Analytics />
+            <AOSInitializer />
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/produtos" element={<Produtos />} />
+                <Route path="/produtos/:categoria" element={<ProdutoCategoria />} />
+                <Route path="/produtos/:categoria/:produto" element={<ProdutoDetalhes />} />
+                <Route path="/sobre" element={<Sobre />} />
+                <Route path="/contato" element={<Contato />} />
+                <Route path="/blog" element={<Blog />} />
+                {/* Detalhe do post: link da listagem é /blog/{post.slug} */}
+                <Route path="/blog/:slug" element={<BlogPost />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/debug" element={<Debug />} />
 
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
-            </BrowserRouter>
-          </TooltipProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </ErrorBoundary>
-  </HelmetProvider>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
