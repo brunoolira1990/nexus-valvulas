@@ -31,16 +31,20 @@ class PostSerializer(serializers.ModelSerializer):
         read_only_fields = ["published_at", "created_at", "updated_at"]
 
     def get_author_name(self, obj):
-        # BLINDAGEM: Se não tiver autor ou der erro, retorna 'Equipe Nexus'
+        if not obj.author:
+            return "Equipe Nexus"
+
+        # Tenta pegar nome completo se existir método, senão tenta username, senão email
         try:
-            if obj.author and hasattr(obj.author, "get_full_name"):
+            if hasattr(obj.author, "get_full_name"):
                 name = obj.author.get_full_name()
-                return name if name else getattr(obj.author, "username", "Equipe Nexus")
-            if obj.author:
-                return getattr(obj.author, "username", "Equipe Nexus")
+                if name:
+                    return name
+
+            # Fallback seguro: usa username ou email (User customizado pode não ter first_name/last_name)
+            return getattr(obj.author, "username", getattr(obj.author, "email", "Equipe Nexus"))
         except Exception:
-            pass
-        return "Equipe Nexus"
+            return "Equipe Nexus"
 
     def get_category_name(self, obj):
         # BLINDAGEM: category pode ser None (ForeignKey null)
