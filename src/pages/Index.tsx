@@ -70,13 +70,15 @@ const Index = () => {
         canonical="/"
       />
 
-      {/* Hero Section */}
-      <section className="relative min-h-[80vh] flex items-center justify-center bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-20"
-          style={{
-            backgroundImage: "url('/imagens/hero-industrial.jpg')",
-          }}
+      {/* Hero Section - imagem com fetchpriority para LCP */}
+      <section className="relative min-h-[80vh] flex items-center justify-center bg-gradient-to-r from-primary to-primary/80 text-primary-foreground overflow-hidden">
+        <img
+          src="/imagens/hero-industrial.jpg"
+          alt=""
+          fetchPriority="high"
+          width={1920}
+          height={1080}
+          className="absolute inset-0 w-full h-full object-cover object-center opacity-20"
         />
         <div className="relative z-10 container mx-auto px-4 text-center">
           <ScrollAnimation animation="fade-in" duration={800}>
@@ -122,7 +124,9 @@ const Index = () => {
                   <img
                     src={partner.logo}
                     alt={`Parceiro ${partner.name}`}
-                    className="h-12 object-contain"
+                    width={120}
+                    height={48}
+                    className="h-12 w-auto object-contain"
                     loading="lazy"
                   />
                 </div>

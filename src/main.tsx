@@ -5,6 +5,10 @@ import "./index.css";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { reportWebVitals } from "./lib/web-vitals.ts";
+import { initGA } from "@/components/Analytics";
+
+// GA4: defina VITE_GA_MEASUREMENT_ID no .env ou substitua em Analytics.tsx
+initGA();
 
 // Inicializar AOS
 AOS.init({

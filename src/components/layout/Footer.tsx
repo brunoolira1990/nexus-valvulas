@@ -10,10 +10,12 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Company Info */}
           <div className="space-y-4">
-            <img 
-              src="/imagens/logo-nexus-letreiro-branco.png" 
+            <img
+              src="/imagens/logo-nexus-letreiro-branco.png"
               alt="Nexus Logo"
-              className="h-10 w-auto" // altura maior, largura proporcional
+              width={160}
+              height={40}
+              className="h-10 w-auto object-contain"
             />
             <div className="space-y-2">
               <div className="flex items-start space-x-2">
@@ -26,13 +28,19 @@ export const Footer = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <Phone className="h-5 w-5" />
-                <a href="tel:+551142408832" className="text-sm hover:underline-none">
+                <a
+                  href="tel:+551142408832"
+                  className="text-sm text-white hover:text-white/90 underline underline-offset-2 focus:outline-none focus:ring-2 focus:ring-white/50 rounded"
+                >
                   (11) 4240-8832
                 </a>
               </div>
               <div className="flex items-center space-x-2">
                 <Mail className="h-5 w-5" />
-                <a href="mailto:nexus@nexusvalvulas.com.br" className="text-sm hover:underline-none">
+                <a
+                  href="mailto:nexus@nexusvalvulas.com.br"
+                  className="text-sm text-white hover:text-white/90 underline underline-offset-2 focus:outline-none focus:ring-2 focus:ring-white/50 rounded"
+                >
                   nexus@nexusvalvulas.com.br
                 </a>
               </div>
@@ -43,16 +51,28 @@ export const Footer = () => {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Links Rápidos</h3>
             <nav className="flex flex-col space-y-2">
-              <NavLink to="/" className="text-primary-foreground/80 hover:text-accent transition-colors">
+              <NavLink
+                to="/"
+                className="text-white hover:text-accent transition-colors underline underline-offset-2 focus:outline-none focus:ring-2 focus:ring-white/50 rounded"
+              >
                 Home
               </NavLink>
-              <NavLink to="/produtos" className="text-primary-foreground/80 hover:text-accent transition-colors">
+              <NavLink
+                to="/produtos"
+                className="text-white hover:text-accent transition-colors underline underline-offset-2 focus:outline-none focus:ring-2 focus:ring-white/50 rounded"
+              >
                 Produtos
               </NavLink>
-              <NavLink to="/sobre" className="text-primary-foreground/80 hover:text-accent transition-colors">
+              <NavLink
+                to="/sobre"
+                className="text-white hover:text-accent transition-colors underline underline-offset-2 focus:outline-none focus:ring-2 focus:ring-white/50 rounded"
+              >
                 Sobre Nós
               </NavLink>
-              <NavLink to="/contato" className="text-primary-foreground/80 hover:text-accent transition-colors">
+              <NavLink
+                to="/contato"
+                className="text-white hover:text-accent transition-colors underline underline-offset-2 focus:outline-none focus:ring-2 focus:ring-white/50 rounded"
+              >
                 Contato
               </NavLink>
             </nav>
@@ -70,7 +90,11 @@ export const Footer = () => {
                 placeholder="Seu e-mail"
                 className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/60"
               />
-              <Button variant="secondary" size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="bg-accent hover:bg-accent/90 text-accent-foreground"
+              >
                 Enviar
               </Button>
             </div>

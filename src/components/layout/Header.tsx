@@ -25,14 +25,17 @@ export const Header = memo(() => {
               <Mail className="h-4 w-4" />
               <a
                 href="mailto:nexus@nexusvalvulas.com.br"
-                className="no-underline hover:no-underline"
+                className="text-white hover:text-white/90 underline underline-offset-2 focus:outline-none focus:ring-2 focus:ring-white/50 rounded"
               >
                 nexus@nexusvalvulas.com.br
               </a>
             </div>
             <div className="flex items-center space-x-2">
               <Phone className="h-4 w-4" />
-              <a href="tel:+551142408832" className="hover:underline-none">
+              <a
+                href="tel:+551142408832"
+                className="text-white hover:text-white/90 underline underline-offset-2 focus:outline-none focus:ring-2 focus:ring-white/50 rounded"
+              >
                 (11) 4240-8832
               </a>
             </div>
@@ -44,7 +47,7 @@ export const Header = memo(() => {
               <Mail className="h-3 w-3" />
               <a
                 href="mailto:nexus@nexusvalvulas.com.br"
-                className="no-underline hover:no-underline truncate"
+                className="text-white hover:text-white/90 underline underline-offset-2 truncate"
               >
                 nexus@nexusvalvulas.com.br
               </a>
@@ -67,7 +70,9 @@ export const Header = memo(() => {
             <img
               src="/imagens/logo-nexus.png"
               alt="Nexus Logo"
-              className="h-20 md:h-24 lg:h-28 w-auto" // altura maior em telas maiores, largura proporcional
+              width={180}
+              height={80}
+              className="h-20 md:h-24 lg:h-28 w-auto object-contain"
             />
           </NavLink>
 
@@ -78,7 +83,7 @@ export const Header = memo(() => {
                 key={item.name}
                 to={item.path}
                 className={({ isActive }) =>
-                  `font-medium transition-colors hover:text-accent ${
+                  `font-medium transition-colors hover:text-accent focus:outline-none focus:ring-2 focus:ring-accent/50 focus:ring-offset-2 rounded ${
                     isActive ? "text-accent" : "text-foreground"
                   }`
                 }
@@ -108,7 +113,7 @@ export const Header = memo(() => {
                   key={item.name}
                   to={item.path}
                   className={({ isActive }) =>
-                    `font-medium transition-colors hover:text-accent py-2 ${
+                    `font-medium transition-colors hover:text-accent py-2 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:ring-offset-2 rounded ${
                       isActive ? "text-accent" : "text-foreground"
                     }`
                   }
