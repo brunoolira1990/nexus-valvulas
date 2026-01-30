@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
 
-# Bloqueio de Bots de IA (Evita plágio de conteúdo)
+# Bloqueio manual de bots de IA (Padrão aceito pelo Google)
 User-agent: GPTBot
 Disallow: /
 
@@ -14,5 +14,7 @@ Disallow: /
 User-agent: Google-Extended
 Disallow: /
 
-# Link para o Mapa do Site
+User-agent: CCBot
+Disallow: /
+
 Sitemap: https://nexusvalvulas.com.br/sitemap.xml
