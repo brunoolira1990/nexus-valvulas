@@ -18,7 +18,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-in-produc
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # python-decouple lê automaticamente do arquivo .env
-DEBUG = True  # Temporário para depuração (voltar para config após)
+DEBUG = False  # Temporário para depuração (voltar para config após)
 
 ALLOWED_HOSTS = config(
     'ALLOWED_HOSTS',
