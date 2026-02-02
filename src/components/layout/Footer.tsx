@@ -8,7 +8,7 @@ export const Footer = () => {
     <footer className="bg-primary text-primary-foreground">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Company Info */}
+          {/* Company Info / Contato */}
           <div className="space-y-4">
             <img
               src="/imagens/logo-nexus-letreiro-branco.png"
@@ -17,6 +17,7 @@ export const Footer = () => {
               height={40}
               className="h-10 w-auto object-contain"
             />
+            <h2 className="sr-only">Contato</h2>
             <div className="space-y-2">
               <div className="flex items-start space-x-2">
                 <MapPin className="h-5 w-5 mt-0.5 flex-shrink-0" />
@@ -26,30 +27,26 @@ export const Footer = () => {
                   <p className="text-sm">São Paulo - SP, 08215-330</p>
                 </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <Phone className="h-5 w-5" />
-                <a
-                  href="tel:+551142408832"
-                  className="text-sm text-white hover:text-white/90 underline underline-offset-2 focus:outline-none focus:ring-2 focus:ring-white/50 rounded"
-                >
-                  (11) 4240-8832
-                </a>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Mail className="h-5 w-5" />
-                <a
-                  href="mailto:nexus@nexusvalvulas.com.br"
-                  className="text-sm text-white hover:text-white/90 underline underline-offset-2 focus:outline-none focus:ring-2 focus:ring-white/50 rounded"
-                >
-                  nexus@nexusvalvulas.com.br
-                </a>
-              </div>
+              <a
+                href="tel:+551142408832"
+                className="min-h-[44px] flex items-center p-3 -m-3 text-sm text-white hover:text-white/90 underline underline-offset-2 focus:outline-none focus:ring-2 focus:ring-white/50 rounded w-fit"
+              >
+                <Phone className="h-5 w-5 shrink-0 mr-2" aria-hidden />
+                <span>(11) 4240-8832</span>
+              </a>
+              <a
+                href="mailto:nexus@nexusvalvulas.com.br"
+                className="min-h-[44px] flex items-center p-3 -m-3 text-sm text-white hover:text-white/90 underline underline-offset-2 focus:outline-none focus:ring-2 focus:ring-white/50 rounded w-fit"
+              >
+                <Mail className="h-5 w-5 shrink-0 mr-2" aria-hidden />
+                <span>nexus@nexusvalvulas.com.br</span>
+              </a>
             </div>
           </div>
 
           {/* Quick Links */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Links Rápidos</h3>
+            <h2 className="text-lg font-semibold">Links Rápidos</h2>
             <nav className="flex flex-col space-y-2">
               <NavLink
                 to="/"
@@ -80,7 +77,7 @@ export const Footer = () => {
 
           {/* Newsletter */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Assine Nossa Newsletter</h3>
+            <h2 className="text-lg font-semibold">Assine Nossa Newsletter</h2>
             <p className="text-primary-foreground/80 text-sm">
               Receba novidades sobre produtos e soluções industriais
             </p>
@@ -93,7 +90,7 @@ export const Footer = () => {
               <Button
                 variant="secondary"
                 size="sm"
-                className="bg-accent hover:bg-accent/90 text-accent-foreground"
+                className="bg-accent hover:bg-accent/90 text-gray-900 font-bold border-2 border-gray-900/20"
               >
                 Enviar
               </Button>

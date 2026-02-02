@@ -103,7 +103,7 @@ export default function Contato() {
       // Enviar dados para o backend
       // API_BASE deve incluir /api se não estiver incluído
       const BASE_URL = import.meta.env.VITE_API_BASE || "http://localhost:8000";
-      const API_BASE = BASE_URL.endsWith('/api') ? BASE_URL : `${BASE_URL}/api`;
+      const API_BASE = BASE_URL.endsWith("/api") ? BASE_URL : `${BASE_URL}/api`;
       console.log("Enviando dados para:", `${API_BASE}/contact`);
       console.log("Dados:", formData);
 
@@ -279,7 +279,7 @@ export default function Contato() {
                     <Button
                       type="submit"
                       disabled={isSubmitting}
-                      className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
+                      className="w-full bg-accent hover:bg-accent/90 text-gray-900 font-bold border-2 border-gray-900/20"
                     >
                       {isSubmitting ? "Enviando..." : "Enviar Mensagem"}
                     </Button>

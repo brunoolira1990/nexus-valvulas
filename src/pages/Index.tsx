@@ -66,14 +66,14 @@ const Index = () => {
         title="Nexus Válvulas E Conexões Industriais - Soluções para Indústria"
         description="Mais de 20 anos fornecendo válvulas industriais de alta qualidade para química, refinarias, siderúrgicas, usinas, metalúrgicas e petroquímicas. Qualidade, atendimento e entrega garantidos."
         keywords="válvulas industriais, conexões industriais, válvulas química, válvulas refinaria, válvulas siderúrgica, válvulas usina, válvulas metalúrgica, válvulas petroquímica, nexus, brasil, fornecedor industrial"
-        image="/imagens/hero-industrial.jpg"
+        image="/imagens/hero-industrial.webp"
         canonical="/"
       />
 
-      {/* Hero Section - imagem com fetchpriority para LCP */}
+      {/* Hero Section - imagem WebP com fetchpriority para LCP */}
       <section className="relative min-h-[80vh] flex items-center justify-center bg-gradient-to-r from-primary to-primary/80 text-primary-foreground overflow-hidden">
         <img
-          src="/imagens/hero-industrial.jpg"
+          src="/imagens/hero-industrial.webp"
           alt=""
           fetchPriority="high"
           width={1920}
@@ -93,7 +93,7 @@ const Index = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
                 size="lg"
-                className="bg-accent hover:bg-accent/90 text-accent-foreground text-lg px-8 py-4"
+                className="bg-accent hover:bg-accent/90 text-gray-900 font-bold text-lg px-8 py-4 border-2 border-gray-900/20"
               >
                 <Link to="/produtos" className="flex items-center">
                   Ver Produtos

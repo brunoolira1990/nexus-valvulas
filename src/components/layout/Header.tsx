@@ -20,44 +20,39 @@ export const Header = memo(() => {
       <div className="bg-primary text-primary-foreground py-2 px-4">
         <div className="container mx-auto">
           {/* Desktop: horizontal layout */}
-          <div className="hidden md:flex justify-end items-center space-x-6 text-sm">
-            <div className="flex items-center space-x-2">
-              <Mail className="h-4 w-4" />
-              <a
-                href="mailto:nexus@nexusvalvulas.com.br"
-                className="text-white hover:text-white/90 underline underline-offset-2 focus:outline-none focus:ring-2 focus:ring-white/50 rounded"
-              >
-                nexus@nexusvalvulas.com.br
-              </a>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Phone className="h-4 w-4" />
-              <a
-                href="tel:+551142408832"
-                className="text-white hover:text-white/90 underline underline-offset-2 focus:outline-none focus:ring-2 focus:ring-white/50 rounded"
-              >
-                (11) 4240-8832
-              </a>
-            </div>
+          <div className="hidden md:flex justify-end items-center space-x-2 text-sm">
+            <a
+              href="mailto:nexus@nexusvalvulas.com.br"
+              className="min-h-[44px] flex items-center justify-center p-3 text-white hover:text-white/90 underline underline-offset-2 focus:outline-none focus:ring-2 focus:ring-white/50 rounded"
+            >
+              <Mail className="h-4 w-4 shrink-0 mr-1.5" aria-hidden />
+              <span>nexus@nexusvalvulas.com.br</span>
+            </a>
+            <a
+              href="tel:+551142408832"
+              className="min-h-[44px] flex items-center justify-center p-3 text-white hover:text-white/90 underline underline-offset-2 focus:outline-none focus:ring-2 focus:ring-white/50 rounded"
+            >
+              <Phone className="h-4 w-4 shrink-0 mr-1.5" aria-hidden />
+              <span>(11) 4240-8832</span>
+            </a>
           </div>
 
-          {/* Mobile: vertical layout */}
-          <div className="md:hidden flex flex-col space-y-1 text-xs">
-            <div className="flex items-center justify-center space-x-2">
-              <Mail className="h-3 w-3" />
-              <a
-                href="mailto:nexus@nexusvalvulas.com.br"
-                className="text-white hover:text-white/90 underline underline-offset-2 truncate"
-              >
-                nexus@nexusvalvulas.com.br
-              </a>
-            </div>
-            <div className="flex items-center justify-center space-x-2">
-              <Phone className="h-3 w-3" />
-              <a href="tel:+551142408832" className="hover:underline-none font-medium">
-                (11) 4240-8832
-              </a>
-            </div>
+          {/* Mobile: vertical layout - touch targets 44px */}
+          <div className="md:hidden flex flex-col text-xs">
+            <a
+              href="mailto:nexus@nexusvalvulas.com.br"
+              className="min-h-[44px] flex items-center justify-center p-3 text-white hover:text-white/90 underline underline-offset-2 focus:outline-none focus:ring-2 focus:ring-white/50 rounded"
+            >
+              <Mail className="h-3 w-3 shrink-0 mr-2" aria-hidden />
+              <span className="truncate">nexus@nexusvalvulas.com.br</span>
+            </a>
+            <a
+              href="tel:+551142408832"
+              className="min-h-[44px] flex items-center justify-center p-3 text-white hover:text-white/90 font-medium focus:outline-none focus:ring-2 focus:ring-white/50 rounded"
+            >
+              <Phone className="h-3 w-3 shrink-0 mr-2" aria-hidden />
+              <span>(11) 4240-8832</span>
+            </a>
           </div>
         </div>
       </div>
