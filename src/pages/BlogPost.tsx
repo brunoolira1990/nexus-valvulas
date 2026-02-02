@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams, Navigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { useParams, Navigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { getBlogPostBySlug } from "@/lib/api";
 import { Header } from "@/components/layout/Header";
@@ -10,8 +8,9 @@ import { PageLoader } from "@/components/PageLoader";
 import { Helmet } from "react-helmet-async";
 import { BreadcrumbStandard } from "@/components/Breadcrumb";
 import { ScrollAnimation } from "@/components/ScrollAnimation";
-// import { format } from 'date-fns';
-// import { ptBR } from 'date-fns/locale/pt-BR';
+import { BlogPostCta } from "@/components/blog/BlogPostCta";
+
+const BLOG_CANONICAL_BASE = "https://nexusvalvulas.com.br";
 
 interface BlogPost {
   id: string;
@@ -82,8 +81,8 @@ export default function BlogPost() {
     return <Navigate to="/404" replace />;
   }
 
-  // SEO: só renderiza Helmet quando post já está carregado (após loading)
-  const canonicalUrl = `https://nexusvalvulas.com.br/blog/${post.slug}`;
+  // SEO: canonical absoluto em todas as páginas dinâmicas do blog
+  const canonicalUrl = `${BLOG_CANONICAL_BASE}/blog/${post.slug}`;
   const ogImage = post.cover_image_url || post.cover_image;
 
   // Keywords (para meta keywords opcional)
@@ -227,25 +226,8 @@ export default function BlogPost() {
               />
             </ScrollAnimation>
 
-            {/* Related Content CTA */}
             <ScrollAnimation animation="fade-up" className="mt-12">
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-bold mb-4">Gostou deste artigo?</h3>
-                  <p className="text-muted-foreground mb-6">
-                    Nossa equipe técnica pode ajudar você a aplicar estas informações em sua
-                    operação industrial.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <Button asChild>
-                      <Link to="/contato">Solicitar Consultoria Técnica</Link>
-                    </Button>
-                    <Button asChild variant="outline">
-                      <Link to="/blog">Ver Mais Artigos</Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <BlogPostCta />
             </ScrollAnimation>
           </article>
         </main>

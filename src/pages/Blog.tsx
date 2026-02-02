@@ -31,7 +31,8 @@ export default function Blog() {
     const fetchPosts = async () => {
       try {
         const data = await getBlogPosts();
-        setPosts(data || []);
+        const sorted = sortPostsByDateNewestFirst((data || []) as BlogPost[]);
+        setPosts(sorted);
       } catch (error) {
         console.error("Erro ao carregar posts:", error);
       } finally {
@@ -158,7 +159,7 @@ export default function Blog() {
                         <div className={post.cover_image_url ? "md:w-2/3" : "w-full"}>
                           <CardHeader>
                             <div className="text-sm text-muted-foreground mb-2">
-                              {new Date(post.created_at).toLocaleDateString("pt-BR", {
+                              {new Date(getPostDate(post)).toLocaleDateString("pt-BR", {
                                 day: "2-digit",
                                 month: "long",
                                 year: "numeric",
