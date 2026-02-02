@@ -21,6 +21,48 @@ interface BlogPost {
   category_name?: string;
   published_at?: string;
   created_at: string;
+  date?: string;
+}
+
+/** Data efetiva para ordenação: date (API) ou published_at ou created_at */
+function getPostDate(post: BlogPost): string {
+  return post.date ?? post.published_at ?? post.created_at ?? "";
+}
+
+/**
+ * Converte string de data (ISO '2026-01-31', ISO com tempo, ou outro formato) em timestamp.
+ * Evita NaN e quebra de sort.
+ */
+function parseDateSafe(value: string): number {
+  if (!value || typeof value !== "string") return 0;
+  const trimmed = value.trim();
+  if (!trimmed) return 0;
+  // ISO (YYYY-MM-DD ou com tempo) é suportado nativamente
+  const parsed = Date.parse(trimmed);
+  if (!Number.isNaN(parsed)) return parsed;
+  // Fallback: formato brasileiro DD/MM/YYYY
+  const br = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (br) {
+    const [, d, m, y] = br;
+    const parsedBr = Date.parse(`${y}-${m!.padStart(2, "0")}-${d!.padStart(2, "0")}`);
+    return Number.isNaN(parsedBr) ? 0 : parsedBr;
+  }
+  return 0;
+}
+
+/** Ordena posts do mais recente para o mais antigo (cronologia inversa). Não lança erro. */
+function sortPostsByDateNewestFirst(posts: BlogPost[]): BlogPost[] {
+  if (!Array.isArray(posts) || posts.length === 0) return posts;
+  try {
+    return [...posts].sort((a, b) => {
+      const dateA = parseDateSafe(getPostDate(a));
+      const dateB = parseDateSafe(getPostDate(b));
+      return dateB - dateA;
+    });
+  } catch (err) {
+    console.warn("[Blog] sortPostsByDateNewestFirst falhou, exibindo lista sem ordenação:", err);
+    return posts;
+  }
 }
 
 export default function Blog() {
@@ -31,10 +73,23 @@ export default function Blog() {
     const fetchPosts = async () => {
       try {
         const data = await getBlogPosts();
-        const sorted = sortPostsByDateNewestFirst((data || []) as BlogPost[]);
-        setPosts(sorted);
+        console.log(
+          "[Blog] getBlogPosts() retornou:",
+          Array.isArray(data) ? data.length : "não-array",
+          data
+        );
+
+        const rawList = (data && Array.isArray(data) ? data : []) as BlogPost[];
+        let list: BlogPost[] = rawList;
+        try {
+          list = sortPostsByDateNewestFirst(rawList);
+        } catch (sortErr) {
+          console.warn("[Blog] Ordenação falhou, usando lista original:", sortErr);
+        }
+        setPosts(list);
       } catch (error) {
-        console.error("Erro ao carregar posts:", error);
+        console.error("[Blog] Erro ao carregar posts:", error);
+        // Não resetar posts para vazio em caso de erro; manter estado anterior se houver
       } finally {
         setLoading(false);
       }

@@ -66,7 +66,14 @@ async function apiCall(path: string, options: ApiOptions = {}) {
 // Blog API
 export async function getBlogPosts() {
   const data = await apiCall("/blog/posts");
-  return normalizeResponse(data);
+  console.log(
+    "[API] getBlogPosts() resposta bruta:",
+    typeof data,
+    Array.isArray(data) ? data.length : data
+  );
+  const normalized = normalizeResponse(data);
+  console.log("[API] getBlogPosts() após normalizeResponse:", normalized?.length ?? 0, normalized);
+  return normalized;
 }
 
 export async function getBlogPostBySlug(slug: string) {
