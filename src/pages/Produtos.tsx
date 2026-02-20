@@ -135,13 +135,13 @@ export default function Produtos() {
                     className="block no-underline text-inherit"
                     style={{ textDecoration: "none", color: "inherit" }}
                   >
-                    <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer h-full overflow-hidden">
-                      <div className="aspect-video w-full rounded-t-lg overflow-hidden bg-muted relative">
+                    <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer h-full overflow-hidden flex flex-col">
+                      <div className="relative w-full aspect-[4/3] flex-shrink-0 overflow-hidden rounded-t-lg bg-muted [&>img]:block">
                         {getCategoryImage(categoria) ? (
                           <img
                             src={getCategoryImage(categoria)}
                             alt={`Imagem da categoria ${categoria.name}`}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
                             loading="lazy"
                             onError={e => {
                               const target = e.currentTarget;
