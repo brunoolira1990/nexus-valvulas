@@ -19,6 +19,44 @@ interface Category {
   products_count?: number;
 }
 
+/** Ordem de prioridade das categorias na página de produtos */
+const CATEGORY_ORDER: Record<string, number> = {
+  "valvulas-industriais": 1,
+  tubos: 2,
+  conexoes: 3,
+  "conexoes-tubulares": 3,
+  flanges: 4,
+  "combate-a-incendio": 5,
+  acessorios: 6,
+  diversas: 7,
+  diversos: 7,
+};
+
+/** Fallback: fotos estáticas por slug quando a API não retorna imagem */
+const CATEGORY_IMAGE_FALLBACK: Record<string, string> = {
+  "valvulas-industriais": "/imagens/valvulas.png",
+  tubos: "/imagens/tubos.png",
+  conexoes: "/imagens/conexoes.png",
+  "conexoes-tubulares": "/imagens/conexoes.png",
+  flanges: "/imagens/flanges.png",
+  "combate-a-incendio": "/imagens/incendio.png",
+  acessorios: "/imagens/acessorios.png",
+  diversas: "/imagens/diversos.png",
+  diversos: "/imagens/diversos.png",
+};
+
+function sortCategoriesByPriority(cats: Category[]): Category[] {
+  return [...cats].sort((a, b) => {
+    const orderA = CATEGORY_ORDER[a.slug] ?? 999;
+    const orderB = CATEGORY_ORDER[b.slug] ?? 999;
+    return orderA - orderB;
+  });
+}
+
+function getCategoryImage(cat: Category): string | undefined {
+  return cat.image_url ?? CATEGORY_IMAGE_FALLBACK[cat.slug];
+}
+
 export default function Produtos() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,10 +67,10 @@ export default function Produtos() {
       try {
         setLoading(true);
         const data = await getCategories();
-        setCategories(data);
+        setCategories(sortCategoriesByPriority(data));
       } catch (err) {
-        console.error('Erro ao buscar categorias:', err);
-        setError('Erro ao carregar categorias. Tente novamente mais tarde.');
+        console.error("Erro ao buscar categorias:", err);
+        setError("Erro ao carregar categorias. Tente novamente mais tarde.");
       } finally {
         setLoading(false);
       }
@@ -86,70 +124,68 @@ export default function Produtos() {
             <div className="text-center py-16">
               <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
               <h2 className="text-2xl font-bold mb-2">Nenhuma categoria encontrada</h2>
-              <p className="text-muted-foreground">
-                Ainda não há categorias cadastradas.
-              </p>
+              <p className="text-muted-foreground">Ainda não há categorias cadastradas.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {categories.map((categoria, index) => (
-              <ScrollAnimation key={categoria.id} animation="fade-up" delay={index * 100}>
-                <Link 
-                  to={`/produtos/${categoria.slug}`} 
-                  className="block no-underline text-inherit"
-                  style={{ textDecoration: 'none', color: 'inherit' }}
-                >
-                  <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer h-full">
-                    <div className="aspect-video rounded-t-lg overflow-hidden bg-white relative">
-                      {categoria.image_url ? (
-                        <img
-                          src={categoria.image_url}
-                          alt={`Imagem da categoria ${categoria.name}`}
-                          className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
-                          loading="lazy"
-                          onError={(e) => {
-                            // Mostra placeholder quando imagem falha
-                            const target = e.currentTarget;
-                            target.style.display = 'none';
-                            const placeholder = target.nextElementSibling as HTMLElement;
-                            if (placeholder) {
-                              placeholder.style.display = 'flex';
-                            }
-                          }}
-                        />
-                      ) : null}
-                      <div 
-                        className={`w-full h-full bg-gradient-to-r from-blue-100 to-orange-100 flex items-center justify-center ${categoria.image_url ? 'absolute inset-0' : ''}`}
-                        style={{ display: categoria.image_url ? 'none' : 'flex' }}
-                      >
-                        <Package className="h-16 w-16 text-blue-600" />
+                <ScrollAnimation key={categoria.id} animation="fade-up" delay={index * 100}>
+                  <Link
+                    to={`/produtos/${categoria.slug}`}
+                    className="block no-underline text-inherit"
+                    style={{ textDecoration: "none", color: "inherit" }}
+                  >
+                    <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer h-full overflow-hidden">
+                      <div className="aspect-video w-full rounded-t-lg overflow-hidden bg-muted relative">
+                        {getCategoryImage(categoria) ? (
+                          <img
+                            src={getCategoryImage(categoria)}
+                            alt={`Imagem da categoria ${categoria.name}`}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            loading="lazy"
+                            onError={e => {
+                              const target = e.currentTarget;
+                              target.style.display = "none";
+                              const placeholder = target.nextElementSibling as HTMLElement;
+                              if (placeholder) {
+                                placeholder.style.display = "flex";
+                              }
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          className="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-100 to-orange-100 flex items-center justify-center"
+                          style={{ display: getCategoryImage(categoria) ? "none" : "flex" }}
+                        >
+                          <Package className="h-16 w-16 text-blue-600" />
+                        </div>
                       </div>
-                    </div>
-                    <CardHeader>
-                      <CardTitle className="group-hover:text-accent transition-colors text-orange-600 font-bold">
-                        {categoria.name}
-                      </CardTitle>
-                      {categoria.description && (
-                        <p className="text-sm text-gray-600 mt-2 line-clamp-2">
-                          {categoria.description}
-                        </p>
-                      )}
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center justify-between">
-                        <span className="text-orange-600 hover:text-orange-700 font-medium">
-                          Ver produtos →
-                        </span>
-                        {categoria.products_count !== undefined && (
-                          <Badge variant="secondary">
-                            {categoria.products_count} {categoria.products_count === 1 ? 'produto' : 'produtos'}
-                          </Badge>
+                      <CardHeader>
+                        <CardTitle className="group-hover:text-accent transition-colors text-orange-600 font-bold">
+                          {categoria.name}
+                        </CardTitle>
+                        {categoria.description && (
+                          <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+                            {categoria.description}
+                          </p>
                         )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              </ScrollAnimation>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center justify-between">
+                          <span className="text-orange-600 hover:text-orange-700 font-medium">
+                            Ver produtos →
+                          </span>
+                          {categoria.products_count !== undefined && (
+                            <Badge variant="secondary">
+                              {categoria.products_count}{" "}
+                              {categoria.products_count === 1 ? "produto" : "produtos"}
+                            </Badge>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </ScrollAnimation>
               ))}
             </div>
           )}
