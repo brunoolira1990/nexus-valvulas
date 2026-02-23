@@ -47,7 +47,11 @@ class Migration(migrations.Migration):
         ),
         migrations.RunPython(set_category_order, noop),
         migrations.AlterModelOptions(
-            model_name="category",
-            options={"ordering": ["order", "name"], "verbose_name": "Categoria", "verbose_name_plural": "Categorias"},
+            name="category",
+            options={
+                "ordering": ["order", "name"],
+                "verbose_name": "Categoria",
+                "verbose_name_plural": "Categorias",
+            },
         ),
     ]
