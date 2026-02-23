@@ -156,6 +156,7 @@ class CategorySerializer(serializers.ModelSerializer):
             'name',
             'slug',
             'description',
+            'order',
             'image_url',
             'products_count',
             'is_active',
@@ -180,7 +181,7 @@ class CategoryWithProductsSerializer(serializers.ModelSerializer):
     """Serializer de categoria com produtos aninhados"""
     products = ProductSerializer(many=True, read_only=True)
     image_url = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Category
         fields = [
@@ -188,6 +189,7 @@ class CategoryWithProductsSerializer(serializers.ModelSerializer):
             'name',
             'slug',
             'description',
+            'order',
             'image_url',
             'products',
             'is_active',

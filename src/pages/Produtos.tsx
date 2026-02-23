@@ -15,22 +15,10 @@ interface Category {
   name: string;
   slug: string;
   description: string;
+  order?: number;
   image_url?: string;
   products_count?: number;
 }
-
-/** Ordem de prioridade das categorias na página de produtos */
-const CATEGORY_ORDER: Record<string, number> = {
-  "valvulas-industriais": 1,
-  tubos: 2,
-  conexoes: 3,
-  "conexoes-tubulares": 3,
-  flanges: 4,
-  "combate-a-incendio": 5,
-  acessorios: 6,
-  diversas: 7,
-  diversos: 7,
-};
 
 /** Fallback: fotos estáticas por slug quando a API não retorna imagem */
 const CATEGORY_IMAGE_FALLBACK: Record<string, string> = {
@@ -44,14 +32,6 @@ const CATEGORY_IMAGE_FALLBACK: Record<string, string> = {
   diversas: "/imagens/diversos.png",
   diversos: "/imagens/diversos.png",
 };
-
-function sortCategoriesByPriority(cats: Category[]): Category[] {
-  return [...cats].sort((a, b) => {
-    const orderA = CATEGORY_ORDER[a.slug] ?? 999;
-    const orderB = CATEGORY_ORDER[b.slug] ?? 999;
-    return orderA - orderB;
-  });
-}
 
 function getCategoryImage(cat: Category): string | undefined {
   return cat.image_url ?? CATEGORY_IMAGE_FALLBACK[cat.slug];
@@ -67,7 +47,7 @@ export default function Produtos() {
       try {
         setLoading(true);
         const data = await getCategories();
-        setCategories(sortCategoriesByPriority(data));
+        setCategories([...data].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)));
       } catch (err) {
         console.error("Erro ao buscar categorias:", err);
         setError("Erro ao carregar categorias. Tente novamente mais tarde.");

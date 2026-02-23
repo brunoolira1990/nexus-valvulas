@@ -14,6 +14,11 @@ class Category(models.Model):
         verbose_name="Imagem",
         help_text="Imagem representativa da categoria"
     )
+    order = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Ordem",
+        help_text="Ordem de exibição no catálogo (menor número aparece primeiro)",
+    )
     is_active = models.BooleanField(default=True, verbose_name="Ativa")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Atualizado em")
@@ -21,7 +26,7 @@ class Category(models.Model):
     class Meta:
         verbose_name = "Categoria"
         verbose_name_plural = "Categorias"
-        ordering = ['name']
+        ordering = ["order", "name"]
 
     def __str__(self):
         return self.name
