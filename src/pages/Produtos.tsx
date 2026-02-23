@@ -116,12 +116,12 @@ export default function Produtos() {
                     style={{ textDecoration: "none", color: "inherit" }}
                   >
                     <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer h-full overflow-hidden flex flex-col">
-                      <div className="relative w-full aspect-[4/3] flex-shrink-0 overflow-hidden rounded-t-lg bg-muted [&>img]:block">
+                      <div className="relative w-full aspect-[4/3] overflow-hidden rounded-t-lg bg-muted">
                         {getCategoryImage(categoria) ? (
                           <img
                             src={getCategoryImage(categoria)}
                             alt={`Imagem da categoria ${categoria.name}`}
-                            className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                            className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300 block"
                             loading="lazy"
                             onError={e => {
                               const target = e.currentTarget;
